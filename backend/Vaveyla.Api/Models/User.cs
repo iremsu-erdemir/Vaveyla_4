@@ -6,6 +6,10 @@ public sealed class User
     public string FullName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
+    public string? ProfilePhotoPath { get; set; }
     public UserRole Role { get; set; }
+    public bool IsPrivacyPolicyAccepted { get; set; }
+    public bool IsTermsOfServiceAccepted { get; set; }
     public DateTime CreatedAtUtc { get; set; }
+    public List<UserAddress> Addresses { get; set; } = [];
 }

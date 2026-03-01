@@ -21,4 +21,10 @@ public sealed class RegisterRequest
     [Required]
     [Range(1, 3)]
     public int RoleId { get; set; }
+
+    [Range(typeof(bool), "true", "true", ErrorMessage = "Privacy policy consent is required.")]
+    public bool IsPrivacyPolicyAccepted { get; set; }
+
+    [Range(typeof(bool), "true", "true", ErrorMessage = "Terms of service consent is required.")]
+    public bool IsTermsOfServiceAccepted { get; set; }
 }

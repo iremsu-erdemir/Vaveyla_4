@@ -5,5 +5,12 @@ namespace Vaveyla.Api.Data;
 public interface IUserRepository
 {
     Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken);
+    Task<User?> GetByIdAsync(Guid userId, CancellationToken cancellationToken);
     Task<User> CreateAsync(User user, CancellationToken cancellationToken);
+    Task<User> UpdateAsync(User user, CancellationToken cancellationToken);
+    Task<List<UserAddress>> GetAddressesAsync(Guid userId, CancellationToken cancellationToken);
+    Task<UserAddress?> GetAddressByIdAsync(Guid userId, Guid addressId, CancellationToken cancellationToken);
+    Task<UserAddress> AddAddressAsync(UserAddress address, CancellationToken cancellationToken);
+    Task DeleteAddressAsync(UserAddress address, CancellationToken cancellationToken);
+    Task SaveChangesAsync(CancellationToken cancellationToken);
 }

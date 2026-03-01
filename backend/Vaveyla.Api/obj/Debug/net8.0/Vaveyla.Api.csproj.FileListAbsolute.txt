@@ -605,3 +605,4 @@ C:\Users\erdem\Desktop\vaveyla2-mainyap\backend\Vaveyla.Api\obj\Debug\net8.0\ref
 C:\Users\erdem\Desktop\vaveyla2-mainyap\backend\Vaveyla.Api\obj\Debug\net8.0\Vaveyla.Api.pdb
 C:\Users\erdem\Desktop\vaveyla2-mainyap\backend\Vaveyla.Api\obj\Debug\net8.0\Vaveyla.Api.genruntimeconfig.cache
 C:\Users\erdem\Desktop\vaveyla2-mainyap\backend\Vaveyla.Api\obj\Debug\net8.0\ref\Vaveyla.Api.dll
+C:\Users\erdem\Desktop\vaveyla2-mainyap\backend\Vaveyla.Api\obj\Debug\net8.0\Vaveyla.Api.sourcelink.json

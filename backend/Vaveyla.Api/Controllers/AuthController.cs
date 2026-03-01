@@ -20,6 +20,11 @@ public sealed class AuthController : ControllerBase
         [FromBody] RegisterRequest request,
         CancellationToken cancellationToken)
     {
+        if (!request.IsPrivacyPolicyAccepted || !request.IsTermsOfServiceAccepted)
+        {
+            return BadRequest(new { message = "Privacy policy and terms consent are required." });
+        }
+
         var email = request.Email.Trim().ToLowerInvariant();
         var existing = await _users.GetByEmailAsync(email, cancellationToken);
         if (existing is not null)
@@ -34,6 +39,8 @@ public sealed class AuthController : ControllerBase
             Email = email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
             Role = (UserRole)request.RoleId,
+            IsPrivacyPolicyAccepted = request.IsPrivacyPolicyAccepted,
+            IsTermsOfServiceAccepted = request.IsTermsOfServiceAccepted,
             CreatedAtUtc = DateTime.UtcNow,
         };
 

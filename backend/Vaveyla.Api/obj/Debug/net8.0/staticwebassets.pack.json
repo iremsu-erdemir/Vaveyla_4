@@ -5,8 +5,16 @@
       "PackagePath": "staticwebassets\\uploads\\owners\\948b3316-b232-4417-a7df-d4f5d58c9c15\\menu\\629729a62bb847c3a6a0909b0d199948.jpg"
     },
     {
+      "Id": "C:\\Users\\erdem\\Desktop\\vaveyla2-mainyap\\backend\\Vaveyla.Api\\wwwroot\\uploads\\owners\\948b3316-b232-4417-a7df-d4f5d58c9c15\\menu\\65f89697e9294b84bb8efa798e3a89c2.jpg",
+      "PackagePath": "staticwebassets\\uploads\\owners\\948b3316-b232-4417-a7df-d4f5d58c9c15\\menu\\65f89697e9294b84bb8efa798e3a89c2.jpg"
+    },
+    {
       "Id": "C:\\Users\\erdem\\Desktop\\vaveyla2-mainyap\\backend\\Vaveyla.Api\\wwwroot\\uploads\\owners\\948b3316-b232-4417-a7df-d4f5d58c9c15\\menu\\c878f789e41f4470bb2dc4aa5f78f511.webp",
       "PackagePath": "staticwebassets\\uploads\\owners\\948b3316-b232-4417-a7df-d4f5d58c9c15\\menu\\c878f789e41f4470bb2dc4aa5f78f511.webp"
+    },
+    {
+      "Id": "C:\\Users\\erdem\\Desktop\\vaveyla2-mainyap\\backend\\Vaveyla.Api\\wwwroot\\uploads\\owners\\948b3316-b232-4417-a7df-d4f5d58c9c15\\menu\\facd54bf77a2494c9d9bcbefdfb49290.jpg",
+      "PackagePath": "staticwebassets\\uploads\\owners\\948b3316-b232-4417-a7df-d4f5d58c9c15\\menu\\facd54bf77a2494c9d9bcbefdfb49290.jpg"
     },
     {
       "Id": "C:\\Users\\erdem\\Desktop\\vaveyla2-mainyap\\backend\\Vaveyla.Api\\wwwroot\\uploads\\owners\\948b3316-b232-4417-a7df-d4f5d58c9c15\\restaurant\\6bed957e43864965ae7398faf57e2c8a.jpg",
@@ -15,6 +23,34 @@
     {
       "Id": "C:\\Users\\erdem\\Desktop\\vaveyla2-mainyap\\backend\\Vaveyla.Api\\wwwroot\\uploads\\owners\\c07998aa-3789-4b27-b2ab-82aa7311533b\\restaurant\\63204c30bd394606932f8f3f08e13225.jpg",
       "PackagePath": "staticwebassets\\uploads\\owners\\c07998aa-3789-4b27-b2ab-82aa7311533b\\restaurant\\63204c30bd394606932f8f3f08e13225.jpg"
+    },
+    {
+      "Id": "C:\\Users\\erdem\\Desktop\\vaveyla2-mainyap\\backend\\Vaveyla.Api\\wwwroot\\uploads\\users\\3e9fe6b8-ec06-4547-a23f-86d021d36d49\\profile\\1cc7f3c34e294deb968fb99a1c796d76.jpg",
+      "PackagePath": "staticwebassets\\uploads\\users\\3e9fe6b8-ec06-4547-a23f-86d021d36d49\\profile\\1cc7f3c34e294deb968fb99a1c796d76.jpg"
+    },
+    {
+      "Id": "C:\\Users\\erdem\\Desktop\\vaveyla2-mainyap\\backend\\Vaveyla.Api\\wwwroot\\uploads\\users\\3e9fe6b8-ec06-4547-a23f-86d021d36d49\\profile\\2246a330edc54f5595f9ba4da7e7dcca.jpg",
+      "PackagePath": "staticwebassets\\uploads\\users\\3e9fe6b8-ec06-4547-a23f-86d021d36d49\\profile\\2246a330edc54f5595f9ba4da7e7dcca.jpg"
+    },
+    {
+      "Id": "C:\\Users\\erdem\\Desktop\\vaveyla2-mainyap\\backend\\Vaveyla.Api\\wwwroot\\uploads\\users\\3e9fe6b8-ec06-4547-a23f-86d021d36d49\\profile\\5bb712988ae3428a82447d1a8b8cf0f1.jpg",
+      "PackagePath": "staticwebassets\\uploads\\users\\3e9fe6b8-ec06-4547-a23f-86d021d36d49\\profile\\5bb712988ae3428a82447d1a8b8cf0f1.jpg"
+    },
+    {
+      "Id": "C:\\Users\\erdem\\Desktop\\vaveyla2-mainyap\\backend\\Vaveyla.Api\\wwwroot\\uploads\\users\\3e9fe6b8-ec06-4547-a23f-86d021d36d49\\profile\\7a0e56d550dd42dd8dc7cbc931a62246.jpg",
+      "PackagePath": "staticwebassets\\uploads\\users\\3e9fe6b8-ec06-4547-a23f-86d021d36d49\\profile\\7a0e56d550dd42dd8dc7cbc931a62246.jpg"
+    },
+    {
+      "Id": "C:\\Users\\erdem\\Desktop\\vaveyla2-mainyap\\backend\\Vaveyla.Api\\wwwroot\\uploads\\users\\3e9fe6b8-ec06-4547-a23f-86d021d36d49\\profile\\938c281e4a2b475dab32db2d415fa2c4.jpeg",
+      "PackagePath": "staticwebassets\\uploads\\users\\3e9fe6b8-ec06-4547-a23f-86d021d36d49\\profile\\938c281e4a2b475dab32db2d415fa2c4.jpeg"
+    },
+    {
+      "Id": "C:\\Users\\erdem\\Desktop\\vaveyla2-mainyap\\backend\\Vaveyla.Api\\wwwroot\\uploads\\users\\3e9fe6b8-ec06-4547-a23f-86d021d36d49\\profile\\bdddf3b49af44b8b8fa22ec462ae965b.jpg",
+      "PackagePath": "staticwebassets\\uploads\\users\\3e9fe6b8-ec06-4547-a23f-86d021d36d49\\profile\\bdddf3b49af44b8b8fa22ec462ae965b.jpg"
+    },
+    {
+      "Id": "C:\\Users\\erdem\\Desktop\\vaveyla2-mainyap\\backend\\Vaveyla.Api\\wwwroot\\uploads\\users\\3e9fe6b8-ec06-4547-a23f-86d021d36d49\\profile\\fb343d5e74c745669e84c8beb4fbe1c4.jpg",
+      "PackagePath": "staticwebassets\\uploads\\users\\3e9fe6b8-ec06-4547-a23f-86d021d36d49\\profile\\fb343d5e74c745669e84c8beb4fbe1c4.jpg"
     },
     {
       "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.Vaveyla.Api.Microsoft.AspNetCore.StaticWebAssets.props",

@@ -11,6 +11,7 @@ public sealed class VaveylaDbContext : DbContext
     }
 
     public DbSet<User> Users => Set<User>();
+    public DbSet<UserAddress> UserAddresses => Set<UserAddress>();
     public DbSet<Restaurant> Restaurants => Set<Restaurant>();
     public DbSet<MenuItem> MenuItems => Set<MenuItem>();
     public DbSet<RestaurantOrder> RestaurantOrders => Set<RestaurantOrder>();
@@ -24,13 +25,37 @@ public sealed class VaveylaDbContext : DbContext
         user.Property(x => x.FullName).HasMaxLength(120).IsRequired();
         user.Property(x => x.Email).HasMaxLength(256).IsRequired();
         user.Property(x => x.PasswordHash).HasMaxLength(200).IsRequired();
+        user.Property(x => x.ProfilePhotoPath).HasMaxLength(512);
         user.Property(x => x.Role)
             .HasConversion<byte>()
+            .IsRequired();
+        user.Property(x => x.IsPrivacyPolicyAccepted)
+            .HasDefaultValue(false)
+            .IsRequired();
+        user.Property(x => x.IsTermsOfServiceAccepted)
+            .HasDefaultValue(false)
             .IsRequired();
         user.Property(x => x.CreatedAtUtc)
             .HasDefaultValueSql("SYSUTCDATETIME()")
             .IsRequired();
         user.HasIndex(x => x.Email).IsUnique();
+        user.HasMany(x => x.Addresses)
+            .WithOne(x => x.User)
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        var userAddress = modelBuilder.Entity<UserAddress>();
+        userAddress.ToTable("UserAddresses");
+        userAddress.HasKey(x => x.AddressId);
+        userAddress.Property(x => x.UserId).IsRequired();
+        userAddress.Property(x => x.Label).HasMaxLength(64).IsRequired();
+        userAddress.Property(x => x.AddressLine).HasMaxLength(320).IsRequired();
+        userAddress.Property(x => x.AddressDetail).HasMaxLength(320);
+        userAddress.Property(x => x.IsSelected).HasDefaultValue(false).IsRequired();
+        userAddress.Property(x => x.CreatedAtUtc)
+            .HasDefaultValueSql("SYSUTCDATETIME()")
+            .IsRequired();
+        userAddress.HasIndex(x => x.UserId);
 
         var restaurant = modelBuilder.Entity<Restaurant>();
         restaurant.ToTable("Restaurants");
