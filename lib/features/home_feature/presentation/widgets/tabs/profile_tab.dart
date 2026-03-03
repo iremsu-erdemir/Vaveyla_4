@@ -17,6 +17,8 @@ import 'package:flutter_sweet_shop_app_ui/features/cart_feature/presentation/scr
 import 'package:flutter_sweet_shop_app_ui/features/cart_feature/presentation/screens/payment_methods_screen.dart';
 import 'package:flutter_sweet_shop_app_ui/core/utils/app_navigator.dart';
 import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/screens/splash_screen.dart';
+import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/screens/feedback_screen.dart';
+import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/screens/help_support_screen.dart';
 
 import '../../../../../core/gen/assets.gen.dart';
 import '../../../../../core/theme/dimens.dart';
@@ -427,13 +429,17 @@ class _ProfileTabState extends State<ProfileTab> {
                 spacing: Dimens.largePadding,
                 children: [
                   AppListTile(
-                    onTap: () {},
+                    onTap: () {
+                      appPush(context, const FeedbackScreen());
+                    },
                     title: context.tr('feedback'),
                     leadingIconPath: Assets.icons.noteText,
                     padding: EdgeInsets.zero,
                   ),
                   AppListTile(
-                    onTap: () {},
+                    onTap: () {
+                      appPush(context, const HelpSupportScreen());
+                    },
                     title: context.tr('help_support'),
                     leadingIconPath: Assets.icons.infoCircle,
                     padding: EdgeInsets.zero,
