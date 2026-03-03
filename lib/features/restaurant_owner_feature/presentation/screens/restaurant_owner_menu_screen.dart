@@ -6,6 +6,7 @@ import 'package:flutter_sweet_shop_app_ui/core/theme/dimens.dart';
 import 'package:flutter_sweet_shop_app_ui/core/theme/theme.dart';
 import 'package:flutter_sweet_shop_app_ui/core/utils/formatters.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_button.dart';
+import 'package:flutter_sweet_shop_app_ui/core/widgets/app_confirm_dialog.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_scaffold.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/general_app_bar.dart';
 import 'package:flutter_sweet_shop_app_ui/features/restaurant_owner_feature/data/models/menu_item_model.dart';
@@ -49,11 +50,12 @@ class _RestaurantOwnerMenuScreenState extends State<RestaurantOwnerMenuScreen> {
             _selectedCategoryIndex = 0;
           }
           final selected = categories[_selectedCategoryIndex];
-          final filtered = selected.keywords.isEmpty
-              ? menuItems
-              : menuItems
-                  .where((item) => _matchesCategory(item, selected))
-                  .toList();
+          final filtered =
+              selected.keywords.isEmpty
+                  ? menuItems
+                  : menuItems
+                      .where((item) => _matchesCategory(item, selected))
+                      .toList();
           if (menuItems.isEmpty) {
             return Center(
               child: Column(
@@ -88,8 +90,8 @@ class _RestaurantOwnerMenuScreenState extends State<RestaurantOwnerMenuScreen> {
                     ),
                     scrollDirection: Axis.horizontal,
                     itemCount: categories.length,
-                    separatorBuilder: (_, __) =>
-                        const SizedBox(width: Dimens.padding),
+                    separatorBuilder:
+                        (_, __) => const SizedBox(width: Dimens.padding),
                     itemBuilder: (context, index) {
                       final category = categories[index];
                       final isSelected = index == _selectedCategoryIndex;
@@ -101,10 +103,11 @@ class _RestaurantOwnerMenuScreenState extends State<RestaurantOwnerMenuScreen> {
                         },
                         selectedColor: colors.primary.withValues(alpha: 0.16),
                         backgroundColor: colors.gray.withValues(alpha: 0.1),
-                        labelStyle: context.theme.appTypography.labelSmall.copyWith(
-                          color: isSelected ? colors.primary : colors.gray4,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        labelStyle: context.theme.appTypography.labelSmall
+                            .copyWith(
+                              color: isSelected ? colors.primary : colors.gray4,
+                              fontWeight: FontWeight.w600,
+                            ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
@@ -124,7 +127,9 @@ class _RestaurantOwnerMenuScreenState extends State<RestaurantOwnerMenuScreen> {
                       item: item,
                       onEdit: () => _showEditProductSheet(context, item),
                       onToggle: () {
-                        context.read<RestaurantMenuCubit>().toggleAvailabilityRemote(
+                        context
+                            .read<RestaurantMenuCubit>()
+                            .toggleAvailabilityRemote(
                               item.id,
                               item.isAvailable,
                             );
@@ -159,11 +164,15 @@ class _RestaurantOwnerMenuScreenState extends State<RestaurantOwnerMenuScreen> {
       const _MenuCategory(label: 'Kek', keywords: ['kek']),
       const _MenuCategory(label: 'Donut', keywords: ['donut']),
       const _MenuCategory(label: 'Kurabiye', keywords: ['kurabiye', 'cookie']),
-      const _MenuCategory(label: 'İçecek', keywords: ['içecek', 'icecek', 'drink']),
+      const _MenuCategory(
+        label: 'İçecek',
+        keywords: ['içecek', 'icecek', 'drink'],
+      ),
     ];
-    final available = defaults.where((category) {
-      return items.any((item) => _matchesCategory(item, category));
-    }).toList();
+    final available =
+        defaults.where((category) {
+          return items.any((item) => _matchesCategory(item, category));
+        }).toList();
     return [all, ...available];
   }
 
@@ -197,35 +206,21 @@ class _RestaurantOwnerMenuScreenState extends State<RestaurantOwnerMenuScreen> {
     );
   }
 
-  void _confirmDeleteItem(BuildContext context, MenuItemModel item) {
-    showDialog<void>(
-      context: context,
-      builder:
-          (dialogContext) => AlertDialog(
-            title: const Text('Ürünü Sil'),
-            content: Text(
-              '"${item.name}" ürününü silmek istediğinize emin misiniz?',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext),
-                child: const Text('İptal'),
-              ),
-              TextButton(
-                onPressed: () {
-                  context.read<RestaurantMenuCubit>().deleteMenuItemRemote(
-                        item.id,
-                      );
-                  Navigator.pop(dialogContext);
-                },
-                style: TextButton.styleFrom(
-                  foregroundColor: context.theme.appColors.error,
-                ),
-                child: const Text('Sil'),
-              ),
-            ],
-          ),
+  Future<void> _confirmDeleteItem(
+    BuildContext context,
+    MenuItemModel item,
+  ) async {
+    final shouldDelete = await AppConfirmDialog.show(
+      context,
+      title: 'Urunu Sil',
+      message: '"${item.name}" urununu silmek istediginize emin misiniz?',
+      cancelText: 'Iptal',
+      confirmText: 'Sil',
+      isDestructive: true,
     );
+    if (shouldDelete == true && context.mounted) {
+      context.read<RestaurantMenuCubit>().deleteMenuItemRemote(item.id);
+    }
   }
 
   void _showEditProductSheet(BuildContext context, MenuItemModel item) {
@@ -245,12 +240,12 @@ class _RestaurantOwnerMenuScreenState extends State<RestaurantOwnerMenuScreen> {
             initialIsFeatured: item.isFeatured,
             onSave: (name, price, imagePath, isFeatured) {
               screenContext.read<RestaurantMenuCubit>().updateMenuItemRemote(
-                    item.id,
-                    name: name,
-                    price: price,
-                    imagePath: imagePath,
-                    isFeatured: isFeatured,
-                  );
+                item.id,
+                name: name,
+                price: price,
+                imagePath: imagePath,
+                isFeatured: isFeatured,
+              );
               Navigator.pop(context);
             },
           ),
@@ -410,35 +405,40 @@ class _MenuItemCard extends StatelessWidget {
                         onDelete();
                       }
                     },
-                    itemBuilder: (context) => [
-                      PopupMenuItem<String>(
-                        value: 'edit',
-                        child: Row(
-                          children: [
-                            Icon(Icons.edit_outlined, size: 18, color: colors.gray4),
-                            const SizedBox(width: 8),
-                            const Text('Düzenle'),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem<String>(
-                        value: 'delete',
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.delete_outline,
-                              size: 18,
-                              color: colors.error,
+                    itemBuilder:
+                        (context) => [
+                          PopupMenuItem<String>(
+                            value: 'edit',
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.edit_outlined,
+                                  size: 18,
+                                  color: colors.gray4,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text('Düzenle'),
+                              ],
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Sil',
-                              style: TextStyle(color: colors.error),
+                          ),
+                          PopupMenuItem<String>(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.delete_outline,
+                                  size: 18,
+                                  color: colors.error,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Sil',
+                                  style: TextStyle(color: colors.error),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
-                    ],
+                          ),
+                        ],
                     icon: Icon(Icons.more_horiz, color: colors.gray4),
                   ),
                 ],
@@ -483,7 +483,8 @@ class _ProductFormSheet extends StatefulWidget {
     int price,
     String? imagePath,
     bool isFeatured,
-  ) onSave;
+  )
+  onSave;
   final String? initialName;
   final int? initialPrice;
   final String? initialImagePath;
@@ -730,7 +731,8 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
                     Switch(
                       value: _isFeatured,
                       onChanged: (v) => setState(() => _isFeatured = v),
-                      activeColor: colors.secondary,
+                      inactiveThumbColor: colors.secondary,
+                      activeTrackColor: colors.secondary.withValues(alpha: 0.4),
                     ),
                   ],
                 ),

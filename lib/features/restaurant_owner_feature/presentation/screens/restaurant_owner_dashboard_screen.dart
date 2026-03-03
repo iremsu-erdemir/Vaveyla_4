@@ -30,23 +30,25 @@ class RestaurantOwnerDashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ownerUserId = AppSession.userId;
-    final ownerService = RestaurantOwnerService(
-      authService: AuthService(),
-    );
+    final ownerService = RestaurantOwnerService(authService: AuthService());
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => RestaurantOwnerNavCubit()),
         BlocProvider(
-          create: (_) =>
-              RestaurantMenuCubit(ownerService, ownerUserId)..loadMenu(),
+          create:
+              (_) => RestaurantMenuCubit(ownerService, ownerUserId)..loadMenu(),
         ),
         BlocProvider(
-          create: (_) =>
-              RestaurantOrdersCubit(ownerService, ownerUserId)..loadOrders(),
+          create:
+              (_) =>
+                  RestaurantOrdersCubit(ownerService, ownerUserId)
+                    ..loadOrders(),
         ),
         BlocProvider(
-          create: (_) =>
-              RestaurantSettingsCubit(ownerService, ownerUserId)..loadSettings(),
+          create:
+              (_) =>
+                  RestaurantSettingsCubit(ownerService, ownerUserId)
+                    ..loadSettings(),
         ),
       ],
       child: const _RestaurantOwnerDashboardScreen(),
@@ -145,134 +147,151 @@ class _DashboardTab extends StatelessWidget {
       builder: (context, orders) {
         return BlocBuilder<RestaurantMenuCubit, List<MenuItemModel>>(
           builder: (context, menuItems) {
-        final pending = orders
-            .where((o) => o.status == RestaurantOrderStatus.pending)
-            .length;
-        final totalRevenue = orders
-            .where((o) => o.status == RestaurantOrderStatus.completed)
-            .fold<int>(0, (sum, o) => sum + o.total);
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(Dimens.largePadding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _DashboardHeader(
-                title: 'Restoran Paneli',
-                subtitle: 'Hoş geldiniz! Bugünkü özetiniz',
-              ),
-              const SizedBox(height: Dimens.largePadding),
-              const _CampaignCarousel(),
-              const SizedBox(height: Dimens.extraLargePadding),
-              _StatsGrid(
-                stats: [
-                  _StatItem(
-                    icon: Assets.icons.bagTimer,
-                    label: 'Bekleyen Sipariş',
-                    value: '$pending',
-                    color: colors.warning,
-                    onTap: () => _openStatDetails(
-                      context,
-                      StatDetailType.pendingOrders,
+            final pending =
+                orders
+                    .where((o) => o.status == RestaurantOrderStatus.pending)
+                    .length;
+            final totalRevenue = orders
+                .where((o) => o.status == RestaurantOrderStatus.completed)
+                .fold<int>(0, (sum, o) => sum + o.total);
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(Dimens.largePadding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _DashboardHeader(
+                    title: 'Restoran Paneli',
+                    subtitle: 'Hoş geldiniz! Bugünkü özetiniz',
+                  ),
+                  const SizedBox(height: Dimens.largePadding),
+                  const _CampaignCarousel(),
+                  const SizedBox(height: Dimens.extraLargePadding),
+                  _StatsGrid(
+                    stats: [
+                      _StatItem(
+                        icon: Assets.icons.bagTimer,
+                        label: 'Bekleyen Sipariş',
+                        value: '$pending',
+                        color: colors.warning,
+                        onTap:
+                            () => _openStatDetails(
+                              context,
+                              StatDetailType.pendingOrders,
+                            ),
+                      ),
+                      _StatItem(
+                        icon: Assets.icons.receipt,
+                        label: 'Sipariş',
+                        value: '${orders.length}',
+                        color: colors.primary,
+                        onTap:
+                            () => _openStatDetails(
+                              context,
+                              StatDetailType.todayOrders,
+                            ),
+                      ),
+                      _StatItem(
+                        icon: Assets.icons.moneyTick,
+                        label: 'Toplam Gelir',
+                        value: formatPrice(totalRevenue),
+                        color: colors.success,
+                        onTap:
+                            () => _openStatDetails(
+                              context,
+                              StatDetailType.totalRevenue,
+                            ),
+                      ),
+                      _StatItem(
+                        icon: Assets.icons.people,
+                        label: 'Menü Ürünü',
+                        value: '${menuItems.length}',
+                        color: colors.secondary,
+                        onTap:
+                            () => _openStatDetails(
+                              context,
+                              StatDetailType.menuItems,
+                            ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: Dimens.extraLargePadding),
+                  _LiveStatusStrip(
+                    pending: pending,
+                    preparing:
+                        orders
+                            .where(
+                              (o) =>
+                                  o.status == RestaurantOrderStatus.preparing,
+                            )
+                            .length,
+                    completed:
+                        orders
+                            .where(
+                              (o) =>
+                                  o.status == RestaurantOrderStatus.completed,
+                            )
+                            .length,
+                  ),
+                  const SizedBox(height: Dimens.extraLargePadding),
+                  Text(
+                    'Hızlı İşlemler',
+                    style: typography.titleMedium.copyWith(
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  _StatItem(
-                    icon: Assets.icons.receipt,
-                    label: 'Bugünkü Sipariş',
-                    value: '${orders.length}',
-                    color: colors.primary,
-                    onTap: () => _openStatDetails(
-                      context,
-                      StatDetailType.todayOrders,
-                    ),
+                  const SizedBox(height: Dimens.largePadding),
+                  _QuickOrderBanner(
+                    onTap: () {
+                      context.read<RestaurantOwnerNavCubit>().onItemTap(1);
+                    },
                   ),
-                  _StatItem(
-                    icon: Assets.icons.moneyTick,
-                    label: 'Toplam Gelir',
-                    value: formatPrice(totalRevenue),
-                    color: colors.success,
-                    onTap: () => _openStatDetails(
-                      context,
-                      StatDetailType.totalRevenue,
-                    ),
+                  const SizedBox(height: Dimens.largePadding),
+                  _QuickActionCard(
+                    icon: Assets.icons.receiptAdd,
+                    title: 'Yeni Sipariş',
+                    subtitle: 'Manuel sipariş ekle',
+                    onTap: () {
+                      context.read<RestaurantOwnerNavCubit>().onItemTap(1);
+                    },
                   ),
-                  _StatItem(
-                    icon: Assets.icons.people,
-                    label: 'Menü Ürünü',
-                    value: '${menuItems.length}',
-                    color: colors.secondary,
-                    onTap: () => _openStatDetails(
-                      context,
-                      StatDetailType.menuItems,
-                    ),
+                  const SizedBox(height: Dimens.largePadding),
+                  _QuickActionCard(
+                    icon: Assets.icons.menu,
+                    title: 'Menüyü Düzenle',
+                    subtitle: 'Ürün ekle veya güncelle',
+                    onTap: () {
+                      context.read<RestaurantOwnerNavCubit>().onItemTap(2);
+                    },
                   ),
+                  const SizedBox(height: Dimens.largePadding),
+                  _QuickActionCard(
+                    icon: Assets.icons.chartSquare,
+                    title: 'Raporlar',
+                    subtitle: 'Satış ve performans raporları',
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder:
+                              (_) => MultiBlocProvider(
+                                providers: [
+                                  BlocProvider.value(
+                                    value:
+                                        context.read<RestaurantOrdersCubit>(),
+                                  ),
+                                  BlocProvider.value(
+                                    value: context.read<RestaurantMenuCubit>(),
+                                  ),
+                                ],
+                                child: const RestaurantOwnerReportsScreen(),
+                              ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: Dimens.extraLargePadding),
                 ],
               ),
-              const SizedBox(height: Dimens.extraLargePadding),
-              _LiveStatusStrip(
-                pending: pending,
-                preparing: orders
-                    .where((o) => o.status == RestaurantOrderStatus.preparing)
-                    .length,
-                completed: orders
-                    .where((o) => o.status == RestaurantOrderStatus.completed)
-                    .length,
-              ),
-              const SizedBox(height: Dimens.extraLargePadding),
-              Text(
-                'Hızlı İşlemler',
-                style: typography.titleMedium.copyWith(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: Dimens.largePadding),
-              _QuickOrderBanner(
-                onTap: () {
-                  context.read<RestaurantOwnerNavCubit>().onItemTap(1);
-                },
-              ),
-              const SizedBox(height: Dimens.largePadding),
-              _QuickActionCard(
-                icon: Assets.icons.receiptAdd,
-                title: 'Yeni Sipariş',
-                subtitle: 'Manuel sipariş ekle',
-                onTap: () {
-                  context.read<RestaurantOwnerNavCubit>().onItemTap(1);
-                },
-              ),
-              const SizedBox(height: Dimens.largePadding),
-              _QuickActionCard(
-                icon: Assets.icons.menu,
-                title: 'Menüyü Düzenle',
-                subtitle: 'Ürün ekle veya güncelle',
-                onTap: () {
-                  context.read<RestaurantOwnerNavCubit>().onItemTap(2);
-                },
-              ),
-              const SizedBox(height: Dimens.largePadding),
-              _QuickActionCard(
-                icon: Assets.icons.chartSquare,
-                title: 'Raporlar',
-                subtitle: 'Satış ve performans raporları',
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => MultiBlocProvider(
-                        providers: [
-                          BlocProvider.value(
-                            value: context.read<RestaurantOrdersCubit>(),
-                          ),
-                          BlocProvider.value(
-                            value: context.read<RestaurantMenuCubit>(),
-                          ),
-                        ],
-                        child: const RestaurantOwnerReportsScreen(),
-                      ),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: Dimens.extraLargePadding),
-            ],
-          ),
-        );
+            );
           },
         );
       },
@@ -282,13 +301,16 @@ class _DashboardTab extends StatelessWidget {
   void _openStatDetails(BuildContext context, StatDetailType type) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => MultiBlocProvider(
-          providers: [
-            BlocProvider.value(value: context.read<RestaurantOrdersCubit>()),
-            BlocProvider.value(value: context.read<RestaurantMenuCubit>()),
-          ],
-          child: RestaurantOwnerStatDetailsScreen(type: type),
-        ),
+        builder:
+            (_) => MultiBlocProvider(
+              providers: [
+                BlocProvider.value(
+                  value: context.read<RestaurantOrdersCubit>(),
+                ),
+                BlocProvider.value(value: context.read<RestaurantMenuCubit>()),
+              ],
+              child: RestaurantOwnerStatDetailsScreen(type: type),
+            ),
       ),
     );
   }
@@ -516,16 +538,18 @@ class _QuickActionCard extends StatelessWidget {
                     ),
                     Text(
                       subtitle,
-                      style: typography.bodySmall.copyWith(
-                        color: colors.gray4,
-                      ),
+                      style: typography.bodySmall.copyWith(color: colors.gray4),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
-              AppSvgViewer(Assets.icons.arrowRight4, width: 20, color: colors.gray4),
+              AppSvgViewer(
+                Assets.icons.arrowRight4,
+                width: 20,
+                color: colors.gray4,
+              ),
             ],
           ),
         ),
@@ -608,10 +632,7 @@ class _CampaignCard extends StatelessWidget {
               color: color,
             ),
           ),
-          Text(
-            subtitle,
-            style: typography.bodySmall.copyWith(color: color),
-          ),
+          Text(subtitle, style: typography.bodySmall.copyWith(color: color)),
         ],
       ),
     );

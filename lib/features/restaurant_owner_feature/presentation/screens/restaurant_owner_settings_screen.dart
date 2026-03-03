@@ -13,6 +13,7 @@ import 'package:flutter_sweet_shop_app_ui/core/widgets/app_svg_viewer.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_list_tile.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_scaffold.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/bordered_container.dart';
+import 'package:flutter_sweet_shop_app_ui/core/widgets/app_confirm_dialog.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/general_app_bar.dart';
 import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/bloc/theme_cubit.dart';
 import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/screens/splash_screen.dart';
@@ -102,7 +103,9 @@ class _RestaurantOwnerSettingsScreenState
                       _RestaurantPhotoPicker(
                         photoPath: settings.restaurantPhotoPath,
                         onPhotoChanged: (path) {
-                          context.read<RestaurantSettingsCubit>().setRestaurantPhoto(path);
+                          context
+                              .read<RestaurantSettingsCubit>()
+                              .setRestaurantPhoto(path);
                           _showSuccess(
                             context,
                             path != null && path.isNotEmpty
@@ -158,29 +161,41 @@ class _RestaurantOwnerSettingsScreenState
                         title: 'Restoran adı',
                         value: settings.restaurantName,
                         iconPath: Assets.icons.shop,
-                        onTap: () => _showEditFieldSheet(
-                          context,
-                          'Restoran adı',
-                          settings.restaurantName,
-                          (v) {
-                            context.read<RestaurantSettingsCubit>().setRestaurantName(v);
-                            _showSuccess(context, 'Restoran adı güncellendi');
-                          },
-                        ),
+                        onTap:
+                            () => _showEditFieldSheet(
+                              context,
+                              'Restoran adı',
+                              settings.restaurantName,
+                              (v) {
+                                context
+                                    .read<RestaurantSettingsCubit>()
+                                    .setRestaurantName(v);
+                                _showSuccess(
+                                  context,
+                                  'Restoran adı güncellendi',
+                                );
+                              },
+                            ),
                       ),
                       _SettingsListTile(
                         title: 'Restoran türü',
                         value: settings.restaurantType,
                         iconPath: Assets.icons.category,
-                        onTap: () => _showEditFieldSheet(
-                          context,
-                          'Restoran türü',
-                          settings.restaurantType,
-                          (v) {
-                            context.read<RestaurantSettingsCubit>().setRestaurantType(v);
-                            _showSuccess(context, 'Restoran türü güncellendi');
-                          },
-                        ),
+                        onTap:
+                            () => _showEditFieldSheet(
+                              context,
+                              'Restoran türü',
+                              settings.restaurantType,
+                              (v) {
+                                context
+                                    .read<RestaurantSettingsCubit>()
+                                    .setRestaurantType(v);
+                                _showSuccess(
+                                  context,
+                                  'Restoran türü güncellendi',
+                                );
+                              },
+                            ),
                       ),
                       _SettingsListTile(
                         title: 'Adres',
@@ -192,33 +207,43 @@ class _RestaurantOwnerSettingsScreenState
                         title: 'Telefon',
                         value: settings.phone,
                         iconPath: Assets.icons.call,
-                        onTap: () => _showEditFieldSheet(
-                          context,
-                          'Telefon',
-                          settings.phone,
-                          (v) {
-                            context.read<RestaurantSettingsCubit>().setPhone(v);
-                            _showSuccess(context, 'Telefon güncellendi');
-                          },
-                        ),
+                        onTap:
+                            () => _showEditFieldSheet(
+                              context,
+                              'Telefon',
+                              settings.phone,
+                              (v) {
+                                context
+                                    .read<RestaurantSettingsCubit>()
+                                    .setPhone(v);
+                                _showSuccess(context, 'Telefon güncellendi');
+                              },
+                            ),
                       ),
                       _SettingsListTile(
                         title: 'Çalışma saatleri',
                         value: settings.workingHours,
                         iconPath: Assets.icons.clock,
-                        onTap: () => _showEditFieldSheet(
-                          context,
-                          'Çalışma saatleri',
-                          settings.workingHours,
-                          (v) {
-                            context.read<RestaurantSettingsCubit>().setWorkingHours(v);
-                            _showSuccess(context, 'Çalışma saatleri güncellendi');
-                          },
-                        ),
+                        onTap:
+                            () => _showEditFieldSheet(
+                              context,
+                              'Çalışma saatleri',
+                              settings.workingHours,
+                              (v) {
+                                context
+                                    .read<RestaurantSettingsCubit>()
+                                    .setWorkingHours(v);
+                                _showSuccess(
+                                  context,
+                                  'Çalışma saatleri güncellendi',
+                                );
+                              },
+                            ),
                       ),
                       _SettingsListTile(
                         title: 'Değerlendirmeler',
-                        value: '${settings.rating} ⭐ · ${settings.reviewCount} yorum',
+                        value:
+                            '${settings.rating} ⭐ · ${settings.reviewCount} yorum',
                         iconPath: Assets.icons.star,
                         onTap: () => _showReviewsSheet(context, settings),
                       ),
@@ -237,9 +262,9 @@ class _RestaurantOwnerSettingsScreenState
                     children: [
                       AppListTile(
                         onTap: () {
-                          context
-                              .read<RestaurantSettingsCubit>()
-                              .setIsOpen(!settings.isOpen);
+                          context.read<RestaurantSettingsCubit>().setIsOpen(
+                            !settings.isOpen,
+                          );
                           _showSuccess(
                             context,
                             settings.isOpen
@@ -254,9 +279,9 @@ class _RestaurantOwnerSettingsScreenState
                           child: CupertinoSwitch(
                             value: settings.isOpen,
                             onChanged: (v) {
-                              context
-                                  .read<RestaurantSettingsCubit>()
-                                  .setIsOpen(v);
+                              context.read<RestaurantSettingsCubit>().setIsOpen(
+                                v,
+                              );
                               _showSuccess(
                                 context,
                                 v
@@ -272,7 +297,9 @@ class _RestaurantOwnerSettingsScreenState
                       const SizedBox(height: Dimens.smallPadding),
                       AppListTile(
                         onTap: () {
-                          context.read<RestaurantSettingsCubit>().setOrderNotifications(
+                          context
+                              .read<RestaurantSettingsCubit>()
+                              .setOrderNotifications(
                                 !settings.orderNotifications,
                               );
                           _showSuccess(
@@ -289,7 +316,9 @@ class _RestaurantOwnerSettingsScreenState
                           child: CupertinoSwitch(
                             value: settings.orderNotifications,
                             onChanged: (v) {
-                              context.read<RestaurantSettingsCubit>().setOrderNotifications(v);
+                              context
+                                  .read<RestaurantSettingsCubit>()
+                                  .setOrderNotifications(v);
                               _showSuccess(
                                 context,
                                 v
@@ -338,10 +367,7 @@ class _RestaurantOwnerSettingsScreenState
                   ),
                 ),
                 const SizedBox(height: Dimens.extraLargePadding),
-                _SectionHeader(
-                  title: 'Hesap',
-                  subtitle: 'Güvenli çıkış yapın',
-                ),
+                _SectionHeader(title: 'Hesap', subtitle: 'Güvenli çıkış yapın'),
                 const SizedBox(height: Dimens.largePadding),
                 BorderedContainer(
                   child: AppListTile(
@@ -368,15 +394,16 @@ class _RestaurantOwnerSettingsScreenState
     );
   }
 
-
   Future<void> _showAddressSearchSheet(BuildContext context) async {
     final selectedAddress = await Navigator.of(context).push<String>(
-      MaterialPageRoute(
-        builder: (_) => const AddressSearchScreen(),
-      ),
+      MaterialPageRoute(builder: (_) => const AddressSearchScreen()),
     );
 
-    if (selectedAddress != null && selectedAddress.trim().isNotEmpty && mounted) {
+    if (!context.mounted) {
+      return;
+    }
+
+    if (selectedAddress != null && selectedAddress.trim().isNotEmpty) {
       context.read<RestaurantSettingsCubit>().setAddress(selectedAddress);
       _showSuccess(context, 'Adres başarıyla seçildi ve kaydedildi');
     }
@@ -395,52 +422,50 @@ class _RestaurantOwnerSettingsScreenState
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(Dimens.extraLargePadding),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                title,
-                style: context.theme.appTypography.titleLarge,
-              ),
-              const SizedBox(height: Dimens.largePadding),
-              TextField(
-                controller: controller,
-                autofocus: true,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(Dimens.corners),
-                  ),
-                ),
-              ),
-              const SizedBox(height: Dimens.largePadding),
-              AppButton(
-                title: 'Kaydet',
-                onPressed: () {
-                  final value = controller.text.trim();
-                  if (value.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('$title boş olamaz'),
-                        backgroundColor: context.theme.appColors.error,
+      builder:
+          (context) => Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(Dimens.extraLargePadding),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(title, style: context.theme.appTypography.titleLarge),
+                  const SizedBox(height: Dimens.largePadding),
+                  TextField(
+                    controller: controller,
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(Dimens.corners),
                       ),
-                    );
-                    return;
-                  }
-                  onSave(value);
-                  Navigator.pop(context);
-                },
+                    ),
+                  ),
+                  const SizedBox(height: Dimens.largePadding),
+                  AppButton(
+                    title: 'Kaydet',
+                    onPressed: () {
+                      final value = controller.text.trim();
+                      if (value.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('$title boş olamaz'),
+                            backgroundColor: context.theme.appColors.error,
+                          ),
+                        );
+                        return;
+                      }
+                      onSave(value);
+                      Navigator.pop(context);
+                    },
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
     );
   }
 
@@ -457,29 +482,35 @@ class _RestaurantOwnerSettingsScreenState
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (modalContext) => BlocProvider.value(
-        value: cubit,
-        child: DraggableScrollableSheet(
-          initialChildSize: 0.85,
-          minChildSize: 0.5,
-          maxChildSize: 0.95,
-          expand: false,
-          builder: (_, scrollController) => BlocBuilder<
-              RestaurantSettingsCubit, RestaurantSettingsState>(
-            builder: (ctx, state) => _ReviewsSheetContent(
-              settings: state,
-              scrollController: scrollController,
-              onReplyTap: (index, initialReply) => _showReplySheet(
-                parentContext,
-                modalContext,
-                cubit,
-                index,
-                initialReply,
-              ),
+      builder:
+          (modalContext) => BlocProvider.value(
+            value: cubit,
+            child: DraggableScrollableSheet(
+              initialChildSize: 0.85,
+              minChildSize: 0.5,
+              maxChildSize: 0.95,
+              expand: false,
+              builder:
+                  (_, scrollController) => BlocBuilder<
+                    RestaurantSettingsCubit,
+                    RestaurantSettingsState
+                  >(
+                    builder:
+                        (ctx, state) => _ReviewsSheetContent(
+                          settings: state,
+                          scrollController: scrollController,
+                          onReplyTap:
+                              (index, initialReply) => _showReplySheet(
+                                parentContext,
+                                modalContext,
+                                cubit,
+                                index,
+                                initialReply,
+                              ),
+                        ),
+                  ),
             ),
           ),
-        ),
-      ),
     );
   }
 
@@ -497,149 +528,62 @@ class _RestaurantOwnerSettingsScreenState
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(ctx).viewInsets.bottom,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(Dimens.extraLargePadding),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'Yanıt yaz',
-                style: parentContext.theme.appTypography.titleLarge,
-              ),
-              const SizedBox(height: Dimens.largePadding),
-              TextField(
-                controller: controller,
-                maxLines: 4,
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: 'Müşteriye yanıtınızı yazın...',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(Dimens.corners),
+      builder:
+          (ctx) => Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(ctx).viewInsets.bottom,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(Dimens.extraLargePadding),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Yanıt yaz',
+                    style: parentContext.theme.appTypography.titleLarge,
                   ),
-                ),
+                  const SizedBox(height: Dimens.largePadding),
+                  TextField(
+                    controller: controller,
+                    maxLines: 4,
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      hintText: 'Müşteriye yanıtınızı yazın...',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(Dimens.corners),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: Dimens.largePadding),
+                  AppButton(
+                    title: 'Gönder',
+                    onPressed: () {
+                      final reply = controller.text.trim();
+                      cubit.setReplyToReview(reviewIndex, reply);
+                      Navigator.pop(ctx);
+                      _showSuccess(parentContext, 'Yanıtınız gönderildi');
+                    },
+                  ),
+                ],
               ),
-              const SizedBox(height: Dimens.largePadding),
-              AppButton(
-                title: 'Gönder',
-                onPressed: () {
-                  final reply = controller.text.trim();
-                  cubit.setReplyToReview(reviewIndex, reply);
-                  Navigator.pop(ctx);
-                  _showSuccess(parentContext, 'Yanıtınız gönderildi');
-                },
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
     );
   }
 
-  void _handleLogout(BuildContext context) {
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        final colors = context.theme.appColors;
-        final typography = context.theme.appTypography;
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(Dimens.extraLargePadding),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: colors.error.withValues(alpha: 0.12),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.logout,
-                    color: colors.error,
-                    size: 30,
-                  ),
-                ),
-                const SizedBox(height: Dimens.largePadding),
-                Text(
-                  'Çıkış yapılıyor',
-                  style: typography.titleLarge.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: Dimens.smallPadding),
-                Text(
-                  'Çıkış yapmak istediğinize emin misiniz?',
-                  style: typography.bodySmall.copyWith(
-                    color: colors.gray4,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: Dimens.extraLargePadding),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.pop(dialogContext),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: Dimens.padding,
-                          ),
-                          side: BorderSide(color: colors.gray.withValues(alpha: 0.5)),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                        child: Text(
-                          'Vazgeç',
-                          style: typography.labelMedium.copyWith(
-                            color: colors.gray4,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: Dimens.largePadding),
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: () {
-                          Navigator.pop(dialogContext);
-                          appPushReplacement(context, const SplashScreen());
-                        },
-                        style: FilledButton.styleFrom(
-                          backgroundColor: colors.error,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: Dimens.padding,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                        child: Text(
-                          'Çıkış',
-                          style: typography.labelMedium.copyWith(
-                            color: colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+  Future<void> _handleLogout(BuildContext context) async {
+    final shouldLogout = await AppConfirmDialog.show(
+      context,
+      title: 'Çıkış Yap',
+      message: 'Çıkış yapmak istediginize emin misiniz?',
+      cancelText: 'Vazgeç',
+      confirmText: 'Çıkış',
+      isDestructive: true,
     );
+    if (shouldLogout == true && context.mounted) {
+      appPushReplacement(context, const SplashScreen());
+    }
   }
 }
 
@@ -681,9 +625,9 @@ class _RestaurantPhotoPickerState extends State<_RestaurantPhotoPicker> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Fotoğraf yüklenemedi: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Fotoğraf yüklenemedi: $e')));
       }
     }
   }
@@ -691,48 +635,51 @@ class _RestaurantPhotoPickerState extends State<_RestaurantPhotoPicker> {
   @override
   Widget build(BuildContext context) {
     final colors = context.theme.appColors;
-    final hasPhoto = widget.photoPath != null &&
-        widget.photoPath!.isNotEmpty;
+    final hasPhoto = widget.photoPath != null && widget.photoPath!.isNotEmpty;
 
     return GestureDetector(
       onTap: () {
         showModalBottomSheet<void>(
           context: context,
-          builder: (ctx) => SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.photo_library),
-                  title: const Text('Galeriden seç'),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _pickImage(ImageSource.gallery);
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.camera_alt),
-                  title: const Text('Kamera ile çek'),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _pickImage(ImageSource.camera);
-                  },
-                ),
-                if (hasPhoto)
-                  ListTile(
-                    leading: Icon(Icons.delete_outline, color: colors.error),
-                    title: Text(
-                      'Fotoğrafı kaldır',
-                      style: TextStyle(color: colors.error),
+          builder:
+              (ctx) => SafeArea(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.photo_library),
+                      title: const Text('Galeriden seç'),
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        _pickImage(ImageSource.gallery);
+                      },
                     ),
-                    onTap: () {
-                      Navigator.pop(ctx);
-                      widget.onPhotoChanged('');
-                    },
-                  ),
-              ],
-            ),
-          ),
+                    ListTile(
+                      leading: const Icon(Icons.camera_alt),
+                      title: const Text('Kamera ile çek'),
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        _pickImage(ImageSource.camera);
+                      },
+                    ),
+                    if (hasPhoto)
+                      ListTile(
+                        leading: Icon(
+                          Icons.delete_outline,
+                          color: colors.error,
+                        ),
+                        title: Text(
+                          'Fotoğrafı kaldır',
+                          style: TextStyle(color: colors.error),
+                        ),
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          widget.onPhotoChanged('');
+                        },
+                      ),
+                  ],
+                ),
+              ),
         );
       },
       child: Stack(
@@ -742,14 +689,15 @@ class _RestaurantPhotoPickerState extends State<_RestaurantPhotoPicker> {
             child: SizedBox(
               width: 80,
               height: 80,
-              child: hasPhoto
-                  ? buildProductImage(widget.photoPath!, 80, 80)
-                  : Image.asset(
-                      'assets/images/logo.png',
-                      width: 80,
-                      height: 80,
-                      fit: BoxFit.cover,
-                    ),
+              child:
+                  hasPhoto
+                      ? buildProductImage(widget.photoPath!, 80, 80)
+                      : Image.asset(
+                        'assets/images/logo.png',
+                        width: 80,
+                        height: 80,
+                        fit: BoxFit.cover,
+                      ),
             ),
           ),
           Positioned(
@@ -777,10 +725,7 @@ class _RestaurantPhotoPickerState extends State<_RestaurantPhotoPicker> {
 }
 
 class _StarRatingDisplay extends StatelessWidget {
-  const _StarRatingDisplay({
-    required this.rating,
-    required this.reviewCount,
-  });
+  const _StarRatingDisplay({required this.rating, required this.reviewCount});
 
   final double rating;
   final int reviewCount;
@@ -803,7 +748,7 @@ class _StarRatingDisplay extends StatelessWidget {
         }),
         const SizedBox(width: 6),
         Text(
-          '${rating.toStringAsFixed(1)} (${reviewCount} değerlendirme)',
+          '${rating.toStringAsFixed(1)} ($reviewCount değerlendirme)',
           style: typography.labelSmall.copyWith(
             color: colors.primary,
             fontWeight: FontWeight.w600,
@@ -829,10 +774,16 @@ class _ReviewsSheetContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.theme.appColors;
     final typography = context.theme.appTypography;
-    final total = settings.ratingDistribution.values.fold<int>(0, (a, b) => a + b);
-    final maxCount = settings.ratingDistribution.values.isEmpty
-        ? 1
-        : settings.ratingDistribution.values.reduce((a, b) => a > b ? a : b);
+    final total = settings.ratingDistribution.values.fold<int>(
+      0,
+      (a, b) => a + b,
+    );
+    final maxCount =
+        settings.ratingDistribution.values.isEmpty
+            ? 1
+            : settings.ratingDistribution.values.reduce(
+              (a, b) => a > b ? a : b,
+            );
 
     return Column(
       children: [
@@ -877,7 +828,8 @@ class _ReviewsSheetContent extends StatelessWidget {
                         children: List.generate(5, (i) {
                           final starValue = i + 1.0;
                           final filled = settings.rating >= starValue;
-                          final half = settings.rating >= starValue - 0.5 &&
+                          final half =
+                              settings.rating >= starValue - 0.5 &&
                               settings.rating < starValue;
                           return Icon(
                             filled
@@ -900,51 +852,59 @@ class _ReviewsSheetContent extends StatelessWidget {
                   const SizedBox(width: Dimens.extraLargePadding),
                   Expanded(
                     child: Column(
-                      children: [5, 4, 3, 2, 1].map((star) {
-                        final count = settings.ratingDistribution[star] ?? 0;
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 6),
-                          child: Row(
-                            children: [
-                              Text(
-                                '$star',
-                                style: typography.bodySmall.copyWith(
-                                  color: colors.gray4,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Icon(Icons.star, size: 14, color: colors.primary),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(2),
-                                  child: LinearProgressIndicator(
-                                    value: maxCount > 0 ? count / maxCount : 0,
-                                    minHeight: 6,
-                                    backgroundColor: colors.gray.withValues(
-                                      alpha: 0.3,
-                                    ),
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      colors.primary,
+                      children:
+                          [5, 4, 3, 2, 1].map((star) {
+                            final count =
+                                settings.ratingDistribution[star] ?? 0;
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 6),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    '$star',
+                                    style: typography.bodySmall.copyWith(
+                                      color: colors.gray4,
                                     ),
                                   ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              SizedBox(
-                                width: 28,
-                                child: Text(
-                                  '$count',
-                                  style: typography.bodySmall.copyWith(
-                                    color: colors.gray4,
+                                  const SizedBox(width: 4),
+                                  Icon(
+                                    Icons.star,
+                                    size: 14,
+                                    color: colors.primary,
                                   ),
-                                  textAlign: TextAlign.end,
-                                ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(2),
+                                      child: LinearProgressIndicator(
+                                        value:
+                                            maxCount > 0 ? count / maxCount : 0,
+                                        minHeight: 6,
+                                        backgroundColor: colors.gray.withValues(
+                                          alpha: 0.3,
+                                        ),
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              colors.primary,
+                                            ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  SizedBox(
+                                    width: 28,
+                                    child: Text(
+                                      '$count',
+                                      style: typography.bodySmall.copyWith(
+                                        color: colors.gray4,
+                                      ),
+                                      textAlign: TextAlign.end,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                        );
-                      }).toList(),
+                            );
+                          }).toList(),
                     ),
                   ),
                 ],
@@ -963,9 +923,12 @@ class _ReviewsSheetContent extends StatelessWidget {
         Expanded(
           child: ListView.separated(
             controller: scrollController,
-            padding: const EdgeInsets.symmetric(horizontal: Dimens.extraLargePadding),
+            padding: const EdgeInsets.symmetric(
+              horizontal: Dimens.extraLargePadding,
+            ),
             itemCount: settings.reviews.length,
-            separatorBuilder: (_, __) => const SizedBox(height: Dimens.largePadding),
+            separatorBuilder:
+                (_, __) => const SizedBox(height: Dimens.largePadding),
             itemBuilder: (context, index) {
               final review = settings.reviews[index];
               return _ReviewCard(
@@ -981,10 +944,7 @@ class _ReviewsSheetContent extends StatelessWidget {
 }
 
 class _ReviewCard extends StatelessWidget {
-  const _ReviewCard({
-    required this.review,
-    required this.onReplyTap,
-  });
+  const _ReviewCard({required this.review, required this.onReplyTap});
 
   final RestaurantReview review;
   final VoidCallback onReplyTap;
@@ -1027,9 +987,7 @@ class _ReviewCard extends StatelessWidget {
                     ),
                     Text(
                       review.date,
-                      style: typography.bodySmall.copyWith(
-                        color: colors.gray4,
-                      ),
+                      style: typography.bodySmall.copyWith(color: colors.gray4),
                     ),
                   ],
                 ),
@@ -1050,9 +1008,7 @@ class _ReviewCard extends StatelessWidget {
           const SizedBox(height: Dimens.padding),
           Text(
             review.comment,
-            style: typography.bodyMedium.copyWith(
-              color: colors.gray4,
-            ),
+            style: typography.bodyMedium.copyWith(color: colors.gray4),
           ),
           if (review.ownerReply != null && review.ownerReply!.isNotEmpty) ...[
             const SizedBox(height: Dimens.padding),
@@ -1158,9 +1114,7 @@ class _SettingsListTile extends StatelessWidget {
                     ),
                     Text(
                       value,
-                      style: typography.bodySmall.copyWith(
-                        color: colors.gray4,
-                      ),
+                      style: typography.bodySmall.copyWith(color: colors.gray4),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -1202,4 +1156,3 @@ class _SectionHeader extends StatelessWidget {
     );
   }
 }
-

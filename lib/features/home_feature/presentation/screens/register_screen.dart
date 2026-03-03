@@ -4,11 +4,11 @@ import 'package:flutter_sweet_shop_app_ui/core/theme/dimens.dart';
 import 'package:flutter_sweet_shop_app_ui/core/theme/theme.dart';
 import 'package:flutter_sweet_shop_app_ui/core/services/auth_service.dart';
 import 'package:flutter_sweet_shop_app_ui/core/utils/app_navigator.dart';
-import 'package:flutter_sweet_shop_app_ui/core/services/app_session.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_button.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_scaffold.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/shaded_container.dart';
-import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/screens/splash_screen.dart';
+import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/screens/privacy_policy_screen.dart';
+import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/screens/terms_of_service_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -132,18 +132,46 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
+    final privacyAccepted =
+        (await appPush(context, const PrivacyPolicyScreen()) as bool?) ?? false;
+    if (!mounted) {
+      return;
+    }
+    if (!privacyAccepted) {
+      _showMessage(
+        message: 'Kayıt için Gizlilik Politikası onayı zorunludur.',
+        backgroundColor: colors.error,
+      );
+      return;
+    }
+
+    final termsAccepted =
+        (await appPush(context, const TermsOfServiceScreen()) as bool?) ??
+        false;
+    if (!mounted) {
+      return;
+    }
+    if (!termsAccepted) {
+      _showMessage(
+        message: 'Kayıt için Hizmet Şartları onayı zorunludur.',
+        backgroundColor: colors.error,
+      );
+      return;
+    }
+
     setState(() {
       _isSubmitting = true;
     });
 
     try {
-      final auth = await _authService.register(
+      await _authService.register(
         fullName: fullName,
         email: email,
         password: password,
         roleId: _roleIdFor(_selectedRole),
+        isPrivacyPolicyAccepted: privacyAccepted,
+        isTermsOfServiceAccepted: termsAccepted,
       );
-      AppSession.setAuth(auth);
       if (!mounted) {
         return;
       }
@@ -151,11 +179,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         message: 'Hesabınız başarı ile oluşturuldu.',
         backgroundColor: colors.success,
       );
-      await Future.delayed(const Duration(seconds: 2));
+      await Future.delayed(const Duration(milliseconds: 900));
       if (!mounted) {
         return;
       }
-      await appPushReplacement(context, const SplashScreen());
+      Navigator.of(context).pop();
     } catch (error) {
       if (!mounted) {
         return;

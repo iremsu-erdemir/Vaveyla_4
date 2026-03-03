@@ -29,6 +29,8 @@ class AuthService {
     required String email,
     required String password,
     required int roleId,
+    required bool isPrivacyPolicyAccepted,
+    required bool isTermsOfServiceAccepted,
   }) async {
     final response = await _postWithFallback(
       path: '/api/auth/register',
@@ -37,6 +39,8 @@ class AuthService {
         'email': email,
         'password': password,
         'roleId': roleId,
+        'isPrivacyPolicyAccepted': isPrivacyPolicyAccepted,
+        'isTermsOfServiceAccepted': isTermsOfServiceAccepted,
       },
     );
     return _handleAuthResponse(response);

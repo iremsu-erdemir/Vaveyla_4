@@ -1,74 +1,151 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_sweet_shop_app_ui/core/theme/dimens.dart';
 import 'package:flutter_sweet_shop_app_ui/core/theme/theme.dart';
 import 'package:flutter_sweet_shop_app_ui/core/utils/check_theme_status.dart';
-import 'package:flutter_sweet_shop_app_ui/core/widgets/app_divider.dart';
+import 'package:flutter_sweet_shop_app_ui/core/utils/app_navigator.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_scaffold.dart';
+import 'package:flutter_sweet_shop_app_ui/core/widgets/bordered_container.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/general_app_bar.dart';
-import 'package:flutter_sweet_shop_app_ui/features/cart_feature/presentation/widgets/payment_item_widget.dart';
+import 'package:flutter_sweet_shop_app_ui/features/cart_feature/presentation/models/payment_saved_card.dart';
+import 'package:flutter_sweet_shop_app_ui/features/cart_feature/presentation/screens/add_card_screen.dart';
+import 'package:flutter_sweet_shop_app_ui/features/cart_feature/presentation/screens/existing_cards_screen.dart';
+import 'package:flutter_sweet_shop_app_ui/features/cart_feature/presentation/screens/payment_completion_success_screen.dart';
 
 import '../../../../core/gen/assets.gen.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_svg_viewer.dart';
 
-class PaymentMethodsScreen extends StatelessWidget {
+enum _PaymentMethod { paypal, applePay, googlePay }
+
+class PaymentMethodsScreen extends StatefulWidget {
   const PaymentMethodsScreen({super.key});
 
   @override
+  State<PaymentMethodsScreen> createState() => _PaymentMethodsScreenState();
+}
+
+class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
+  _PaymentMethod? _selectedMethod;
+  PaymentSavedCard? _selectedCard;
+
+  void _onSelect(_PaymentMethod method) {
+    setState(() {
+      _selectedMethod = _selectedMethod == method ? null : method;
+      _selectedCard = null;
+    });
+  }
+
+  bool get _isNextEnabled => _selectedMethod != null || _selectedCard != null;
+
+  Future<void> _openAddCard() async {
+    final result = await appPush(context, const AddCardScreen());
+    if (result is PaymentSavedCard && mounted) {
+      setState(() {
+        _selectedCard = result;
+        _selectedMethod = null;
+      });
+    }
+  }
+
+  Future<void> _openExistingCards() async {
+    final result = await appPush(
+      context,
+      const ExistingCardsScreen(selectionMode: true),
+    );
+    if (result is PaymentSavedCard && mounted) {
+      setState(() {
+        _selectedCard = result;
+        _selectedMethod = null;
+      });
+    }
+  }
+
+  Future<void> _goNext() async {
+    if (!_isNextEnabled) {
+      return;
+    }
+    await appPush(context, const PaymentCompletionSuccessScreen());
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final appColors = context.theme.appColors;
     final appTypography = context.theme.appTypography;
+
     return AppScaffold(
-      appBar: GeneralAppBar(title: 'Ödeme yöntemleri'),
+      appBar: GeneralAppBar(title: context.tr('payment_methods_title')),
       body: SingleChildScrollView(
         child: Column(
           spacing: Dimens.largePadding,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            PaymentItemWidget(
-              onTap: () {},
-              title: 'Nakit',
-              iconPath: Assets.icons.money3,
+            Text(context.tr('add_credit_card'), style: appTypography.bodyLarge),
+            const SizedBox(height: Dimens.padding),
+            BorderedContainer(
+              padding: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  _PaymentMethodTile(
+                    title: context.tr('add_card'),
+                    iconPath: Assets.icons.card,
+                    selected: _selectedCard != null,
+                    onTap: _openAddCard,
+                    showRadio: false,
+                    useBrandIconColors: false,
+                  ),
+                  Divider(height: 1, color: appColors.gray),
+                  _PaymentMethodTile(
+                    title: context.tr('select_existing_cards'),
+                    iconPath: Assets.icons.cardReceive,
+                    selected: _selectedCard != null,
+                    onTap: _openExistingCards,
+                    showRadio: false,
+                    useBrandIconColors: false,
+                  ),
+                ],
+              ),
             ),
-            PaymentItemWidget(
-              onTap: () {},
-              title: 'Cüzdan',
-              iconPath: Assets.icons.wallet,
+            if (_selectedCard != null)
+              Text(
+                '${context.tr('selected_card')}: ${_selectedCard!.cardAlias}',
+                style: appTypography.bodySmall.copyWith(color: appColors.gray4),
+              ),
+            const SizedBox(height: Dimens.padding),
+            Text(
+              context.tr('more_payment_options'),
+              style: appTypography.bodyLarge,
             ),
-            SizedBox.shrink(),
-            Text('Kredi kartı ekle', style: appTypography.bodyLarge),
-            PaymentItemWidget(
-              onTap: () {},
-              title: 'Kart ekle',
-              iconPath: Assets.icons.card,
-              showRadio: false,
-            ),
-            SizedBox.shrink(),
-            Text('Diğer ödeme seçenekleri', style: appTypography.bodyLarge),
-            Column(
-              children: [
-                PaymentItemWidget(
-                  onTap: () {},
-                  title: 'PayPal',
-                  logoPath:
-                      checkDarkMode(context) ? null : Assets.icons.paypalLogo,
-                  showBorder: false,
-                ),
-                AppDivider(),
-                PaymentItemWidget(
-                  onTap: () {},
-                  title: 'Apple Pay',
-                  logoPath:
-                      checkDarkMode(context) ? null : Assets.icons.appleLogo,
-                  showBorder: false,
-                ),
-                AppDivider(),
-                PaymentItemWidget(
-                  onTap: () {},
-                  title: 'Google Pay',
-                  logoPath:
-                      checkDarkMode(context) ? null : Assets.icons.googleLogo,
-                  showBorder: false,
-                ),
-              ],
+            const SizedBox(height: Dimens.padding),
+            BorderedContainer(
+              padding: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  _PaymentMethodTile(
+                    title: 'PayPal',
+                    logoPath:
+                        checkDarkMode(context) ? null : Assets.icons.paypalLogo,
+                    selected: _selectedMethod == _PaymentMethod.paypal,
+                    onTap: () => _onSelect(_PaymentMethod.paypal),
+                  ),
+                  Divider(height: 1, color: appColors.gray),
+                  _PaymentMethodTile(
+                    title: 'Apple Pay',
+                    logoPath:
+                        checkDarkMode(context) ? null : Assets.icons.appleLogo,
+                    selected: _selectedMethod == _PaymentMethod.applePay,
+                    onTap: () => _onSelect(_PaymentMethod.applePay),
+                  ),
+                  Divider(height: 1, color: appColors.gray),
+                  _PaymentMethodTile(
+                    title: 'Google Pay',
+                    logoPath:
+                        checkDarkMode(context) ? null : Assets.icons.googleLogo,
+                    selected: _selectedMethod == _PaymentMethod.googlePay,
+                    onTap: () => _onSelect(_PaymentMethod.googlePay),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -80,11 +157,89 @@ class PaymentMethodsScreen extends StatelessWidget {
           bottom: Dimens.padding,
         ),
         child: AppButton(
-          onPressed: () {},
-          title: 'Ödemeyi onayla',
+          onPressed: _isNextEnabled ? _goNext : null,
+          title: context.tr('next'),
           textStyle: appTypography.bodyLarge,
           borderRadius: Dimens.corners,
-          margin: EdgeInsets.symmetric(vertical: Dimens.largePadding),
+          margin: const EdgeInsets.only(top: Dimens.largePadding),
+        ),
+      ),
+    );
+  }
+}
+
+class _PaymentMethodTile extends StatelessWidget {
+  const _PaymentMethodTile({
+    required this.title,
+    this.iconPath,
+    this.logoPath,
+    required this.selected,
+    required this.onTap,
+    this.showRadio = true,
+    this.useBrandIconColors = true,
+  });
+
+  final String title;
+  final String? iconPath;
+  final String? logoPath;
+  final bool selected;
+  final VoidCallback onTap;
+  final bool showRadio;
+  final bool useBrandIconColors;
+
+  @override
+  Widget build(BuildContext context) {
+    final appColors = context.theme.appColors;
+    final appTypography = context.theme.appTypography;
+
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: Dimens.largePadding,
+          vertical: Dimens.padding,
+        ),
+        child: Row(
+          children: [
+            if (iconPath != null)
+              Padding(
+                padding: const EdgeInsets.only(right: Dimens.padding),
+                child: AppSvgViewer(
+                  iconPath!,
+                  width: 18,
+                  height: 18,
+                  color: useBrandIconColors ? null : appColors.primary,
+                ),
+              ),
+            if (logoPath != null)
+              Padding(
+                padding: const EdgeInsets.only(right: Dimens.padding),
+                child: AppSvgViewer(logoPath!, width: 18, height: 18),
+              ),
+            Expanded(child: Text(title, style: appTypography.bodyMedium)),
+            if (showRadio)
+              Container(
+                width: 18,
+                height: 18,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: selected ? appColors.primary : appColors.gray2,
+                    width: 1.2,
+                  ),
+                ),
+                padding: const EdgeInsets.all(3),
+                child:
+                    selected
+                        ? DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: appColors.primary,
+                            shape: BoxShape.circle,
+                          ),
+                        )
+                        : const SizedBox.shrink(),
+              ),
+          ],
         ),
       ),
     );

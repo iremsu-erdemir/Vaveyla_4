@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_sweet_shop_app_ui/core/theme/colors.dart';
+import 'package:flutter_sweet_shop_app_ui/core/theme/dimens.dart';
 import 'package:flutter_sweet_shop_app_ui/core/theme/typography.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -40,6 +41,40 @@ class AppTheme {
       }),
     ),
     scaffoldBackgroundColor: appColors.white,
+    dialogTheme: DialogThemeData(
+      backgroundColor: appColors.white,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(color: appColors.primary.withValues(alpha: 0.1)),
+      ),
+      titleTextStyle: AppTypography.typography.titleLarge.copyWith(
+        color: appColors.black,
+        fontWeight: FontWeight.w700,
+      ),
+      contentTextStyle: AppTypography.typography.bodyMedium.copyWith(
+        color: appColors.gray4,
+      ),
+    ),
+    bottomSheetTheme: BottomSheetThemeData(
+      backgroundColor: appColors.white,
+      surfaceTintColor: Colors.transparent,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: appColors.primary,
+        textStyle: AppTypography.typography.labelLarge.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Dimens.corners),
+        ),
+      ),
+    ),
   );
 
   static const appColors = AppColors(
@@ -172,6 +207,40 @@ class AppTheme {
       }),
     ),
     scaffoldBackgroundColor: appColors.black,
+    dialogTheme: DialogThemeData(
+      backgroundColor: const Color(0xFF1A1A1A),
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(color: appColors.white.withValues(alpha: 0.12)),
+      ),
+      titleTextStyle: AppTypography.typography.titleLarge.copyWith(
+        color: appColors.white,
+        fontWeight: FontWeight.w700,
+      ),
+      contentTextStyle: AppTypography.typography.bodyMedium.copyWith(
+        color: appColors.gray2,
+      ),
+    ),
+    bottomSheetTheme: const BottomSheetThemeData(
+      backgroundColor: Color(0xFF121212),
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: appColors.primaryShade2,
+        textStyle: AppTypography.typography.labelLarge.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Dimens.corners),
+        ),
+      ),
+    ),
   );
 }
 

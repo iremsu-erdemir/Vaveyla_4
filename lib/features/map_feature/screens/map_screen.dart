@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../../core/widgets/app_scaffold.dart';
@@ -44,7 +45,7 @@ class MapScreen extends StatelessWidget {
     ];
 
     return AppScaffold(
-      appBar: GeneralAppBar(title: 'Harita', showBackIcon: false),
+      appBar: GeneralAppBar(title: context.tr('map'), showBackIcon: false),
       padding: EdgeInsets.zero,
       body: Stack(
         alignment: Alignment.bottomCenter,

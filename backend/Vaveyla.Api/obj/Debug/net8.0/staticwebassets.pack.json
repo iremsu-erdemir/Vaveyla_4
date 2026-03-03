@@ -1,6 +1,10 @@
 {
   "Files": [
     {
+      "Id": "C:\\Users\\erdem\\Desktop\\vaveyla2-mainyap\\backend\\Vaveyla.Api\\wwwroot\\uploads\\owners\\16e4293f-8678-413f-b9ae-f4b12dc7b09c\\menu\\664386106f00465a8b9e84c7f7b71e46.webp",
+      "PackagePath": "staticwebassets\\uploads\\owners\\16e4293f-8678-413f-b9ae-f4b12dc7b09c\\menu\\664386106f00465a8b9e84c7f7b71e46.webp"
+    },
+    {
       "Id": "C:\\Users\\erdem\\Desktop\\vaveyla2-mainyap\\backend\\Vaveyla.Api\\wwwroot\\uploads\\owners\\948b3316-b232-4417-a7df-d4f5d58c9c15\\menu\\629729a62bb847c3a6a0909b0d199948.jpg",
       "PackagePath": "staticwebassets\\uploads\\owners\\948b3316-b232-4417-a7df-d4f5d58c9c15\\menu\\629729a62bb847c3a6a0909b0d199948.jpg"
     },
@@ -33,6 +37,10 @@
       "PackagePath": "staticwebassets\\uploads\\users\\3e9fe6b8-ec06-4547-a23f-86d021d36d49\\profile\\2246a330edc54f5595f9ba4da7e7dcca.jpg"
     },
     {
+      "Id": "C:\\Users\\erdem\\Desktop\\vaveyla2-mainyap\\backend\\Vaveyla.Api\\wwwroot\\uploads\\users\\3e9fe6b8-ec06-4547-a23f-86d021d36d49\\profile\\39b95af4b6b94abca6f495b1f24e4fd0.jpeg",
+      "PackagePath": "staticwebassets\\uploads\\users\\3e9fe6b8-ec06-4547-a23f-86d021d36d49\\profile\\39b95af4b6b94abca6f495b1f24e4fd0.jpeg"
+    },
+    {
       "Id": "C:\\Users\\erdem\\Desktop\\vaveyla2-mainyap\\backend\\Vaveyla.Api\\wwwroot\\uploads\\users\\3e9fe6b8-ec06-4547-a23f-86d021d36d49\\profile\\5bb712988ae3428a82447d1a8b8cf0f1.jpg",
       "PackagePath": "staticwebassets\\uploads\\users\\3e9fe6b8-ec06-4547-a23f-86d021d36d49\\profile\\5bb712988ae3428a82447d1a8b8cf0f1.jpg"
     },
@@ -43,6 +51,10 @@
     {
       "Id": "C:\\Users\\erdem\\Desktop\\vaveyla2-mainyap\\backend\\Vaveyla.Api\\wwwroot\\uploads\\users\\3e9fe6b8-ec06-4547-a23f-86d021d36d49\\profile\\938c281e4a2b475dab32db2d415fa2c4.jpeg",
       "PackagePath": "staticwebassets\\uploads\\users\\3e9fe6b8-ec06-4547-a23f-86d021d36d49\\profile\\938c281e4a2b475dab32db2d415fa2c4.jpeg"
+    },
+    {
+      "Id": "C:\\Users\\erdem\\Desktop\\vaveyla2-mainyap\\backend\\Vaveyla.Api\\wwwroot\\uploads\\users\\3e9fe6b8-ec06-4547-a23f-86d021d36d49\\profile\\946c29be038341518b1258bea36fc331.jpg",
+      "PackagePath": "staticwebassets\\uploads\\users\\3e9fe6b8-ec06-4547-a23f-86d021d36d49\\profile\\946c29be038341518b1258bea36fc331.jpg"
     },
     {
       "Id": "C:\\Users\\erdem\\Desktop\\vaveyla2-mainyap\\backend\\Vaveyla.Api\\wwwroot\\uploads\\users\\3e9fe6b8-ec06-4547-a23f-86d021d36d49\\profile\\bdddf3b49af44b8b8fa22ec462ae965b.jpg",

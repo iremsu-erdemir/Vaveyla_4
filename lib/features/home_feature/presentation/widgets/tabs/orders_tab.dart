@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_sweet_shop_app_ui/core/theme/theme.dart';
 import 'package:flutter_sweet_shop_app_ui/core/utils/check_theme_status.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_scaffold.dart';
@@ -34,7 +35,7 @@ class _OrdersTabState extends State<OrdersTab>
     final appColors = context.theme.appColors;
     return AppScaffold(
       appBar: GeneralAppBar(
-        title: 'Siparişlerim',
+        title: context.tr('my_orders'),
         showBackIcon: false,
         height: AppBar().preferredSize.height + 56,
         bottom: TabBar(
@@ -46,9 +47,9 @@ class _OrdersTabState extends State<OrdersTab>
               checkDarkMode(context) ? appColors.white : appColors.black,
           indicatorColor: appColors.primary,
           tabs: [
-            Tab(child: Text('Aktif')),
-            Tab(child: Text('Tamamlanan')),
-            Tab(child: Text('İptal')),
+            Tab(child: Text(context.tr('active'))),
+            Tab(child: Text(context.tr('completed'))),
+            Tab(child: Text(context.tr('canceled'))),
           ],
         ),
       ),

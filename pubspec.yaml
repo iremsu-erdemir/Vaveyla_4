@@ -33,6 +33,7 @@ dependencies:
   latlong2: ^0.9.1
   image_picker: ^1.0.7
   path_provider: ^2.1.2
+  easy_localization: ^3.0.8
 
 dev_dependencies:
   build_runner: ^2.4.15
@@ -52,3 +53,4 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/
+    - assets/translations/

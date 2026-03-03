@@ -15,6 +15,7 @@ class GoogleAddressInput extends StatefulWidget {
     this.hintText = 'Adres seçin',
     this.label,
     this.showLabel = true,
+    this.clearAfterSelection = false,
   });
 
   final void Function(String address) onAddressSelected;
@@ -22,6 +23,7 @@ class GoogleAddressInput extends StatefulWidget {
   final String hintText;
   final String? label;
   final bool showLabel;
+  final bool clearAfterSelection;
 
   @override
   State<GoogleAddressInput> createState() => _GoogleAddressInputState();
@@ -38,14 +40,14 @@ class _GoogleAddressInputState extends State<GoogleAddressInput> {
 
   Future<void> _openAddressSearch() async {
     final selectedAddress = await Navigator.of(context).push<String>(
-      MaterialPageRoute(
-        builder: (_) => const AddressSearchScreen(),
-      ),
+      MaterialPageRoute(builder: (_) => const AddressSearchScreen()),
     );
 
-    if (selectedAddress != null && selectedAddress.trim().isNotEmpty && mounted) {
+    if (selectedAddress != null &&
+        selectedAddress.trim().isNotEmpty &&
+        mounted) {
       setState(() {
-        _selectedAddress = selectedAddress;
+        _selectedAddress = widget.clearAfterSelection ? null : selectedAddress;
       });
       widget.onAddressSelected(selectedAddress);
     }
@@ -62,13 +64,11 @@ class _GoogleAddressInputState extends State<GoogleAddressInput> {
         if (widget.showLabel && widget.label != null) ...[
           Text(
             widget.label!,
-            style: typography.bodyMedium.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: typography.bodyMedium.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: Dimens.padding),
         ],
-        
+
         InkWell(
           onTap: _openAddressSearch,
           borderRadius: BorderRadius.circular(Dimens.corners),
@@ -87,29 +87,26 @@ class _GoogleAddressInputState extends State<GoogleAddressInput> {
                   color: colors.primary,
                 ),
                 const SizedBox(width: Dimens.padding),
-                
+
                 Expanded(
-                  child: _selectedAddress != null && _selectedAddress!.isNotEmpty
-                      ? Text(
-                          _selectedAddress!,
-                          style: typography.bodyMedium,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        )
-                      : Text(
-                          widget.hintText,
-                          style: typography.bodyMedium.copyWith(
-                            color: colors.gray4,
+                  child:
+                      _selectedAddress != null && _selectedAddress!.isNotEmpty
+                          ? Text(
+                            _selectedAddress!,
+                            style: typography.bodyMedium,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          )
+                          : Text(
+                            widget.hintText,
+                            style: typography.bodyMedium.copyWith(
+                              color: colors.gray4,
+                            ),
                           ),
-                        ),
                 ),
-                
+
                 const SizedBox(width: Dimens.padding),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  size: 16,
-                  color: colors.gray4,
-                ),
+                Icon(Icons.arrow_forward_ios, size: 16, color: colors.gray4),
               ],
             ),
           ),
@@ -134,9 +131,7 @@ class CompactGoogleAddressInput extends StatelessWidget {
 
   Future<void> _openAddressSearch(BuildContext context) async {
     final selectedAddress = await Navigator.of(context).push<String>(
-      MaterialPageRoute(
-        builder: (_) => const AddressSearchScreen(),
-      ),
+      MaterialPageRoute(builder: (_) => const AddressSearchScreen()),
     );
 
     if (selectedAddress != null && selectedAddress.trim().isNotEmpty) {
@@ -151,23 +146,17 @@ class CompactGoogleAddressInput extends StatelessWidget {
 
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      leading: AppSvgViewer(
-        Assets.icons.location,
-        color: colors.primary,
-      ),
+      leading: AppSvgViewer(Assets.icons.location, color: colors.primary),
       title: Text(
         currentAddress?.isNotEmpty == true ? currentAddress! : hintText,
-        style: currentAddress?.isNotEmpty == true 
-            ? typography.bodyMedium
-            : typography.bodyMedium.copyWith(color: colors.gray4),
+        style:
+            currentAddress?.isNotEmpty == true
+                ? typography.bodyMedium
+                : typography.bodyMedium.copyWith(color: colors.gray4),
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),
-      trailing: Icon(
-        Icons.arrow_forward_ios,
-        color: colors.gray4,
-        size: 16,
-      ),
+      trailing: Icon(Icons.arrow_forward_ios, color: colors.gray4, size: 16),
       onTap: () => _openAddressSearch(context),
     );
   }

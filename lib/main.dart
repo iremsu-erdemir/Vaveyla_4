@@ -1,27 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_sweet_shop_app_ui/features/cart_feature/data/data_source/local/fake_products.dart';
 import 'package:flutter_sweet_shop_app_ui/features/cart_feature/presentation/bloc/cart_cubit.dart';
-import 'package:intl/intl.dart';
 import 'core/theme/theme.dart';
 import 'features/home_feature/presentation/bloc/theme_cubit.dart';
 import 'features/home_feature/presentation/screens/splash_screen.dart';
 
-void main() {
+const List<Locale> _supportedAppLocales = <Locale>[
+  Locale('tr', 'TR'),
+  Locale('en', 'US'),
+];
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await EasyLocalization.ensureInitialized();
   Intl.defaultLocale = 'tr_TR';
 
   runApp(
-    MultiBlocProvider(
-      providers: [
-        BlocProvider(create: (final BuildContext context) => ThemeCubit()),
-      ],
-      child: BlocBuilder<ThemeCubit, ThemeMode?>(
-        builder: (final BuildContext context, final ThemeMode? themeMode) {
-          return App(themeMode: themeMode);
-        },
+    EasyLocalization(
+      supportedLocales: _supportedAppLocales,
+      path: 'assets/translations',
+      fallbackLocale: const Locale('tr', 'TR'),
+      startLocale: const Locale('tr', 'TR'),
+      saveLocale: true,
+      useFallbackTranslations: true,
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (final BuildContext context) => ThemeCubit()),
+        ],
+        child: BlocBuilder<ThemeCubit, ThemeMode?>(
+          builder: (final BuildContext context, final ThemeMode? themeMode) {
+            return App(themeMode: themeMode);
+          },
+        ),
       ),
     ),
   );
@@ -35,6 +48,8 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    final locale = context.locale;
+    Intl.defaultLocale = '${locale.languageCode}_${locale.countryCode ?? ''}';
     return BlocProvider(
       create:
           (context) =>
@@ -49,13 +64,9 @@ class App extends StatelessWidget {
         theme: AppTheme.light,
         darkTheme: AppTheme.dark,
         themeMode: themeMode,
-        locale: const Locale('tr', 'TR'),
-        supportedLocales: const [Locale('tr', 'TR')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
+        locale: locale,
+        supportedLocales: context.supportedLocales,
+        localizationsDelegates: context.localizationDelegates,
         home: SplashScreen(),
       ),
     );

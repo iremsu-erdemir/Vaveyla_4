@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_sweet_shop_app_ui/core/theme/theme.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_scaffold.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_svg_viewer.dart';
+import 'package:flutter_sweet_shop_app_ui/core/widgets/app_confirm_dialog.dart';
 import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/widgets/tabs/cart_tab.dart';
 import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/widgets/tabs/orders_tab.dart';
 import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/widgets/tabs/profile_tab.dart';
@@ -61,28 +63,17 @@ class _HomeScreenState extends State<_HomeScreen> {
     ];
     return BlocListener<LocationCubit, LocationState>(
       listener: (context, state) {
-        if (state.status == LocationStatus.denied &&
-            !_permissionDialogShown) {
+        if (state.status == LocationStatus.denied && !_permissionDialogShown) {
           _permissionDialogShown = true;
           if (!mounted) {
             return;
           }
-          showDialog<void>(
-            context: context,
-            builder: (dialogContext) {
-              return AlertDialog(
-                title: Text('Konum İzni Gerekli'),
-                content: Text(
-                  'Konumunuzu gösterebilmemiz için izin vermeniz gerekiyor.',
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(dialogContext).pop(),
-                    child: Text('Tamam'),
-                  ),
-                ],
-              );
-            },
+          AppConfirmDialog.show(
+            context,
+            title: context.tr('location_permission_required'),
+            message: context.tr('location_permission_message'),
+            confirmText: context.tr('ok'),
+            showCancel: false,
           );
         }
       },
@@ -119,7 +110,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                   Assets.icons.home2,
                   color: colors.primary,
                 ),
-                label: 'Ana Sayfa',
+                label: context.tr('home'),
               ),
               NavigationDestination(
                 icon: AppSvgViewer(Assets.icons.shoppingCart),
@@ -127,7 +118,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                   Assets.icons.shoppingCart,
                   color: colors.primary,
                 ),
-                label: 'Sepet',
+                label: context.tr('cart'),
               ),
               NavigationDestination(
                 icon: AppSvgViewer(Assets.icons.receipt),
@@ -135,7 +126,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                   Assets.icons.receipt,
                   color: colors.primary,
                 ),
-                label: 'Siparişler',
+                label: context.tr('orders'),
               ),
               NavigationDestination(
                 icon: AppSvgViewer(Assets.icons.map1),
@@ -143,7 +134,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                   Assets.icons.map1,
                   color: colors.primary,
                 ),
-                label: 'Harita',
+                label: context.tr('map'),
               ),
               NavigationDestination(
                 icon: AppSvgViewer(Assets.icons.user),
@@ -151,7 +142,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                   Assets.icons.user,
                   color: colors.primary,
                 ),
-                label: 'Profil',
+                label: context.tr('profile'),
               ),
             ],
           ),
