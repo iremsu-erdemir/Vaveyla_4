@@ -22,6 +22,7 @@ Future<void> main() async {
     EasyLocalization(
       supportedLocales: _supportedAppLocales,
       path: 'assets/translations',
+      useOnlyLangCode: false,
       fallbackLocale: const Locale('tr', 'TR'),
       startLocale: const Locale('tr', 'TR'),
       saveLocale: true,

@@ -31,8 +31,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final AuthService _authService = AuthService();
-  final RegExp _hasUpperCase = RegExp(r'[A-Z]');
-  final RegExp _hasLowerCase = RegExp(r'[a-z]');
+  final RegExp _hasUpperCase = RegExp(r'[A-ZÇĞİÖŞÜ]');
+  final RegExp _hasLowerCase = RegExp(r'[a-zçğıöşü]');
   final RegExp _hasDigit = RegExp(r'[0-9]');
   final RegExp _hasSpecial = RegExp(r"[!@#$%^&*(),.?{}|<>_\-+=;'\[\]\\\/`~]");
 

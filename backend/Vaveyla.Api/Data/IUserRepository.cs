@@ -12,5 +12,10 @@ public interface IUserRepository
     Task<UserAddress?> GetAddressByIdAsync(Guid userId, Guid addressId, CancellationToken cancellationToken);
     Task<UserAddress> AddAddressAsync(UserAddress address, CancellationToken cancellationToken);
     Task DeleteAddressAsync(UserAddress address, CancellationToken cancellationToken);
+    Task<List<PaymentCard>> GetPaymentCardsAsync(Guid userId, CancellationToken cancellationToken);
+    Task<PaymentCard?> GetPaymentCardByIdAsync(Guid userId, Guid paymentCardId, CancellationToken cancellationToken);
+    Task<PaymentCard> AddPaymentCardAsync(PaymentCard paymentCard, CancellationToken cancellationToken);
+    Task DeletePaymentCardAsync(PaymentCard paymentCard, CancellationToken cancellationToken);
+    Task<UserFeedback> AddFeedbackAsync(UserFeedback feedback, CancellationToken cancellationToken);
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }

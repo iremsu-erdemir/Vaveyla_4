@@ -12,6 +12,8 @@ public sealed class VaveylaDbContext : DbContext
 
     public DbSet<User> Users => Set<User>();
     public DbSet<UserAddress> UserAddresses => Set<UserAddress>();
+    public DbSet<PaymentCard> PaymentCards => Set<PaymentCard>();
+    public DbSet<UserFeedback> UserFeedbacks => Set<UserFeedback>();
     public DbSet<Restaurant> Restaurants => Set<Restaurant>();
     public DbSet<MenuItem> MenuItems => Set<MenuItem>();
     public DbSet<RestaurantOrder> RestaurantOrders => Set<RestaurantOrder>();
@@ -43,6 +45,14 @@ public sealed class VaveylaDbContext : DbContext
             .WithOne(x => x.User)
             .HasForeignKey(x => x.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+        user.HasMany(x => x.PaymentCards)
+            .WithOne(x => x.User)
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+        user.HasMany(x => x.Feedbacks)
+            .WithOne(x => x.User)
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         var userAddress = modelBuilder.Entity<UserAddress>();
         userAddress.ToTable("UserAddresses");
@@ -56,6 +66,32 @@ public sealed class VaveylaDbContext : DbContext
             .HasDefaultValueSql("SYSUTCDATETIME()")
             .IsRequired();
         userAddress.HasIndex(x => x.UserId);
+
+        var paymentCard = modelBuilder.Entity<PaymentCard>();
+        paymentCard.ToTable("PaymentCards");
+        paymentCard.HasKey(x => x.PaymentCardId);
+        paymentCard.Property(x => x.UserId).IsRequired();
+        paymentCard.Property(x => x.CardholderName).HasMaxLength(120).IsRequired();
+        paymentCard.Property(x => x.CardNumber).HasMaxLength(32).IsRequired();
+        paymentCard.Property(x => x.Expiration).HasMaxLength(10).IsRequired();
+        paymentCard.Property(x => x.CVC).HasColumnName("CVV").HasMaxLength(4).IsRequired();
+        paymentCard.Property(x => x.BankName).HasMaxLength(120).IsRequired();
+        paymentCard.Property(x => x.CardAlias).HasMaxLength(80).IsRequired();
+        paymentCard.Property(x => x.CreatedAtUtc)
+            .HasDefaultValueSql("SYSUTCDATETIME()")
+            .IsRequired();
+        paymentCard.HasIndex(x => x.UserId);
+
+        var feedback = modelBuilder.Entity<UserFeedback>();
+        feedback.ToTable("UserFeedbacks");
+        feedback.HasKey(x => x.FeedbackId);
+        feedback.Property(x => x.UserId).IsRequired();
+        feedback.Property(x => x.RestaurantName).HasMaxLength(160).IsRequired();
+        feedback.Property(x => x.Message).HasMaxLength(1200).IsRequired();
+        feedback.Property(x => x.CreatedAtUtc)
+            .HasDefaultValueSql("SYSUTCDATETIME()")
+            .IsRequired();
+        feedback.HasIndex(x => x.UserId);
 
         var restaurant = modelBuilder.Entity<Restaurant>();
         restaurant.ToTable("Restaurants");

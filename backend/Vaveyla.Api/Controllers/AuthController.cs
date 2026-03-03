@@ -25,6 +25,11 @@ public sealed class AuthController : ControllerBase
             return BadRequest(new { message = "Privacy policy and terms consent are required." });
         }
 
+        if (!TryValidatePassword(request.Password, out var passwordValidationError))
+        {
+            return BadRequest(new { message = passwordValidationError });
+        }
+
         var email = request.Email.Trim().ToLowerInvariant();
         var existing = await _users.GetByEmailAsync(email, cancellationToken);
         if (existing is not null)
@@ -52,6 +57,42 @@ public sealed class AuthController : ControllerBase
             Role = user.Role,
             FullName = user.FullName,
         });
+    }
+
+    private static bool TryValidatePassword(string password, out string? errorMessage)
+    {
+        if (string.IsNullOrWhiteSpace(password) || password.Length < 6)
+        {
+            errorMessage = "Password must be at least 6 characters long.";
+            return false;
+        }
+
+        if (!password.Any(char.IsUpper))
+        {
+            errorMessage = "Password must contain at least one uppercase letter.";
+            return false;
+        }
+
+        if (!password.Any(char.IsLower))
+        {
+            errorMessage = "Password must contain at least one lowercase letter.";
+            return false;
+        }
+
+        if (!password.Any(char.IsDigit))
+        {
+            errorMessage = "Password must contain at least one number.";
+            return false;
+        }
+
+        if (!password.Any(c => !char.IsLetterOrDigit(c)))
+        {
+            errorMessage = "Password must contain at least one special character.";
+            return false;
+        }
+
+        errorMessage = null;
+        return true;
     }
 
     [HttpPost("login")]

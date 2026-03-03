@@ -201,6 +201,144 @@ public sealed class UsersController : ControllerBase
         return NoContent();
     }
 
+    [HttpGet("{userId:guid}/payment-cards")]
+    public async Task<ActionResult<List<PaymentCardDto>>> GetPaymentCards(
+        [FromRoute] Guid userId,
+        CancellationToken cancellationToken)
+    {
+        if (userId == Guid.Empty)
+        {
+            return BadRequest(new { message = "User id is required." });
+        }
+
+        var user = await _users.GetByIdAsync(userId, cancellationToken);
+        if (user is null)
+        {
+            return NotFound(new { message = "User not found." });
+        }
+
+        var cards = await _users.GetPaymentCardsAsync(userId, cancellationToken);
+        return Ok(cards.Select(MapPaymentCard).ToList());
+    }
+
+    [HttpPost("{userId:guid}/payment-cards")]
+    public async Task<ActionResult<PaymentCardDto>> CreatePaymentCard(
+        [FromRoute] Guid userId,
+        [FromBody] CreatePaymentCardRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (userId == Guid.Empty)
+        {
+            return BadRequest(new { message = "User id is required." });
+        }
+
+        var user = await _users.GetByIdAsync(userId, cancellationToken);
+        if (user is null)
+        {
+            return NotFound(new { message = "User not found." });
+        }
+
+        var card = new PaymentCard
+        {
+            PaymentCardId = Guid.NewGuid(),
+            UserId = userId,
+            CardholderName = request.CardholderName.Trim(),
+            CardNumber = request.CardNumber.Trim(),
+            Expiration = request.Expiration.Trim(),
+            CVC = request.CVC.Trim(),
+            BankName = string.IsNullOrWhiteSpace(request.BankName)
+                ? "BANK NAME"
+                : request.BankName.Trim(),
+            CardAlias = request.CardAlias.Trim(),
+            CreatedAtUtc = DateTime.UtcNow,
+        };
+
+        var created = await _users.AddPaymentCardAsync(card, cancellationToken);
+        return Ok(MapPaymentCard(created));
+    }
+
+    [HttpPut("{userId:guid}/payment-cards/{paymentCardId:guid}")]
+    public async Task<ActionResult<PaymentCardDto>> UpdatePaymentCard(
+        [FromRoute] Guid userId,
+        [FromRoute] Guid paymentCardId,
+        [FromBody] UpdatePaymentCardRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (userId == Guid.Empty || paymentCardId == Guid.Empty)
+        {
+            return BadRequest(new { message = "User id and payment card id are required." });
+        }
+
+        var card = await _users.GetPaymentCardByIdAsync(userId, paymentCardId, cancellationToken);
+        if (card is null)
+        {
+            return NotFound(new { message = "Payment card not found." });
+        }
+
+        card.CardholderName = request.CardholderName.Trim();
+        card.CardNumber = request.CardNumber.Trim();
+        card.Expiration = request.Expiration.Trim();
+        card.CVC = request.CVC.Trim();
+        card.BankName = string.IsNullOrWhiteSpace(request.BankName)
+            ? "BANK NAME"
+            : request.BankName.Trim();
+        card.CardAlias = request.CardAlias.Trim();
+
+        await _users.SaveChangesAsync(cancellationToken);
+        return Ok(MapPaymentCard(card));
+    }
+
+    [HttpDelete("{userId:guid}/payment-cards/{paymentCardId:guid}")]
+    public async Task<IActionResult> DeletePaymentCard(
+        [FromRoute] Guid userId,
+        [FromRoute] Guid paymentCardId,
+        CancellationToken cancellationToken)
+    {
+        if (userId == Guid.Empty || paymentCardId == Guid.Empty)
+        {
+            return BadRequest(new { message = "User id and payment card id are required." });
+        }
+
+        var card = await _users.GetPaymentCardByIdAsync(userId, paymentCardId, cancellationToken);
+        if (card is null)
+        {
+            return NotFound(new { message = "Payment card not found." });
+        }
+
+        await _users.DeletePaymentCardAsync(card, cancellationToken);
+        return NoContent();
+    }
+
+    [HttpPost("{userId:guid}/feedback")]
+    public async Task<ActionResult<UserFeedbackDto>> CreateFeedback(
+        [FromRoute] Guid userId,
+        [FromBody] CreateUserFeedbackRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (userId == Guid.Empty)
+        {
+            return BadRequest(new { message = "User id is required." });
+        }
+
+        var user = await _users.GetByIdAsync(userId, cancellationToken);
+        if (user is null)
+        {
+            return NotFound(new { message = "User not found." });
+        }
+
+        var feedback = new UserFeedback
+        {
+            FeedbackId = Guid.NewGuid(),
+            UserId = userId,
+            RestaurantName = request.RestaurantName.Trim(),
+            Message = request.Message.Trim(),
+            CreatedAtUtc = DateTime.UtcNow,
+        };
+
+        var created = await _users.AddFeedbackAsync(feedback, cancellationToken);
+        return Ok(MapFeedback(created));
+    }
+
     private UserProfileDto MapProfile(User user)
     {
         return new UserProfileDto(
@@ -219,6 +357,29 @@ public sealed class UsersController : ControllerBase
             address.AddressDetail,
             address.IsSelected,
             address.CreatedAtUtc);
+    }
+
+    private PaymentCardDto MapPaymentCard(PaymentCard card)
+    {
+        return new PaymentCardDto(
+            card.PaymentCardId,
+            card.CardholderName,
+            card.CardNumber,
+            card.Expiration,
+            card.CVC,
+            card.BankName,
+            card.CardAlias,
+            card.CreatedAtUtc);
+    }
+
+    private UserFeedbackDto MapFeedback(UserFeedback feedback)
+    {
+        return new UserFeedbackDto(
+            feedback.FeedbackId,
+            feedback.UserId,
+            feedback.RestaurantName,
+            feedback.Message,
+            feedback.CreatedAtUtc);
     }
 
     private string? BuildPublicUrl(string? relativePath)

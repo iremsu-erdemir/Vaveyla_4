@@ -12,4 +12,6 @@ public sealed class User
     public bool IsTermsOfServiceAccepted { get; set; }
     public DateTime CreatedAtUtc { get; set; }
     public List<UserAddress> Addresses { get; set; } = [];
+    public List<PaymentCard> PaymentCards { get; set; } = [];
+    public List<UserFeedback> Feedbacks { get; set; } = [];
 }

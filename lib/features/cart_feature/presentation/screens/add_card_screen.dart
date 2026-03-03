@@ -3,12 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_sweet_shop_app_ui/core/theme/dimens.dart';
 import 'package:flutter_sweet_shop_app_ui/core/theme/theme.dart';
+import 'package:flutter_sweet_shop_app_ui/core/services/app_session.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_button.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_scaffold.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/bordered_container.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/general_app_bar.dart';
 import 'package:flutter_sweet_shop_app_ui/features/cart_feature/presentation/models/payment_saved_card.dart';
-import 'package:flutter_sweet_shop_app_ui/features/cart_feature/presentation/services/payment_saved_card_store.dart';
+import 'package:flutter_sweet_shop_app_ui/features/cart_feature/presentation/services/payment_card_service.dart';
 
 class AddCardScreen extends StatefulWidget {
   const AddCardScreen({super.key, this.initialCard, this.cardIndex});
@@ -21,10 +22,11 @@ class AddCardScreen extends StatefulWidget {
 }
 
 class _AddCardScreenState extends State<AddCardScreen> {
+  final PaymentCardService _paymentCardService = PaymentCardService();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _cardNumberController = TextEditingController();
   final TextEditingController _expirationController = TextEditingController();
-  final TextEditingController _cvvController = TextEditingController();
+  final TextEditingController _cvcController = TextEditingController();
   final TextEditingController _cardNameController = TextEditingController(
     text: 'Nakit Kartim',
   );
@@ -32,8 +34,9 @@ class _AddCardScreenState extends State<AddCardScreen> {
   String? _nameError;
   String? _cardNumberError;
   String? _expirationError;
-  String? _cvvError;
+  String? _cvcError;
   String? _cardNameError;
+  bool _isSubmitting = false;
 
   bool get _isEditMode =>
       widget.initialCard != null && widget.cardIndex != null;
@@ -46,7 +49,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
       _nameController.text = initialCard.cardholderName;
       _cardNumberController.text = initialCard.cardNumber;
       _expirationController.text = initialCard.expiration;
-      _cvvController.text = initialCard.cvv;
+      _cvcController.text = initialCard.cvc;
       _cardNameController.text = initialCard.cardAlias;
     }
   }
@@ -56,7 +59,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
     _nameController.dispose();
     _cardNumberController.dispose();
     _expirationController.dispose();
-    _cvvController.dispose();
+    _cvcController.dispose();
     _cardNameController.dispose();
     super.dispose();
   }
@@ -74,7 +77,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
     final name = _nameController.text.trim();
     final cardNumber = _cardNumberController.text.replaceAll(' ', '');
     final expiration = _expirationController.text.trim();
-    final cvv = _cvvController.text.trim();
+    final cvc = _cvcController.text.trim();
     final cardName = _cardNameController.text.trim();
 
     setState(() {
@@ -96,12 +99,12 @@ class _AddCardScreenState extends State<AddCardScreen> {
       } else {
         _expirationError = null;
       }
-      if (cvv.isEmpty) {
-        _cvvError = 'cvv_required'.tr();
-      } else if (cvv.length != 3 || int.tryParse(cvv) == null) {
-        _cvvError = 'cvv_invalid'.tr();
+      if (cvc.isEmpty) {
+        _cvcError = 'CVC_required'.tr();
+      } else if (cvc.length != 3 || int.tryParse(cvc) == null) {
+        _cvcError = 'CVC_invalid'.tr();
       } else {
-        _cvvError = null;
+        _cvcError = null;
       }
       _cardNameError =
           cardName.isEmpty
@@ -112,55 +115,135 @@ class _AddCardScreenState extends State<AddCardScreen> {
     return _nameError == null &&
         _cardNumberError == null &&
         _expirationError == null &&
-        _cvvError == null &&
+        _cvcError == null &&
         _cardNameError == null;
   }
 
-  void _onSave() {
-    if (!_validateForm()) {
+  Future<void> _onSave() async {
+    if (_isSubmitting || !_validateForm()) {
+      return;
+    }
+
+    final userId = AppSession.userId;
+    if (userId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.tr('profile_info_fetch_failed')),
+          backgroundColor: context.theme.appColors.error,
+        ),
+      );
       return;
     }
 
     final card = PaymentSavedCard(
+      paymentCardId: widget.initialCard?.paymentCardId,
       cardholderName: _nameController.text.trim(),
       cardNumber: _cardNumberController.text.replaceAll(' ', ''),
       expiration: _expirationController.text.trim(),
-      cvv: _cvvController.text.trim(),
+      cvc: _cvcController.text.trim(),
       bankName: 'BANK NAME',
       cardAlias: _cardNameController.text.trim(),
     );
-    if (_isEditMode) {
-      PaymentSavedCardStore.updateCardAt(widget.cardIndex!, card);
-    } else {
-      PaymentSavedCardStore.addCard(card);
-    }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          _isEditMode ? 'card_updated_success'.tr() : 'card_added_success'.tr(),
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      if (_isEditMode) {
+        final paymentCardId = widget.initialCard?.paymentCardId;
+        if (paymentCardId == null || paymentCardId.isEmpty) {
+          throw Exception('Kart kimliği bulunamadı.');
+        }
+        await _paymentCardService.updateCard(
+          userId: userId,
+          paymentCardId: paymentCardId,
+          card: card,
+        );
+      } else {
+        await _paymentCardService.createCard(userId: userId, card: card);
+      }
+
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _isEditMode
+                ? 'card_updated_success'.tr()
+                : 'card_added_success'.tr(),
+          ),
+          backgroundColor: context.theme.appColors.success,
         ),
-        backgroundColor: context.theme.appColors.success,
-      ),
-    );
-    Navigator.of(context).pop(true);
+      );
+      Navigator.of(context).pop(true);
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString()),
+          backgroundColor: context.theme.appColors.error,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
   }
 
-  void _onDelete() {
-    if (!_isEditMode) {
+  Future<void> _onDelete() async {
+    if (!_isEditMode || _isSubmitting) {
       return;
     }
-    final isDeleted = PaymentSavedCardStore.removeCardAt(widget.cardIndex!);
-    if (!isDeleted) {
+
+    final userId = AppSession.userId;
+    final paymentCardId = widget.initialCard?.paymentCardId;
+    if (userId.isEmpty || paymentCardId == null || paymentCardId.isEmpty) {
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('card_deleted_success'.tr()),
-        backgroundColor: context.theme.appColors.success,
-      ),
-    );
-    Navigator.of(context).pop(true);
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      await _paymentCardService.deleteCard(
+        userId: userId,
+        paymentCardId: paymentCardId,
+      );
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('card_deleted_success'.tr()),
+          backgroundColor: context.theme.appColors.success,
+        ),
+      );
+      Navigator.of(context).pop(true);
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString()),
+          backgroundColor: context.theme.appColors.error,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
   }
 
   @override
@@ -233,12 +316,12 @@ class _AddCardScreenState extends State<AddCardScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _InputLabel(text: context.tr('cvv').toUpperCase()),
+                      _InputLabel(text: context.tr('CVC').toUpperCase()),
                       const SizedBox(height: Dimens.smallPadding),
                       _CardInputField(
-                        controller: _cvvController,
+                        controller: _cvcController,
                         hintText: '•••',
-                        errorText: _cvvError,
+                        errorText: _cvcError,
                         keyboardType: TextInputType.number,
                         textInputAction: TextInputAction.next,
                         inputFormatters: [
@@ -277,7 +360,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
               SizedBox(
                 width: double.infinity,
                 child: TextButton(
-                  onPressed: _onDelete,
+                  onPressed: _isSubmitting ? null : _onDelete,
                   child: Text(
                     context.tr('delete_card'),
                     style: appTypography.bodyMedium.copyWith(
@@ -288,7 +371,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                 ),
               ),
             AppButton(
-              onPressed: _onSave,
+              onPressed: _isSubmitting ? null : _onSave,
               title: _isEditMode ? context.tr('update') : context.tr('save'),
               textStyle: appTypography.bodyLarge.copyWith(
                 color: appColors.white,

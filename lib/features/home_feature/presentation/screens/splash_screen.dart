@@ -26,8 +26,8 @@ class _SplashScreenState extends State<SplashScreen> {
   final _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
   final ScrollController _scrollController = ScrollController();
-  final RegExp _hasUpperCase = RegExp(r'[A-Z]');
-  final RegExp _hasLowerCase = RegExp(r'[a-z]');
+  final RegExp _hasUpperCase = RegExp(r'[A-ZÇĞİÖŞÜ]');
+  final RegExp _hasLowerCase = RegExp(r'[a-zçğıöşü]');
   final RegExp _hasDigit = RegExp(r'[0-9]');
   final RegExp _hasSpecial = RegExp(r"[!@#$%^&*(),.?{}|<>_\-+=;'\[\]\\\/`~]");
 

@@ -91,6 +91,50 @@ public sealed class UserRepository : IUserRepository
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task<List<PaymentCard>> GetPaymentCardsAsync(
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        return await _dbContext.PaymentCards
+            .Where(x => x.UserId == userId)
+            .OrderByDescending(x => x.CreatedAtUtc)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<PaymentCard?> GetPaymentCardByIdAsync(
+        Guid userId,
+        Guid paymentCardId,
+        CancellationToken cancellationToken)
+    {
+        return await _dbContext.PaymentCards.FirstOrDefaultAsync(
+            x => x.UserId == userId && x.PaymentCardId == paymentCardId,
+            cancellationToken);
+    }
+
+    public async Task<PaymentCard> AddPaymentCardAsync(
+        PaymentCard paymentCard,
+        CancellationToken cancellationToken)
+    {
+        _dbContext.PaymentCards.Add(paymentCard);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return paymentCard;
+    }
+
+    public async Task DeletePaymentCardAsync(PaymentCard paymentCard, CancellationToken cancellationToken)
+    {
+        _dbContext.PaymentCards.Remove(paymentCard);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<UserFeedback> AddFeedbackAsync(
+        UserFeedback feedback,
+        CancellationToken cancellationToken)
+    {
+        _dbContext.UserFeedbacks.Add(feedback);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return feedback;
+    }
+
     public Task SaveChangesAsync(CancellationToken cancellationToken)
     {
         return _dbContext.SaveChangesAsync(cancellationToken);

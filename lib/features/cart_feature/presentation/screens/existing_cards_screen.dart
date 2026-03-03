@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_sweet_shop_app_ui/core/theme/dimens.dart';
 import 'package:flutter_sweet_shop_app_ui/core/theme/theme.dart';
 import 'package:flutter_sweet_shop_app_ui/core/utils/app_navigator.dart';
+import 'package:flutter_sweet_shop_app_ui/core/services/app_session.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_button.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_scaffold.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/bordered_container.dart';
@@ -10,7 +11,7 @@ import 'package:flutter_sweet_shop_app_ui/core/widgets/general_app_bar.dart';
 import 'package:flutter_sweet_shop_app_ui/features/cart_feature/presentation/models/payment_saved_card.dart';
 import 'package:flutter_sweet_shop_app_ui/features/cart_feature/presentation/screens/add_card_screen.dart';
 import 'package:flutter_sweet_shop_app_ui/features/cart_feature/presentation/screens/payment_completion_success_screen.dart';
-import 'package:flutter_sweet_shop_app_ui/features/cart_feature/presentation/services/payment_saved_card_store.dart';
+import 'package:flutter_sweet_shop_app_ui/features/cart_feature/presentation/services/payment_card_service.dart';
 
 class ExistingCardsScreen extends StatefulWidget {
   const ExistingCardsScreen({super.key, this.selectionMode = false});
@@ -22,10 +23,12 @@ class ExistingCardsScreen extends StatefulWidget {
 }
 
 class _ExistingCardsScreenState extends State<ExistingCardsScreen> {
+  final PaymentCardService _paymentCardService = PaymentCardService();
   List<PaymentSavedCard> _cards = <PaymentSavedCard>[];
   int _selectedIndex = 0;
   late final PageController _pageController;
-  bool _hasUserSelectedCard = false;
+  bool _isLoading = true;
+  String? _loadError;
 
   @override
   void initState() {
@@ -40,22 +43,69 @@ class _ExistingCardsScreenState extends State<ExistingCardsScreen> {
     super.dispose();
   }
 
-  void _loadCards({bool selectLast = false}) {
-    final cards = PaymentSavedCardStore.getCards();
-    setState(() {
-      _cards = cards;
-      if (_cards.isEmpty) {
-        _selectedIndex = 0;
-      } else if (selectLast) {
-        _selectedIndex = _cards.length - 1;
-      } else if (_selectedIndex >= _cards.length) {
-        _selectedIndex = _cards.length - 1;
+  Future<void> _loadCards({bool selectLast = false}) async {
+    final userId = AppSession.userId;
+    if (userId.isEmpty) {
+      if (!mounted) {
+        return;
       }
-    });
+      setState(() {
+        _cards = <PaymentSavedCard>[];
+        _selectedIndex = 0;
+        _isLoading = false;
+        _loadError = null;
+      });
+      return;
+    }
+
+    try {
+      final cards = await _paymentCardService.getCards(userId: userId);
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _cards = cards;
+        if (_cards.isEmpty) {
+          _selectedIndex = 0;
+        } else if (selectLast) {
+          _selectedIndex = _cards.length - 1;
+        } else if (_selectedIndex >= _cards.length) {
+          _selectedIndex = _cards.length - 1;
+        }
+        _loadError = null;
+      });
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _loadError = error.toString();
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return AppScaffold(
+        appBar: GeneralAppBar(title: context.tr('existing_cards_title')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_loadError != null) {
+      return AppScaffold(
+        appBar: GeneralAppBar(title: context.tr('existing_cards_title')),
+        body: Center(child: Text(_loadError!)),
+      );
+    }
+
     if (_cards.isEmpty) {
       return AppScaffold(
         appBar: GeneralAppBar(title: context.tr('existing_cards_title')),
@@ -82,7 +132,6 @@ class _ExistingCardsScreenState extends State<ExistingCardsScreen> {
                 onPageChanged: (index) {
                   setState(() {
                     _selectedIndex = index;
-                    _hasUserSelectedCard = true;
                   });
                 },
                 itemBuilder: (context, index) {
@@ -113,7 +162,7 @@ class _ExistingCardsScreenState extends State<ExistingCardsScreen> {
               value: selectedCard.expiration,
             ),
             const SizedBox(height: Dimens.padding),
-            _ReadOnlyField(label: context.tr('cvv'), value: selectedCard.cvv),
+            _ReadOnlyField(label: context.tr('CVC'), value: selectedCard.cvc),
             const SizedBox(height: Dimens.largePadding),
             Row(
               children: [
@@ -124,10 +173,11 @@ class _ExistingCardsScreenState extends State<ExistingCardsScreen> {
                         context,
                         const AddCardScreen(),
                       );
-                      if (created is PaymentSavedCard && mounted) {
-                        _loadCards(selectLast: true);
-                        _hasUserSelectedCard = true;
-                        _pageController.jumpToPage(_selectedIndex);
+                      if (created == true && mounted) {
+                        await _loadCards(selectLast: true);
+                        if (_cards.isNotEmpty) {
+                          _pageController.jumpToPage(_selectedIndex);
+                        }
                       }
                     },
                     icon: const Icon(Icons.add, size: 16),
@@ -158,7 +208,7 @@ class _ExistingCardsScreenState extends State<ExistingCardsScreen> {
                         ),
                       );
                       if (updated == true && mounted) {
-                        _loadCards();
+                        await _loadCards();
                       }
                     },
                     style: FilledButton.styleFrom(
@@ -182,12 +232,9 @@ class _ExistingCardsScreenState extends State<ExistingCardsScreen> {
               const SizedBox(height: Dimens.largePadding),
               AppButton(
                 onPressed:
-                    _hasUserSelectedCard
+                    _cards.isNotEmpty
                         ? () {
-                          appPush(
-                            context,
-                            const PaymentCompletionSuccessScreen(),
-                          );
+                          appPush(context, const PaymentCompletionSuccessScreen());
                         }
                         : null,
                 title: context.tr('complete_payment'),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter_sweet_shop_app_ui/core/services/app_session.dart';
 import 'package:flutter_sweet_shop_app_ui/core/theme/dimens.dart';
 import 'package:flutter_sweet_shop_app_ui/core/theme/theme.dart';
 import 'package:flutter_sweet_shop_app_ui/core/utils/check_theme_status.dart';
@@ -11,6 +12,7 @@ import 'package:flutter_sweet_shop_app_ui/features/cart_feature/presentation/mod
 import 'package:flutter_sweet_shop_app_ui/features/cart_feature/presentation/screens/add_card_screen.dart';
 import 'package:flutter_sweet_shop_app_ui/features/cart_feature/presentation/screens/existing_cards_screen.dart';
 import 'package:flutter_sweet_shop_app_ui/features/cart_feature/presentation/screens/payment_completion_success_screen.dart';
+import 'package:flutter_sweet_shop_app_ui/features/cart_feature/presentation/services/payment_card_service.dart';
 
 import '../../../../core/gen/assets.gen.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -26,6 +28,7 @@ class PaymentMethodsScreen extends StatefulWidget {
 }
 
 class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
+  final PaymentCardService _paymentCardService = PaymentCardService();
   _PaymentMethod? _selectedMethod;
   PaymentSavedCard? _selectedCard;
 
@@ -40,11 +43,21 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
 
   Future<void> _openAddCard() async {
     final result = await appPush(context, const AddCardScreen());
-    if (result is PaymentSavedCard && mounted) {
-      setState(() {
-        _selectedCard = result;
-        _selectedMethod = null;
-      });
+    if (result == true && mounted) {
+      final userId = AppSession.userId;
+      if (userId.isEmpty) {
+        return;
+      }
+      try {
+        final cards = await _paymentCardService.getCards(userId: userId);
+        if (!mounted || cards.isEmpty) {
+          return;
+        }
+        setState(() {
+          _selectedCard = cards.first;
+          _selectedMethod = null;
+        });
+      } catch (_) {}
     }
   }
 

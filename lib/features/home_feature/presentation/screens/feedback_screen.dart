@@ -1,9 +1,11 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_sweet_shop_app_ui/core/services/app_session.dart';
 import 'package:flutter_sweet_shop_app_ui/core/theme/dimens.dart';
 import 'package:flutter_sweet_shop_app_ui/core/theme/theme.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_button.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_scaffold.dart';
+import 'package:flutter_sweet_shop_app_ui/features/home_feature/data/services/feedback_service.dart';
 
 class FeedbackScreen extends StatefulWidget {
   const FeedbackScreen({super.key});
@@ -13,19 +15,24 @@ class FeedbackScreen extends StatefulWidget {
 }
 
 class _FeedbackScreenState extends State<FeedbackScreen> {
-  final _subjectController = TextEditingController();
+  final FeedbackService _feedbackService = FeedbackService();
+  final _restaurantNameController = TextEditingController();
   final _messageController = TextEditingController();
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
-    _subjectController.dispose();
+    _restaurantNameController.dispose();
     _messageController.dispose();
     super.dispose();
   }
 
-  void _submitFeedback() {
+  Future<void> _submitFeedback() async {
+    if (_isSubmitting) {
+      return;
+    }
     final colors = context.theme.appColors;
-    if (_subjectController.text.trim().isEmpty ||
+    if (_restaurantNameController.text.trim().isEmpty ||
         _messageController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -36,14 +43,55 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(context.tr('feedback_sent_message')),
-        backgroundColor: colors.success,
-      ),
-    );
-    _subjectController.clear();
-    _messageController.clear();
+    final userId = AppSession.userId;
+    if (userId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.tr('feedback_login_required')),
+          backgroundColor: colors.error,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      await _feedbackService.submitFeedback(
+        userId: userId,
+        restaurantName: _restaurantNameController.text.trim(),
+        message: _messageController.text.trim(),
+      );
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.tr('feedback_sent_message')),
+          backgroundColor: colors.success,
+        ),
+      );
+      _restaurantNameController.clear();
+      _messageController.clear();
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString()),
+          backgroundColor: colors.error,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
   }
 
   @override
@@ -140,13 +188,13 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                     ),
                     const SizedBox(height: Dimens.extraLargePadding),
                     TextField(
-                      controller: _subjectController,
+                      controller: _restaurantNameController,
                       style: typography.bodyMedium.copyWith(
                         color: isDark ? colors.white : colors.primaryTint2,
                         fontWeight: FontWeight.w600,
                       ),
                       decoration: InputDecoration(
-                        hintText: context.tr('feedback_subject_hint'),
+                        hintText: context.tr('feedback_restaurant_name_hint'),
                         hintStyle: typography.bodyMedium.copyWith(
                           color: hintColor,
                         ),
@@ -213,7 +261,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                     const Spacer(),
                     AppButton(
                       title: context.tr('send'),
-                      onPressed: _submitFeedback,
+                      onPressed: _isSubmitting ? null : _submitFeedback,
                       margin: EdgeInsets.zero,
                       borderRadius: 14,
                       textStyle: typography.titleMedium.copyWith(
