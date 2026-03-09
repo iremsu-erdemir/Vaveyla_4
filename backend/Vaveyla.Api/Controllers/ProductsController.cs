@@ -57,6 +57,7 @@ public sealed class ProductsController : ControllerBase
                     p.RestaurantPhone,
                     p.RestaurantLat,
                     p.RestaurantLng,
+                    p.RestaurantIsOpen,
                     p.Item.CategoryName,
                     p.Item.Name,
                     p.Item.Price,

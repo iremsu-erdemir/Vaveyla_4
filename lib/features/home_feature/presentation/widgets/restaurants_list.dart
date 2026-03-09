@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_sweet_shop_app_ui/core/theme/dimens.dart';
 import 'package:flutter_sweet_shop_app_ui/core/theme/theme.dart';
 import 'package:flutter_sweet_shop_app_ui/core/utils/app_navigator.dart';
+import 'package:flutter_sweet_shop_app_ui/core/utils/app_feedback.dart';
 import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/bloc/home_products_cubit.dart';
 import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/screens/restaurant_products_screen.dart';
 import 'package:flutter_sweet_shop_app_ui/features/restaurant_owner_feature/widgets/product_image_widget.dart';
@@ -17,7 +18,7 @@ class RestaurantsList extends StatelessWidget {
         final allProducts = [
           ...state.allProducts,
         ];
-        final byRestaurant = <String, (String name, String type, String? photoPath)> {};
+        final byRestaurant = <String, (String name, String type, String? photoPath, bool isOpen)>{};
         for (final product in allProducts) {
           final restaurantId = product.restaurantId;
           if (restaurantId == null || restaurantId.isEmpty) continue;
@@ -25,6 +26,7 @@ class RestaurantsList extends StatelessWidget {
             product.restaurantName ?? 'Restoran',
             product.restaurantType ?? 'Kategori',
             product.restaurantPhotoPath,
+            product.restaurantIsOpen,
           );
         }
         final restaurants = byRestaurant.entries.toList();
@@ -42,9 +44,15 @@ class RestaurantsList extends StatelessWidget {
             itemBuilder: (context, index) {
               final item = restaurants[index];
               final restaurantId = item.key;
-              final (name, type, photoPath) = item.value;
+              final (name, type, photoPath, isOpen) = item.value;
               return InkWell(
                 onTap: () {
+                  if (!isOpen) {
+                    context.showErrorMessage(
+                      'Bu restoran şu anda hizmet verememektedir.',
+                    );
+                    return;
+                  }
                   appPush(
                     context,
                     RestaurantProductsScreen(
@@ -63,6 +71,12 @@ class RestaurantsList extends StatelessWidget {
                         Positioned.fill(
                           child: buildProductImage(photoPath ?? '', 216, 150),
                         ),
+                        if (!isOpen)
+                          Positioned.fill(
+                            child: Container(
+                              color: Colors.grey.withValues(alpha: 0.45),
+                            ),
+                          ),
                         Positioned.fill(
                           child: DecoratedBox(
                             decoration: BoxDecoration(
@@ -73,6 +87,30 @@ class RestaurantsList extends StatelessWidget {
                                   Colors.black.withValues(alpha: 0.08),
                                   Colors.black.withValues(alpha: 0.55),
                                 ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          top: Dimens.padding,
+                          right: Dimens.padding,
+                          child: Visibility(
+                            visible: !isOpen,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: Dimens.smallPadding,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.7),
+                                borderRadius: BorderRadius.circular(Dimens.smallCorners),
+                              ),
+                              child: Text(
+                                'Kapalı',
+                                style: context.theme.appTypography.labelSmall.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                             ),
                           ),

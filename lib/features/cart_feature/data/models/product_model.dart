@@ -13,6 +13,7 @@ class ProductModel {
   final String? restaurantPhone;
   final double? restaurantLat;
   final double? restaurantLng;
+  final bool restaurantIsOpen;
   final String? categoryName;
 
   ProductModel({
@@ -30,6 +31,7 @@ class ProductModel {
     this.restaurantPhone,
     this.restaurantLat,
     this.restaurantLng,
+    this.restaurantIsOpen = true,
     this.categoryName,
   });
 
@@ -48,6 +50,7 @@ class ProductModel {
     String? restaurantPhone,
     double? restaurantLat,
     double? restaurantLng,
+    bool? restaurantIsOpen,
     String? categoryName,
   }) {
     return ProductModel(
@@ -65,6 +68,7 @@ class ProductModel {
       restaurantPhone: restaurantPhone ?? this.restaurantPhone,
       restaurantLat: restaurantLat ?? this.restaurantLat,
       restaurantLng: restaurantLng ?? this.restaurantLng,
+      restaurantIsOpen: restaurantIsOpen ?? this.restaurantIsOpen,
       categoryName: categoryName ?? this.categoryName,
     );
   }
@@ -84,6 +88,8 @@ class ProductModel {
       restaurantPhone: json['restaurantPhone']?.toString(),
       restaurantLat: _parseDouble(json['restaurantLat']),
       restaurantLng: _parseDouble(json['restaurantLng']),
+      restaurantIsOpen:
+          json['restaurantIsOpen'] == true || json['restaurantIsOpen'] == 1,
       categoryName: json['categoryName']?.toString(),
     );
   }

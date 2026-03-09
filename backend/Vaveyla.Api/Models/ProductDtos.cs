@@ -11,6 +11,7 @@ public sealed record CustomerProductDto(
     string? RestaurantPhone,
     double? RestaurantLat,
     double? RestaurantLng,
+    bool RestaurantIsOpen,
     string? CategoryName,
     string Name,
     int Price,

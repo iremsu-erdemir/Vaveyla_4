@@ -42,6 +42,9 @@ class ProductsScreen extends StatefulWidget {
 }
 
 class _ProductsScreenState extends State<ProductsScreen> {
+  static const _closedRestaurantMessage =
+      'Bu restoran şu anda hizmet verememektedir.';
+
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   ProductSortOption _sortOption = ProductSortOption.topRated;
@@ -299,8 +302,13 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     itemCount: products.length,
                     itemBuilder: (final context, final index) {
                       final product = products[index];
+                      final isRestaurantOpen = product.restaurantIsOpen;
                       return InkWell(
                         onTap: () {
+                          if (!isRestaurantOpen) {
+                            context.showErrorMessage(_closedRestaurantMessage);
+                            return;
+                          }
                           appPush(
                             context,
                             ProductDetailsScreen(product: product),
@@ -308,86 +316,131 @@ class _ProductsScreenState extends State<ProductsScreen> {
                         },
                         borderRadius: BorderRadius.circular(Dimens.corners),
                         child: ShadedContainer(
-                          child: Column(
-                            spacing: Dimens.padding,
-                            crossAxisAlignment: CrossAxisAlignment.center,
+                          child: Stack(
                             children: [
-                              Padding(
-                                padding: const EdgeInsets.all(Dimens.padding),
-                                child: SizedBox(
-                                  height: 114,
-                                  width: context.widthPx,
-                                  child: ClipRRect(
-                                    borderRadius:
-                                        BorderRadius.circular(Dimens.corners),
-                                    child: _buildProductImage(
-                                      context,
-                                      product.imageUrl,
+                              Column(
+                                spacing: Dimens.padding,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.all(Dimens.padding),
+                                    child: SizedBox(
+                                      height: 114,
+                                      width: context.widthPx,
+                                      child: ClipRRect(
+                                        borderRadius:
+                                            BorderRadius.circular(Dimens.corners),
+                                        child: _buildProductImage(
+                                          context,
+                                          product.imageUrl,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: Dimens.padding,
+                                    ),
+                                    child: Column(
+                                      spacing: Dimens.largePadding,
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          spacing: Dimens.padding,
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                product.name,
+                                                style: context
+                                                    .theme
+                                                    .appTypography
+                                                    .titleSmall,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                            AppRatingSummary(
+                                              rating: product.rate,
+                                              reviewCount: product.reviewCount,
+                                            ),
+                                          ],
+                                        ),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              formatPrice(product.price),
+                                              style: context
+                                                  .theme
+                                                  .appTypography
+                                                  .labelLarge
+                                                  .copyWith(
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                            ),
+                                            SizedBox(
+                                              width: 30,
+                                              height: 30,
+                                              child: AppIconButton(
+                                                iconPath: Assets.icons.shoppingCart,
+                                                backgroundColor: appColors.primary,
+                                                onPressed: () {
+                                                  if (!isRestaurantOpen) {
+                                                    context.showErrorMessage(
+                                                      _closedRestaurantMessage,
+                                                    );
+                                                    return;
+                                                  }
+                                                  context
+                                                      .read<CartCubit>()
+                                                      .addItem(product);
+                                                  context.showSuccessMessage(
+                                                    '${product.name} sepete eklendi!',
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (!isRestaurantOpen)
+                                Positioned.fill(
+                                  child: IgnorePointer(
+                                    child: Container(
+                                      color: Colors.grey.withValues(alpha: 0.35),
                                     ),
                                   ),
                                 ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: Dimens.padding,
-                                ),
-                                child: Column(
-                                  spacing: Dimens.largePadding,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      spacing: Dimens.padding,
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            product.name,
-                                            style: context
-                                                .theme
-                                                .appTypography
-                                                .titleSmall,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        AppRatingSummary(
-                                          rating: product.rate,
-                                          reviewCount: product.reviewCount,
-                                        ),
-                                      ],
+                              Positioned(
+                                top: Dimens.padding,
+                                right: Dimens.padding,
+                                child: Visibility(
+                                  visible: !isRestaurantOpen,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: Dimens.smallPadding,
+                                      vertical: 2,
                                     ),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          formatPrice(product.price),
-                                          style: context
-                                              .theme
-                                              .appTypography
-                                              .labelLarge
-                                              .copyWith(
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                        ),
-                                        SizedBox(
-                                          width: 30,
-                                          height: 30,
-                                          child: AppIconButton(
-                                            iconPath: Assets.icons.shoppingCart,
-                                            backgroundColor: appColors.primary,
-                                            onPressed: () {
-                                              context
-                                                  .read<CartCubit>()
-                                                  .addItem(product);
-                                              context.showSuccessMessage(
-                                                '${product.name} sepete eklendi!',
-                                              );
-                                            },
-                                          ),
-                                        ),
-                                      ],
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withValues(alpha: 0.7),
+                                      borderRadius: BorderRadius.circular(
+                                        Dimens.smallCorners,
+                                      ),
                                     ),
-                                  ],
+                                    child: Text(
+                                      'Kapalı',
+                                      style: context.theme.appTypography.labelSmall
+                                          .copyWith(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                    ),
+                                  ),
                                 ),
                               ),
                             ],

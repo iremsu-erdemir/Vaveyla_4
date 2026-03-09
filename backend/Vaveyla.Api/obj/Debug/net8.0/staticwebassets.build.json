@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "buejU297cVJXCLRYCO9X/gVTxUvggfx4swNwoWvsvpU=",
+  "Hash": "uIPXcMu77fjfpMpQE5/2VXTyUjlTBuAP6VitXNJADME=",
   "Source": "Vaveyla.Api",
   "BasePath": "_content/Vaveyla.Api",
   "Mode": "Default",
@@ -262,6 +262,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\uploads\\owners\\cd23f525-9f11-4f17-9239-4468d58a6008\\menu\\4b16f36725974bb8b37d7ed7f27e451c.avif"
+    },
+    {
+      "Identity": "C:\\Users\\erdem\\Desktop\\VaveylaSaticiMusteriPanel-main\\backend\\Vaveyla.Api\\wwwroot\\uploads\\owners\\cd23f525-9f11-4f17-9239-4468d58a6008\\menu\\68a5e7c5fcfd445d9515af73a3b78998.jpg",
+      "SourceId": "Vaveyla.Api",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\erdem\\Desktop\\VaveylaSaticiMusteriPanel-main\\backend\\Vaveyla.Api\\wwwroot\\",
+      "BasePath": "_content/Vaveyla.Api",
+      "RelativePath": "uploads/owners/cd23f525-9f11-4f17-9239-4468d58a6008/menu/68a5e7c5fcfd445d9515af73a3b78998.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\owners\\cd23f525-9f11-4f17-9239-4468d58a6008\\menu\\68a5e7c5fcfd445d9515af73a3b78998.jpg"
     },
     {
       "Identity": "C:\\Users\\erdem\\Desktop\\VaveylaSaticiMusteriPanel-main\\backend\\Vaveyla.Api\\wwwroot\\uploads\\owners\\cd23f525-9f11-4f17-9239-4468d58a6008\\menu\\894612b8d3b24738bab9a57444419f71.jpg",

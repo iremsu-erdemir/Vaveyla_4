@@ -33,6 +33,9 @@ class CategoriesScreen extends StatelessWidget {
 }
 
 class _CategoriesScreenBody extends StatelessWidget {
+  static const _closedRestaurantMessage =
+      'Bu restoran şu anda hizmet verememektedir.';
+
   const _CategoriesScreenBody();
 
   @override
@@ -78,6 +81,7 @@ class _CategoriesScreenBody extends StatelessWidget {
                       shrinkWrap: true,
                       itemBuilder: (final context, final index) {
                         final product = products[index];
+                        final isRestaurantOpen = product.restaurantIsOpen;
                         return Padding(
                           padding: const EdgeInsets.only(
                             left: Dimens.largePadding,
@@ -86,6 +90,10 @@ class _CategoriesScreenBody extends StatelessWidget {
                           ),
                           child: InkWell(
                             onTap: () {
+                              if (!isRestaurantOpen) {
+                                context.showErrorMessage(_closedRestaurantMessage);
+                                return;
+                              }
                               appPush(
                                 context,
                                 ProductDetailsScreen(product: product),
@@ -94,96 +102,140 @@ class _CategoriesScreenBody extends StatelessWidget {
                             borderRadius: BorderRadius.circular(
                               Dimens.largePadding,
                             ),
-                            child: Container(
-                              width: 138,
-                              height: 243,
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).scaffoldBackgroundColor,
-                                borderRadius: BorderRadius.circular(
-                                  Dimens.largePadding,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: context.theme.appColors.black
-                                        .withValues(alpha: 0.1),
-                                    blurRadius: 10,
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                spacing: Dimens.padding,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  SizedBox(
-                                    height: 110,
-                                    width: 138,
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(
-                                        Dimens.corners,
+                            child: Stack(
+                              children: [
+                                Container(
+                                  width: 138,
+                                  height: 243,
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).scaffoldBackgroundColor,
+                                    borderRadius: BorderRadius.circular(
+                                      Dimens.largePadding,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: context.theme.appColors.black
+                                            .withValues(alpha: 0.1),
+                                        blurRadius: 10,
                                       ),
-                                      child: _buildProductImage(
-                                        context,
-                                        product.imageUrl,
+                                    ],
+                                  ),
+                                  child: Column(
+                                    spacing: Dimens.padding,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      SizedBox(
+                                        height: 110,
+                                        width: 138,
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            Dimens.corners,
+                                          ),
+                                          child: _buildProductImage(
+                                            context,
+                                            product.imageUrl,
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        height: 32,
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: Dimens.smallPadding,
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              product.name,
+                                              style: context
+                                                  .theme
+                                                  .appTypography
+                                                  .labelMedium
+                                                  .copyWith(
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                              overflow: TextOverflow.ellipsis,
+                                              maxLines: 2,
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: AppRatingSummary(
+                                          rating: product.rate,
+                                          reviewCount: product.reviewCount,
+                                        ),
+                                      ),
+                                      Text(
+                                        formatPrice(product.price),
+                                        style: context.theme.appTypography
+                                            .labelLarge
+                                            .copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                      ),
+                                      SizedBox(
+                                        width: 100,
+                                        height: 32,
+                                        child: AppButton(
+                                          title: 'Sepete ekle',
+                                          onPressed: () {
+                                            _addToCart(context, product);
+                                          },
+                                          margin: EdgeInsets.zero,
+                                          padding:
+                                              WidgetStateProperty.all<EdgeInsets>(
+                                            EdgeInsets.symmetric(
+                                              horizontal: Dimens.padding,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (!isRestaurantOpen)
+                                  Positioned.fill(
+                                    child: IgnorePointer(
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(
+                                            Dimens.largePadding,
+                                          ),
+                                          color: Colors.grey.withValues(alpha: 0.35),
+                                        ),
                                       ),
                                     ),
                                   ),
-                                  SizedBox(
-                                    height: 32,
-                                    child: Padding(
+                                Positioned(
+                                  top: Dimens.smallPadding,
+                                  right: Dimens.smallPadding,
+                                  child: Visibility(
+                                    visible: !isRestaurantOpen,
+                                    child: Container(
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: Dimens.smallPadding,
+                                        vertical: 2,
                                       ),
-                                      child: Center(
-                                        child: Text(
-                                          product.name,
-                                          style: context
-                                              .theme
-                                              .appTypography
-                                              .labelMedium
-                                              .copyWith(
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                          overflow: TextOverflow.ellipsis,
-                                          maxLines: 2,
-                                          textAlign: TextAlign.center,
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withValues(alpha: 0.7),
+                                        borderRadius: BorderRadius.circular(
+                                          Dimens.smallCorners,
                                         ),
                                       ),
-                                    ),
-                                  ),
-                                  FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    child: AppRatingSummary(
-                                      rating: product.rate,
-                                      reviewCount: product.reviewCount,
-                                    ),
-                                  ),
-                                  Text(
-                                    formatPrice(product.price),
-                                    style: context.theme.appTypography
-                                        .labelLarge
-                                        .copyWith(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                  ),
-                                  SizedBox(
-                                    width: 100,
-                                    height: 32,
-                                    child: AppButton(
-                                      title: 'Sepete ekle',
-                                      onPressed: () {
-                                        _addToCart(context, product);
-                                      },
-                                      margin: EdgeInsets.zero,
-                                      padding:
-                                          WidgetStateProperty.all<EdgeInsets>(
-                                        EdgeInsets.symmetric(
-                                          horizontal: Dimens.padding,
-                                        ),
+                                      child: Text(
+                                        'Kapalı',
+                                        style: context.theme.appTypography.labelSmall
+                                            .copyWith(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.w700,
+                                            ),
                                       ),
                                     ),
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
                         );
@@ -234,6 +286,10 @@ class _CategoriesScreenBody extends StatelessWidget {
   }
 
   void _addToCart(final BuildContext context, ProductModel product) {
+    if (!product.restaurantIsOpen) {
+      context.showErrorMessage(_closedRestaurantMessage);
+      return;
+    }
     final cartCubit = context.read<CartCubit>();
     cartCubit.addItem(product);
     context.showSuccessMessage('${product.name} sepete eklendi!');

@@ -22,6 +22,9 @@ import '../../../../core/widgets/shaded_container.dart';
 import 'product_details_screen.dart';
 
 class RestaurantProductsScreen extends StatelessWidget {
+  static const _closedRestaurantMessage =
+      'Bu restoran şu anda hizmet verememektedir.';
+
   const RestaurantProductsScreen({
     super.key,
     required this.restaurantId,
@@ -52,6 +55,8 @@ class RestaurantProductsScreen extends StatelessWidget {
       );
       existingReviews = loaded.items;
     } catch (_) {}
+
+    if (!context.mounted) return;
 
     await showModalBottomSheet<void>(
       context: context,
@@ -184,53 +189,100 @@ class RestaurantProductsScreen extends StatelessWidget {
               itemCount: state.products.length,
               itemBuilder: (context, index) {
                 final product = state.products[index];
+                final isRestaurantOpen = product.restaurantIsOpen;
                 return InkWell(
-                  onTap: () => appPush(context, ProductDetailsScreen(product: product)),
+                  onTap: () {
+                    if (!isRestaurantOpen) {
+                      context.showErrorMessage(_closedRestaurantMessage);
+                      return;
+                    }
+                    appPush(context, ProductDetailsScreen(product: product));
+                  },
                   borderRadius: BorderRadius.circular(Dimens.corners),
                   child: ShadedContainer(
-                    child: Column(
-                      spacing: Dimens.padding,
+                    child: Stack(
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.all(Dimens.padding),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(Dimens.corners),
-                            child: buildProductImage(product.imageUrl, 200, 114),
-                          ),
+                        Column(
+                          spacing: Dimens.padding,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(Dimens.padding),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(Dimens.corners),
+                                child: buildProductImage(product.imageUrl, 200, 114),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: Dimens.padding),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      product.name,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: context.theme.appTypography.titleSmall,
+                                    ),
+                                  ),
+                                  Text(
+                                    formatPrice(product.price),
+                                    style: context.theme.appTypography.labelLarge
+                                        .copyWith(fontWeight: FontWeight.w700),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(
+                              width: 30,
+                              height: 30,
+                              child: AppIconButton(
+                                iconPath: Assets.icons.shoppingCart,
+                                backgroundColor: appColors.primary,
+                                onPressed: () {
+                                  if (!isRestaurantOpen) {
+                                    context.showErrorMessage(_closedRestaurantMessage);
+                                    return;
+                                  }
+                                  context.read<CartCubit>().addItem(product);
+                                  context.showSuccessMessage(
+                                    '${product.name} sepete eklendi!',
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
                         ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: Dimens.padding),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  product.name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: context.theme.appTypography.titleSmall,
+                        if (!isRestaurantOpen)
+                          Positioned.fill(
+                            child: IgnorePointer(
+                              child: Container(
+                                color: Colors.grey.withValues(alpha: 0.35),
+                              ),
+                            ),
+                          ),
+                        Positioned(
+                          top: Dimens.padding,
+                          right: Dimens.padding,
+                          child: Visibility(
+                            visible: !isRestaurantOpen,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: Dimens.smallPadding,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.7),
+                                borderRadius: BorderRadius.circular(Dimens.smallCorners),
+                              ),
+                              child: Text(
+                                'Kapalı',
+                                style: context.theme.appTypography.labelSmall.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
-                              Text(
-                                formatPrice(product.price),
-                                style: context.theme.appTypography.labelLarge
-                                    .copyWith(fontWeight: FontWeight.w700),
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(
-                          width: 30,
-                          height: 30,
-                          child: AppIconButton(
-                            iconPath: Assets.icons.shoppingCart,
-                            backgroundColor: appColors.primary,
-                            onPressed: () {
-                              context.read<CartCubit>().addItem(product);
-                              context.showSuccessMessage(
-                                '${product.name} sepete eklendi!',
-                              );
-                            },
+                            ),
                           ),
                         ),
                       ],

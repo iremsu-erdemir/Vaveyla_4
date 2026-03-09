@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_sweet_shop_app_ui/core/theme/theme.dart';
 import 'package:flutter_sweet_shop_app_ui/core/utils/app_navigator.dart';
+import 'package:flutter_sweet_shop_app_ui/core/utils/app_feedback.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_rating_summary.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_title_widget.dart';
 import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/bloc/home_products_cubit.dart';
@@ -12,6 +13,9 @@ import '../../../../core/theme/dimens.dart';
 import '../screens/product_details_screen.dart';
 
 class ProductsList extends StatelessWidget {
+  static const _closedRestaurantMessage =
+      'Bu restoran şu anda hizmet verememektedir.';
+
   const ProductsList({super.key});
 
   @override
@@ -63,12 +67,17 @@ class ProductsList extends StatelessWidget {
                           shrinkWrap: true,
                           itemBuilder: (context, index) {
                             final product = products[index];
+                            final isRestaurantOpen = product.restaurantIsOpen;
                             return Padding(
                               padding: const EdgeInsets.only(
                                 left: Dimens.largePadding,
                               ),
                               child: InkWell(
                                 onTap: () {
+                                  if (!isRestaurantOpen) {
+                                    context.showErrorMessage(_closedRestaurantMessage);
+                                    return;
+                                  }
                                   appPush(
                                     context,
                                     ProductDetailsScreen(product: product),
@@ -92,6 +101,15 @@ class ProductsList extends StatelessWidget {
                                           ),
                                         ),
                                       ),
+                                      if (!isRestaurantOpen)
+                                        Positioned.fill(
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.circular(24),
+                                              color: Colors.grey.withValues(alpha: 0.35),
+                                            ),
+                                          ),
+                                        ),
                                       Column(
                                         mainAxisAlignment:
                                             MainAxisAlignment.spaceBetween,
@@ -125,6 +143,33 @@ class ProductsList extends StatelessWidget {
                                               ),
                                             ),
                                           ),
+                                          if (!isRestaurantOpen)
+                                            Container(
+                                              margin: const EdgeInsets.only(
+                                                left: Dimens.largePadding,
+                                              ),
+                                              padding: const EdgeInsets.symmetric(
+                                                horizontal: Dimens.smallPadding,
+                                                vertical: 2,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: Colors.black.withValues(alpha: 0.7),
+                                                borderRadius: BorderRadius.circular(
+                                                  Dimens.smallCorners,
+                                                ),
+                                              ),
+                                              child: Text(
+                                                'Kapalı',
+                                                style: context
+                                                    .theme
+                                                    .appTypography
+                                                    .labelSmall
+                                                    .copyWith(
+                                                      color: Colors.white,
+                                                      fontWeight: FontWeight.w700,
+                                                    ),
+                                              ),
+                                            ),
                                           Container(
                                             width: 196,
                                             height: 30,

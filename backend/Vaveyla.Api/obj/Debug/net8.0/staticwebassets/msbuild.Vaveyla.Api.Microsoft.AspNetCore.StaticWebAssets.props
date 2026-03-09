@@ -208,6 +208,22 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\owners\cd23f525-9f11-4f17-9239-4468d58a6008\menu\4b16f36725974bb8b37d7ed7f27e451c.avif))</OriginalItemSpec>
     </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\owners\cd23f525-9f11-4f17-9239-4468d58a6008\menu\68a5e7c5fcfd445d9515af73a3b78998.jpg))">
+      <SourceType>Package</SourceType>
+      <SourceId>Vaveyla.Api</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/Vaveyla.Api</BasePath>
+      <RelativePath>uploads/owners/cd23f525-9f11-4f17-9239-4468d58a6008/menu/68a5e7c5fcfd445d9515af73a3b78998.jpg</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\owners\cd23f525-9f11-4f17-9239-4468d58a6008\menu\68a5e7c5fcfd445d9515af73a3b78998.jpg))</OriginalItemSpec>
+    </StaticWebAsset>
     <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\owners\cd23f525-9f11-4f17-9239-4468d58a6008\menu\894612b8d3b24738bab9a57444419f71.jpg))">
       <SourceType>Package</SourceType>
       <SourceId>Vaveyla.Api</SourceId>

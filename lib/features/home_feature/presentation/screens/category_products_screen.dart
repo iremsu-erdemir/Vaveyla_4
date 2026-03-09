@@ -19,6 +19,9 @@ import '../bloc/category_products_cubit.dart';
 import 'product_details_screen.dart';
 
 class CategoryProductsScreen extends StatelessWidget {
+  static const _closedRestaurantMessage =
+      'Bu restoran şu anda hizmet verememektedir.';
+
   const CategoryProductsScreen({
     super.key,
     required this.categoryName,
@@ -68,77 +71,127 @@ class CategoryProductsScreen extends StatelessWidget {
               itemCount: products.length,
               itemBuilder: (context, index) {
                 final product = products[index];
+                final isRestaurantOpen = product.restaurantIsOpen;
                 return InkWell(
                   onTap: () {
+                    if (!isRestaurantOpen) {
+                      context.showErrorMessage(_closedRestaurantMessage);
+                      return;
+                    }
                     appPush(context, ProductDetailsScreen(product: product));
                   },
                   borderRadius: BorderRadius.circular(Dimens.corners),
                   child: ShadedContainer(
-                    child: Column(
-                      spacing: Dimens.padding,
-                      crossAxisAlignment: CrossAxisAlignment.center,
+                    child: Stack(
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.all(Dimens.padding),
-                          child: SizedBox(
-                            height: 100,
-                            width: 200,
-                            child: ClipRRect(
-                              borderRadius:
-                                  BorderRadius.circular(Dimens.corners),
-                              child: _buildProductImage(
-                                context,
-                                product.imageUrl,
+                        Column(
+                          spacing: Dimens.padding,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(Dimens.padding),
+                              child: SizedBox(
+                                height: 100,
+                                width: 200,
+                                child: ClipRRect(
+                                  borderRadius:
+                                      BorderRadius.circular(Dimens.corners),
+                                  child: _buildProductImage(
+                                    context,
+                                    product.imageUrl,
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: Dimens.padding,
-                          ),
-                          child: Column(
-                            spacing: Dimens.smallPadding,
-                            children: [
-                              Text(
-                                product.name,
-                                style: context.theme.appTypography.titleSmall,
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 2,
-                                textAlign: TextAlign.center,
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: Dimens.padding,
                               ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                              child: Column(
+                                spacing: Dimens.smallPadding,
                                 children: [
-                                  AppRatingSummary(
-                                    rating: product.rate,
-                                    reviewCount: product.reviewCount,
-                                  ),
                                   Text(
-                                    formatPrice(product.price),
-                                    style: context.theme.appTypography
-                                        .labelLarge
-                                        .copyWith(
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                    product.name,
+                                    style: context.theme.appTypography.titleSmall,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 2,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      AppRatingSummary(
+                                        rating: product.rate,
+                                        reviewCount: product.reviewCount,
+                                      ),
+                                      Text(
+                                        formatPrice(product.price),
+                                        style: context.theme.appTypography
+                                            .labelLarge
+                                            .copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: AppIconButton(
+                                      iconPath: Assets.icons.shoppingCart,
+                                      backgroundColor: appColors.primary,
+                                      onPressed: () {
+                                        if (!isRestaurantOpen) {
+                                          context.showErrorMessage(
+                                            _closedRestaurantMessage,
+                                          );
+                                          return;
+                                        }
+                                        context.read<CartCubit>().addItem(product);
+                                        context.showSuccessMessage(
+                                          '${product.name} sepete eklendi!',
+                                        );
+                                      },
+                                    ),
                                   ),
                                 ],
                               ),
-                              SizedBox(
-                                width: double.infinity,
-                                child: AppIconButton(
-                                  iconPath: Assets.icons.shoppingCart,
-                                  backgroundColor: appColors.primary,
-                                  onPressed: () {
-                                    context.read<CartCubit>().addItem(product);
-                                    context.showSuccessMessage(
-                                      '${product.name} sepete eklendi!',
-                                    );
-                                  },
+                            ),
+                          ],
+                        ),
+                        if (!isRestaurantOpen)
+                          Positioned.fill(
+                            child: IgnorePointer(
+                              child: Container(
+                                color: Colors.grey.withValues(alpha: 0.35),
+                              ),
+                            ),
+                          ),
+                        Positioned(
+                          top: Dimens.padding,
+                          right: Dimens.padding,
+                          child: Visibility(
+                            visible: !isRestaurantOpen,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: Dimens.smallPadding,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.7),
+                                borderRadius: BorderRadius.circular(
+                                  Dimens.smallCorners,
                                 ),
                               ),
-                            ],
+                              child: Text(
+                                'Kapalı',
+                                style: context.theme.appTypography.labelSmall
+                                    .copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                              ),
+                            ),
                           ),
                         ),
                       ],
