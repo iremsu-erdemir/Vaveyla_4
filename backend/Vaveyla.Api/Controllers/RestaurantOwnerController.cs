@@ -1,0 +1,602 @@
+using Microsoft.AspNetCore.Mvc;
+using Vaveyla.Api.Data;
+using Vaveyla.Api.Models;
+
+namespace Vaveyla.Api.Controllers;
+
+[ApiController]
+[Route("api/owner")]
+public sealed class RestaurantOwnerController : ControllerBase
+{
+    private readonly IRestaurantOwnerRepository _repository;
+    private readonly ICustomerOrdersRepository _customerOrdersRepository;
+    private readonly IWebHostEnvironment _environment;
+
+    public RestaurantOwnerController(
+        IRestaurantOwnerRepository repository,
+        ICustomerOrdersRepository customerOrdersRepository,
+        IWebHostEnvironment environment)
+    {
+        _repository = repository;
+        _customerOrdersRepository = customerOrdersRepository;
+        _environment = environment;
+    }
+
+    [HttpPost("uploads/menu")]
+    [ApiExplorerSettings(IgnoreApi = true)]
+    public async Task<ActionResult<object>> UploadMenuImage(
+        [FromQuery] Guid ownerUserId,
+        [FromForm] IFormFile file,
+        CancellationToken cancellationToken)
+    {
+        if (ownerUserId == Guid.Empty)
+        {
+            return BadRequest(new { message = "Owner user id is required." });
+        }
+
+        if (file.Length == 0)
+        {
+            return BadRequest(new { message = "File is required." });
+        }
+
+        var relativePath = await SaveUploadAsync(ownerUserId, "menu", file, cancellationToken);
+        return Ok(new { url = BuildPublicUrl(relativePath) });
+    }
+
+    [HttpPost("uploads/restaurant-photo")]
+    [ApiExplorerSettings(IgnoreApi = true)]
+    public async Task<ActionResult<object>> UploadRestaurantPhoto(
+        [FromQuery] Guid ownerUserId,
+        [FromForm] IFormFile file,
+        CancellationToken cancellationToken)
+    {
+        if (ownerUserId == Guid.Empty)
+        {
+            return BadRequest(new { message = "Owner user id is required." });
+        }
+
+        if (file.Length == 0)
+        {
+            return BadRequest(new { message = "File is required." });
+        }
+
+        var relativePath = await SaveUploadAsync(ownerUserId, "restaurant", file, cancellationToken);
+        return Ok(new { url = BuildPublicUrl(relativePath) });
+    }
+
+    [HttpGet("menu")]
+    public async Task<ActionResult<List<MenuItemDto>>> GetMenu(
+        [FromQuery] Guid ownerUserId,
+        CancellationToken cancellationToken)
+    {
+        if (ownerUserId == Guid.Empty)
+        {
+            return BadRequest(new { message = "Owner user id is required." });
+        }
+
+        var restaurant = await _repository.GetOrCreateRestaurantAsync(ownerUserId, cancellationToken);
+        var items = await _repository.GetMenuItemsAsync(restaurant.RestaurantId, cancellationToken);
+        var response = items
+            .Select(item => new MenuItemDto(
+                item.MenuItemId,
+                item.CategoryName,
+                item.Name,
+                item.Price,
+                item.ImagePath,
+                item.IsAvailable,
+                item.IsFeatured))
+            .ToList();
+        return Ok(response);
+    }
+
+    [HttpPost("menu")]
+    public async Task<ActionResult<MenuItemDto>> CreateMenuItem(
+        [FromQuery] Guid ownerUserId,
+        [FromBody] CreateMenuItemRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (ownerUserId == Guid.Empty)
+        {
+            return BadRequest(new { message = "Owner user id is required." });
+        }
+
+        var restaurant = await _repository.GetOrCreateRestaurantAsync(ownerUserId, cancellationToken);
+        var item = new MenuItem
+        {
+            MenuItemId = Guid.NewGuid(),
+            RestaurantId = restaurant.RestaurantId,
+            CategoryName = string.IsNullOrWhiteSpace(request.CategoryName) ? null : request.CategoryName.Trim(),
+            Name = request.Name.Trim(),
+            Price = request.Price,
+            ImagePath = request.ImagePath?.Trim() ?? string.Empty,
+            IsAvailable = request.IsAvailable ?? true,
+            IsFeatured = request.IsFeatured ?? false,
+            CreatedAtUtc = DateTime.UtcNow,
+        };
+
+        await _repository.AddMenuItemAsync(item, cancellationToken);
+        return Ok(new MenuItemDto(
+            item.MenuItemId,
+            item.CategoryName,
+            item.Name,
+            item.Price,
+            item.ImagePath,
+            item.IsAvailable,
+            item.IsFeatured));
+    }
+
+    [HttpPut("menu/{menuItemId:guid}")]
+    public async Task<ActionResult<MenuItemDto>> UpdateMenuItem(
+        [FromQuery] Guid ownerUserId,
+        [FromRoute] Guid menuItemId,
+        [FromBody] UpdateMenuItemRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (ownerUserId == Guid.Empty)
+        {
+            return BadRequest(new { message = "Owner user id is required." });
+        }
+
+        var restaurant = await _repository.GetOrCreateRestaurantAsync(ownerUserId, cancellationToken);
+        var item = await _repository.GetMenuItemAsync(restaurant.RestaurantId, menuItemId, cancellationToken);
+        if (item is null)
+        {
+            return NotFound(new { message = "Menu item not found." });
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Name))
+        {
+            item.Name = request.Name.Trim();
+        }
+
+        if (request.Price.HasValue)
+        {
+            item.Price = request.Price.Value;
+        }
+
+        if (request.ImagePath is not null)
+        {
+            item.ImagePath = request.ImagePath;
+        }
+
+        if (request.IsAvailable.HasValue)
+        {
+            item.IsAvailable = request.IsAvailable.Value;
+        }
+
+        if (request.IsFeatured.HasValue)
+        {
+            item.IsFeatured = request.IsFeatured.Value;
+        }
+
+        if (request.CategoryName is not null)
+        {
+            item.CategoryName = string.IsNullOrWhiteSpace(request.CategoryName) ? null : request.CategoryName.Trim();
+        }
+
+        await _repository.UpdateMenuItemAsync(item, cancellationToken);
+        return Ok(new MenuItemDto(
+            item.MenuItemId,
+            item.CategoryName,
+            item.Name,
+            item.Price,
+            item.ImagePath,
+            item.IsAvailable,
+            item.IsFeatured));
+    }
+
+    [HttpDelete("menu/{menuItemId:guid}")]
+    public async Task<ActionResult> DeleteMenuItem(
+        [FromQuery] Guid ownerUserId,
+        [FromRoute] Guid menuItemId,
+        CancellationToken cancellationToken)
+    {
+        if (ownerUserId == Guid.Empty)
+        {
+            return BadRequest(new { message = "Owner user id is required." });
+        }
+
+        var restaurant = await _repository.GetOrCreateRestaurantAsync(ownerUserId, cancellationToken);
+        var removed = await _repository.DeleteMenuItemAsync(restaurant.RestaurantId, menuItemId, cancellationToken);
+        if (!removed)
+        {
+            return NotFound(new { message = "Menu item not found." });
+        }
+
+        return NoContent();
+    }
+
+    [HttpGet("orders")]
+    public async Task<ActionResult<List<RestaurantOrderDto>>> GetOrders(
+        [FromQuery] Guid ownerUserId,
+        CancellationToken cancellationToken)
+    {
+        if (ownerUserId == Guid.Empty)
+        {
+            return BadRequest(new { message = "Owner user id is required." });
+        }
+
+        var restaurant = await _repository.GetOrCreateRestaurantAsync(ownerUserId, cancellationToken);
+        var customerOrders = await _customerOrdersRepository.GetOrdersForRestaurantAsync(
+            restaurant.RestaurantId,
+            cancellationToken);
+        var menuItems = await _repository.GetMenuItemsAsync(restaurant.RestaurantId, cancellationToken);
+        var response = customerOrders
+            .Select(order => MapCustomerOrder(order, menuItems))
+            .ToList();
+        return Ok(response);
+    }
+
+    [HttpPost("orders")]
+    public async Task<ActionResult<RestaurantOrderDto>> CreateOrder(
+        [FromQuery] Guid ownerUserId,
+        [FromBody] CreateOrderRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (ownerUserId == Guid.Empty)
+        {
+            return BadRequest(new { message = "Owner user id is required." });
+        }
+
+        var restaurant = await _repository.GetOrCreateRestaurantAsync(ownerUserId, cancellationToken);
+        var status = RestaurantOrderStatus.Pending;
+        if (!string.IsNullOrWhiteSpace(request.Status) &&
+            !TryParseOrderStatus(request.Status, out status))
+        {
+            return BadRequest(new { message = "Invalid order status." });
+        }
+        if (request.PreparationMinutes is <= 0)
+        {
+            return BadRequest(new { message = "Preparation minutes must be greater than zero." });
+        }
+
+        var createdAtUtc = request.CreatedAtUtc?.ToUniversalTime() ?? DateTime.UtcNow;
+        var order = new RestaurantOrder
+        {
+            OrderId = Guid.NewGuid(),
+            RestaurantId = restaurant.RestaurantId,
+            Items = request.Items.Trim(),
+            ImagePath = request.ImagePath?.Trim(),
+            PreparationMinutes = request.PreparationMinutes,
+            Total = request.Total,
+            Status = status,
+            CreatedAtUtc = createdAtUtc,
+        };
+
+        await _repository.AddOrderAsync(order, cancellationToken);
+        var menuItems = await _repository.GetMenuItemsAsync(restaurant.RestaurantId, cancellationToken);
+        return Ok(MapOrder(order, menuItems));
+    }
+
+    [HttpPut("orders/{orderId:guid}/status")]
+    public async Task<ActionResult<RestaurantOrderDto>> UpdateOrderStatus(
+        [FromQuery] Guid ownerUserId,
+        [FromRoute] Guid orderId,
+        [FromBody] UpdateOrderStatusRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (ownerUserId == Guid.Empty)
+        {
+            return BadRequest(new { message = "Owner user id is required." });
+        }
+
+        var restaurant = await _repository.GetOrCreateRestaurantAsync(ownerUserId, cancellationToken);
+        var order = await _customerOrdersRepository.GetOrderAsync(orderId, cancellationToken);
+        if (order is null)
+        {
+            return NotFound(new { message = "Order not found." });
+        }
+        if (order.RestaurantId != restaurant.RestaurantId)
+        {
+            return NotFound(new { message = "Order not found." });
+        }
+
+        if (!TryParseOrderStatus(request.Status, out var status))
+        {
+            return BadRequest(new { message = "Invalid order status." });
+        }
+
+        order.Status = MapRestaurantToCustomerStatus(status);
+        await _customerOrdersRepository.UpdateOrderStatusAsync(order, cancellationToken);
+        var menuItems = await _repository.GetMenuItemsAsync(restaurant.RestaurantId, cancellationToken);
+        return Ok(MapCustomerOrder(order, menuItems));
+    }
+
+    [HttpGet("settings")]
+    public async Task<ActionResult<RestaurantSettingsDto>> GetSettings(
+        [FromQuery] Guid ownerUserId,
+        CancellationToken cancellationToken)
+    {
+        if (ownerUserId == Guid.Empty)
+        {
+            return BadRequest(new { message = "Owner user id is required." });
+        }
+
+        var restaurant = await _repository.GetOrCreateRestaurantAsync(ownerUserId, cancellationToken);
+        var reviews = await _repository.GetReviewsAsync(restaurant.RestaurantId, cancellationToken);
+        var settings = BuildSettingsDto(restaurant, reviews);
+        return Ok(settings);
+    }
+
+    [HttpPut("settings")]
+    public async Task<ActionResult<RestaurantSettingsDto>> UpdateSettings(
+        [FromQuery] Guid ownerUserId,
+        [FromBody] UpdateRestaurantSettingsRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (ownerUserId == Guid.Empty)
+        {
+            return BadRequest(new { message = "Owner user id is required." });
+        }
+
+        var restaurant = await _repository.GetOrCreateRestaurantAsync(ownerUserId, cancellationToken);
+        if (!string.IsNullOrWhiteSpace(request.RestaurantName))
+        {
+            restaurant.Name = request.RestaurantName.Trim();
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.RestaurantType))
+        {
+            restaurant.Type = request.RestaurantType.Trim();
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Address))
+        {
+            restaurant.Address = request.Address.Trim();
+        }
+
+        if (request.Latitude.HasValue)
+        {
+            restaurant.Latitude = request.Latitude.Value;
+        }
+
+        if (request.Longitude.HasValue)
+        {
+            restaurant.Longitude = request.Longitude.Value;
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Phone))
+        {
+            restaurant.Phone = request.Phone.Trim();
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.WorkingHours))
+        {
+            restaurant.WorkingHours = request.WorkingHours.Trim();
+        }
+
+        if (request.OrderNotifications.HasValue)
+        {
+            restaurant.OrderNotifications = request.OrderNotifications.Value;
+        }
+
+        if (request.IsOpen.HasValue)
+        {
+            restaurant.IsOpen = request.IsOpen.Value;
+        }
+
+        if (request.RestaurantPhotoPath is not null)
+        {
+            restaurant.PhotoPath = request.RestaurantPhotoPath;
+        }
+
+        await _repository.UpdateRestaurantAsync(restaurant, cancellationToken);
+
+        var reviews = await _repository.GetReviewsAsync(restaurant.RestaurantId, cancellationToken);
+        var settings = BuildSettingsDto(restaurant, reviews);
+        return Ok(settings);
+    }
+
+    [HttpPut("reviews/{reviewId:guid}/reply")]
+    public async Task<ActionResult> UpdateReviewReply(
+        [FromQuery] Guid ownerUserId,
+        [FromRoute] Guid reviewId,
+        [FromBody] UpdateReviewReplyRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (ownerUserId == Guid.Empty)
+        {
+            return BadRequest(new { message = "Owner user id is required." });
+        }
+
+        var restaurant = await _repository.GetOrCreateRestaurantAsync(ownerUserId, cancellationToken);
+        await _repository.UpdateReviewReplyAsync(
+            restaurant.RestaurantId,
+            reviewId,
+            request.OwnerReply.Trim(),
+            cancellationToken);
+        return NoContent();
+    }
+
+    private static RestaurantOrderDto MapOrder(
+        RestaurantOrder order,
+        IReadOnlyList<MenuItem> menuItems)
+    {
+        var imagePath = !string.IsNullOrWhiteSpace(order.ImagePath)
+            ? order.ImagePath.Trim()
+            : ResolveOrderImagePath(order.Items, menuItems);
+        return new RestaurantOrderDto(
+            order.OrderId,
+            order.CreatedAtUtc.ToLocalTime().ToString("HH:mm"),
+            order.CreatedAtUtc.ToLocalTime().ToString("dd.MM.yyyy"),
+            imagePath,
+            order.Items,
+            order.Total,
+            order.Status.ToString().ToLowerInvariant(),
+            order.PreparationMinutes);
+    }
+
+    private static RestaurantOrderDto MapCustomerOrder(
+        CustomerOrder order,
+        IReadOnlyList<MenuItem> menuItems)
+    {
+        var imagePath = ResolveOrderImagePath(order.Items, menuItems);
+        return new RestaurantOrderDto(
+            order.OrderId,
+            order.CreatedAtUtc.ToLocalTime().ToString("HH:mm"),
+            order.CreatedAtUtc.ToLocalTime().ToString("dd.MM.yyyy"),
+            imagePath,
+            order.Items,
+            order.Total,
+            MapCustomerToRestaurantStatus(order.Status),
+            null);
+    }
+
+    private static RestaurantSettingsDto BuildSettingsDto(
+        Restaurant restaurant,
+        List<RestaurantReview> reviews)
+    {
+        var reviewCount = reviews.Count;
+        var rating = reviewCount == 0
+            ? 0
+            : Math.Round(reviews.Average(x => x.Rating), 1);
+        var ratingDistribution = reviews
+            .GroupBy(x => (int)x.Rating)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        return new RestaurantSettingsDto
+        {
+            RestaurantId = restaurant.RestaurantId,
+            RestaurantName = restaurant.Name,
+            RestaurantType = restaurant.Type,
+            Address = restaurant.Address,
+            Latitude = restaurant.Latitude,
+            Longitude = restaurant.Longitude,
+            Phone = restaurant.Phone,
+            WorkingHours = restaurant.WorkingHours,
+            OrderNotifications = restaurant.OrderNotifications,
+            IsOpen = restaurant.IsOpen,
+            RestaurantPhotoPath = restaurant.PhotoPath,
+            ReviewCount = reviewCount,
+            Rating = rating,
+            RatingDistribution = ratingDistribution,
+            Reviews = reviews
+                .Select(review => new RestaurantReviewDto(
+                    review.ReviewId,
+                    review.CustomerName,
+                    review.Rating,
+                    review.Comment,
+                    review.CreatedAtUtc.ToLocalTime().ToString("dd.MM.yyyy"),
+                    review.OwnerReply))
+                .ToList(),
+        };
+    }
+
+    private static bool TryParseOrderStatus(string status, out RestaurantOrderStatus parsed)
+    {
+        parsed = RestaurantOrderStatus.Pending;
+        if (string.IsNullOrWhiteSpace(status))
+        {
+            return false;
+        }
+
+        return status.Trim().ToLowerInvariant() switch
+        {
+            "pending" => Assign(RestaurantOrderStatus.Pending, out parsed),
+            "preparing" => Assign(RestaurantOrderStatus.Preparing, out parsed),
+            "completed" => Assign(RestaurantOrderStatus.Completed, out parsed),
+            "rejected" => Assign(RestaurantOrderStatus.Rejected, out parsed),
+            _ => false,
+        };
+    }
+
+    private static bool Assign(RestaurantOrderStatus status, out RestaurantOrderStatus parsed)
+    {
+        parsed = status;
+        return true;
+    }
+
+    private static CustomerOrderStatus MapRestaurantToCustomerStatus(RestaurantOrderStatus status)
+    {
+        return status switch
+        {
+            RestaurantOrderStatus.Pending => CustomerOrderStatus.Pending,
+            RestaurantOrderStatus.Preparing => CustomerOrderStatus.Preparing,
+            RestaurantOrderStatus.Completed => CustomerOrderStatus.Delivered,
+            RestaurantOrderStatus.Rejected => CustomerOrderStatus.Cancelled,
+            _ => CustomerOrderStatus.Pending,
+        };
+    }
+
+    private static string MapCustomerToRestaurantStatus(CustomerOrderStatus status)
+    {
+        return status switch
+        {
+            CustomerOrderStatus.Pending => "pending",
+            CustomerOrderStatus.Preparing => "preparing",
+            CustomerOrderStatus.Assigned => "preparing",
+            CustomerOrderStatus.InTransit => "preparing",
+            CustomerOrderStatus.Delivered => "completed",
+            CustomerOrderStatus.Cancelled => "rejected",
+            _ => "pending",
+        };
+    }
+
+    private static string ResolveOrderImagePath(
+        string itemsText,
+        IReadOnlyList<MenuItem> menuItems)
+    {
+        if (string.IsNullOrWhiteSpace(itemsText) || menuItems.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        var lowerItems = itemsText.ToLowerInvariant();
+        foreach (var menuItem in menuItems)
+        {
+            var name = menuItem.Name?.Trim();
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                continue;
+            }
+
+            if (lowerItems.Contains(name.ToLowerInvariant()) &&
+                !string.IsNullOrWhiteSpace(menuItem.ImagePath))
+            {
+                return menuItem.ImagePath.Trim();
+            }
+        }
+
+        return menuItems
+                   .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x.ImagePath))
+                   ?.ImagePath
+                   ?.Trim()
+               ?? string.Empty;
+    }
+
+    private async Task<string> SaveUploadAsync(
+        Guid ownerUserId,
+        string folder,
+        IFormFile file,
+        CancellationToken cancellationToken)
+    {
+        var extension = Path.GetExtension(file.FileName);
+        var fileName = $"{Guid.NewGuid():N}{extension}";
+        var relativePath = Path.Combine("uploads", "owners", ownerUserId.ToString(), folder, fileName);
+        var webRootPath = _environment.WebRootPath;
+        if (string.IsNullOrWhiteSpace(webRootPath))
+        {
+            webRootPath = Path.Combine(_environment.ContentRootPath, "wwwroot");
+        }
+        if (!Directory.Exists(webRootPath))
+        {
+            Directory.CreateDirectory(webRootPath);
+        }
+
+        var absolutePath = Path.Combine(webRootPath, relativePath);
+        var directory = Path.GetDirectoryName(absolutePath);
+        if (!string.IsNullOrWhiteSpace(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        await using var stream = System.IO.File.Create(absolutePath);
+        await file.CopyToAsync(stream, cancellationToken);
+        return relativePath.Replace(Path.DirectorySeparatorChar, '/');
+    }
+
+    private string BuildPublicUrl(string relativePath)
+    {
+        return $"{Request.Scheme}://{Request.Host}/{relativePath}";
+    }
+}

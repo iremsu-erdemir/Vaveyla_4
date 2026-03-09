@@ -1,0 +1,375 @@
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:flutter_sweet_shop_app_ui/core/services/auth_service.dart';
+import 'package:http/http.dart' as http;
+
+import 'package:flutter_sweet_shop_app_ui/features/restaurant_owner_feature/data/models/menu_item_model.dart';
+import 'package:flutter_sweet_shop_app_ui/features/restaurant_owner_feature/data/models/order_model.dart';
+import 'package:flutter_sweet_shop_app_ui/features/restaurant_owner_feature/presentation/bloc/restaurant_settings_cubit.dart';
+
+class RestaurantOwnerService {
+  RestaurantOwnerService({
+    required this.authService,
+    String? baseUrl,
+    List<String>? baseUrls,
+  }) : _baseUrls =
+            baseUrl != null || (baseUrls != null && baseUrls.isNotEmpty)
+                ? AuthService(baseUrl: baseUrl, baseUrls: baseUrls).baseUrls
+                : authService.baseUrls;
+
+  final AuthService authService;
+  final List<String> _baseUrls;
+
+  Future<List<MenuItemModel>> getMenu({required String ownerUserId}) async {
+    final response = await _getWithFallback(
+      path: '/api/owner/menu?ownerUserId=$ownerUserId',
+    );
+    final data = _decodeJson(response);
+    if (data is List) {
+      return data
+          .whereType<Map>()
+          .map((item) => MenuItemModel.fromJson(item.cast<String, dynamic>()))
+          .toList();
+    }
+    return [];
+  }
+
+  Future<MenuItemModel> createMenuItem({
+    required String ownerUserId,
+    required String name,
+    required int price,
+    required String imagePath,
+    String? categoryName,
+    bool isAvailable = true,
+    bool isFeatured = false,
+  }) async {
+    final response = await _postWithFallback(
+      path: '/api/owner/menu?ownerUserId=$ownerUserId',
+      body: {
+        'name': name,
+        'price': price,
+        'imagePath': imagePath,
+        'categoryName': categoryName,
+        'isAvailable': isAvailable,
+        'isFeatured': isFeatured,
+      },
+    );
+    final data = _decodeJson(response) as Map<String, dynamic>;
+    return MenuItemModel.fromJson(data);
+  }
+
+  Future<MenuItemModel> updateMenuItem({
+    required String ownerUserId,
+    required String id,
+    String? name,
+    int? price,
+    String? imagePath,
+    String? categoryName,
+    bool? isAvailable,
+    bool? isFeatured,
+  }) async {
+    final response = await _putWithFallback(
+      path: '/api/owner/menu/$id?ownerUserId=$ownerUserId',
+      body: {
+        'name': name,
+        'price': price,
+        'imagePath': imagePath,
+        'categoryName': categoryName,
+        'isAvailable': isAvailable,
+        'isFeatured': isFeatured,
+      },
+    );
+    final data = _decodeJson(response) as Map<String, dynamic>;
+    return MenuItemModel.fromJson(data);
+  }
+
+  Future<void> deleteMenuItem({
+    required String ownerUserId,
+    required String id,
+  }) async {
+    await _deleteWithFallback(
+      path: '/api/owner/menu/$id?ownerUserId=$ownerUserId',
+    );
+  }
+
+  Future<List<RestaurantOrderModel>> getOrders({
+    required String ownerUserId,
+  }) async {
+    final response = await _getWithFallback(
+      path: '/api/owner/orders?ownerUserId=$ownerUserId',
+    );
+    final data = _decodeJson(response);
+    if (data is List) {
+      return data
+          .whereType<Map>()
+          .map((item) => RestaurantOrderModel.fromJson(item.cast<String, dynamic>()))
+          .toList();
+    }
+    return [];
+  }
+
+  Future<RestaurantOrderModel> createOrder({
+    required String ownerUserId,
+    required String items,
+    required int total,
+    String? imagePath,
+    int? preparationMinutes,
+    String? status,
+    DateTime? createdAt,
+  }) async {
+    final response = await _postWithFallback(
+      path: '/api/owner/orders?ownerUserId=$ownerUserId',
+      body: {
+        'items': items,
+        'total': total,
+        'imagePath': imagePath,
+        'preparationMinutes': preparationMinutes,
+        'status': status,
+        'createdAtUtc': createdAt?.toUtc().toIso8601String(),
+      },
+    );
+    final data = _decodeJson(response) as Map<String, dynamic>;
+    return RestaurantOrderModel.fromJson(data);
+  }
+
+  Future<RestaurantOrderModel> updateOrderStatus({
+    required String ownerUserId,
+    required String id,
+    required RestaurantOrderStatus status,
+  }) async {
+    final response = await _putWithFallback(
+      path: '/api/owner/orders/$id/status?ownerUserId=$ownerUserId',
+      body: {'status': status.name},
+    );
+    final data = _decodeJson(response) as Map<String, dynamic>;
+    return RestaurantOrderModel.fromJson(data);
+  }
+
+  Future<RestaurantSettingsState> getSettings({
+    required String ownerUserId,
+  }) async {
+    final response = await _getWithFallback(
+      path: '/api/owner/settings?ownerUserId=$ownerUserId',
+    );
+    final data = _decodeJson(response) as Map<String, dynamic>;
+    return RestaurantSettingsState.fromJson(data);
+  }
+
+  Future<RestaurantSettingsState> updateSettings({
+    required String ownerUserId,
+    String? restaurantName,
+    String? restaurantType,
+    String? address,
+    double? latitude,
+    double? longitude,
+    String? phone,
+    String? workingHours,
+    bool? orderNotifications,
+    bool? isOpen,
+    String? restaurantPhotoPath,
+  }) async {
+    final response = await _putWithFallback(
+      path: '/api/owner/settings?ownerUserId=$ownerUserId',
+      body: {
+        'restaurantName': restaurantName,
+        'restaurantType': restaurantType,
+        'address': address,
+        'latitude': latitude,
+        'longitude': longitude,
+        'phone': phone,
+        'workingHours': workingHours,
+        'orderNotifications': orderNotifications,
+        'isOpen': isOpen,
+        'restaurantPhotoPath': restaurantPhotoPath,
+      },
+    );
+    final data = _decodeJson(response) as Map<String, dynamic>;
+    return RestaurantSettingsState.fromJson(data);
+  }
+
+  Future<void> updateReviewReply({
+    required String ownerUserId,
+    required String reviewId,
+    required String ownerReply,
+  }) async {
+    await _putWithFallback(
+      path: '/api/owner/reviews/$reviewId/reply?ownerUserId=$ownerUserId',
+      body: {'ownerReply': ownerReply},
+    );
+  }
+
+  Future<String> uploadMenuImage({
+    required String ownerUserId,
+    required String filePath,
+    Uint8List? fileBytes,
+    String? fileName,
+  }) async {
+    final response = await _multipartWithFallback(
+      path: '/api/owner/uploads/menu?ownerUserId=$ownerUserId',
+      filePath: filePath,
+      fileBytes: fileBytes,
+      fileName: fileName,
+    );
+    final data = _decodeJson(response) as Map<String, dynamic>;
+    return data['url']?.toString() ?? '';
+  }
+
+  Future<String> uploadRestaurantPhoto({
+    required String ownerUserId,
+    required String filePath,
+    Uint8List? fileBytes,
+    String? fileName,
+  }) async {
+    final response = await _multipartWithFallback(
+      path: '/api/owner/uploads/restaurant-photo?ownerUserId=$ownerUserId',
+      filePath: filePath,
+      fileBytes: fileBytes,
+      fileName: fileName,
+    );
+    final data = _decodeJson(response) as Map<String, dynamic>;
+    return data['url']?.toString() ?? '';
+  }
+
+  Future<http.Response> _getWithFallback({required String path}) async {
+    for (final baseUrl in _baseUrls) {
+      try {
+        return await http
+            .get(Uri.parse('$baseUrl$path'))
+            .timeout(const Duration(seconds: 8));
+      } on Exception catch (error) {
+        if (kDebugMode) {
+          debugPrint('OwnerService GET hata ($baseUrl): $error');
+        }
+      }
+    }
+    throw AuthException('Sunucuya bağlanılamadı. Lütfen bağlantınızı kontrol edin.');
+  }
+
+  Future<http.Response> _postWithFallback({
+    required String path,
+    required Map<String, dynamic> body,
+  }) async {
+    for (final baseUrl in _baseUrls) {
+      try {
+        return await http
+            .post(
+              Uri.parse('$baseUrl$path'),
+              headers: const {'Content-Type': 'application/json'},
+              body: jsonEncode(body),
+            )
+            .timeout(const Duration(seconds: 8));
+      } on Exception catch (error) {
+        if (kDebugMode) {
+          debugPrint('OwnerService POST hata ($baseUrl): $error');
+        }
+      }
+    }
+    throw AuthException('Sunucuya bağlanılamadı. Lütfen bağlantınızı kontrol edin.');
+  }
+
+  Future<http.Response> _putWithFallback({
+    required String path,
+    required Map<String, dynamic> body,
+  }) async {
+    for (final baseUrl in _baseUrls) {
+      try {
+        return await http
+            .put(
+              Uri.parse('$baseUrl$path'),
+              headers: const {'Content-Type': 'application/json'},
+              body: jsonEncode(body),
+            )
+            .timeout(const Duration(seconds: 8));
+      } on Exception catch (error) {
+        if (kDebugMode) {
+          debugPrint('OwnerService PUT hata ($baseUrl): $error');
+        }
+      }
+    }
+    throw AuthException('Sunucuya bağlanılamadı. Lütfen bağlantınızı kontrol edin.');
+  }
+
+  Future<http.Response> _deleteWithFallback({required String path}) async {
+    for (final baseUrl in _baseUrls) {
+      try {
+        return await http
+            .delete(Uri.parse('$baseUrl$path'))
+            .timeout(const Duration(seconds: 8));
+      } on Exception catch (error) {
+        if (kDebugMode) {
+          debugPrint('OwnerService DELETE hata ($baseUrl): $error');
+        }
+      }
+    }
+    throw AuthException('Sunucuya bağlanılamadı. Lütfen bağlantınızı kontrol edin.');
+  }
+
+  Future<http.Response> _multipartWithFallback({
+    required String path,
+    required String filePath,
+    Uint8List? fileBytes,
+    String? fileName,
+  }) async {
+    for (final baseUrl in _baseUrls) {
+      try {
+        final uri = Uri.parse('$baseUrl$path');
+        final request = http.MultipartRequest('POST', uri);
+        if (kIsWeb) {
+          final bytes = fileBytes ?? await XFile(filePath).readAsBytes();
+          request.files.add(
+            http.MultipartFile.fromBytes(
+              'file',
+              bytes,
+              filename: fileName ?? 'upload.jpg',
+            ),
+          );
+        } else {
+          request.files.add(await http.MultipartFile.fromPath('file', filePath));
+        }
+        final response = await request.send();
+        final body = await response.stream.bytesToString();
+        final wrapped = http.Response(body, response.statusCode);
+        if (wrapped.statusCode >= 200 && wrapped.statusCode < 300) {
+          return wrapped;
+        }
+        if (kDebugMode) {
+          debugPrint(
+            'OwnerService UPLOAD cevap hata ($baseUrl): ${wrapped.statusCode} ${wrapped.body}',
+          );
+        }
+      } on Exception catch (error) {
+        if (kDebugMode) {
+          debugPrint('OwnerService UPLOAD hata ($baseUrl): $error');
+        }
+      }
+    }
+    throw AuthException('Sunucuya bağlanılamadı. Lütfen bağlantınızı kontrol edin.');
+  }
+
+  dynamic _decodeJson(http.Response response) {
+    final status = response.statusCode;
+    if (status >= 200 && status < 300) {
+      if (response.body.isEmpty) {
+        return null;
+      }
+      return jsonDecode(response.body);
+    }
+    throw AuthException(_extractMessage(response));
+  }
+
+  String _extractMessage(http.Response response) {
+    try {
+      final data = jsonDecode(response.body);
+      if (data is Map<String, dynamic> && data['message'] != null) {
+        return data['message'].toString();
+      }
+    } catch (_) {}
+
+    if (response.body.isNotEmpty) {
+      return response.body;
+    }
+    return 'İşlem sırasında bir hata oluştu.';
+  }
+}

@@ -1,0 +1,122 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_sweet_shop_app_ui/core/theme/dimens.dart';
+import 'package:flutter_sweet_shop_app_ui/core/theme/theme.dart';
+import 'package:flutter_sweet_shop_app_ui/core/utils/app_navigator.dart';
+import 'package:flutter_sweet_shop_app_ui/core/widgets/app_scaffold.dart';
+import 'package:flutter_sweet_shop_app_ui/core/widgets/general_app_bar.dart';
+import 'package:flutter_sweet_shop_app_ui/features/home_feature/data/services/products_service.dart';
+import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/bloc/all_products_cubit.dart';
+import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/screens/restaurant_products_screen.dart';
+import 'package:flutter_sweet_shop_app_ui/features/restaurant_owner_feature/widgets/product_image_widget.dart';
+
+class RestaurantsScreen extends StatelessWidget {
+  const RestaurantsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => AllProductsCubit(ProductsService())..loadProducts(),
+      child: AppScaffold(
+        appBar: const GeneralAppBar(title: 'Restoranlar'),
+        body: BlocBuilder<AllProductsCubit, AllProductsState>(
+          builder: (context, state) {
+            if (state.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            final byRestaurant = <String, (String name, String type, String? photoPath)>{};
+            for (final product in state.products) {
+              final id = product.restaurantId;
+              if (id == null || id.isEmpty) continue;
+              byRestaurant[id] = (
+                product.restaurantName ?? 'Restoran',
+                product.restaurantType ?? 'Kategori',
+                product.restaurantPhotoPath,
+              );
+            }
+            final restaurants = byRestaurant.entries.toList();
+            if (restaurants.isEmpty) {
+              return const Center(child: Text('Restoran bulunamadı.'));
+            }
+
+            return ListView.separated(
+              padding: const EdgeInsets.all(Dimens.largePadding),
+              itemCount: restaurants.length,
+              separatorBuilder: (_, __) => const SizedBox(height: Dimens.largePadding),
+              itemBuilder: (context, index) {
+                final item = restaurants[index];
+                final restaurantId = item.key;
+                final (name, type, photoPath) = item.value;
+                return InkWell(
+                  borderRadius: BorderRadius.circular(Dimens.corners),
+                  onTap: () {
+                    appPush(
+                      context,
+                      RestaurantProductsScreen(
+                        restaurantId: restaurantId,
+                        restaurantName: name,
+                      ),
+                    );
+                  },
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(Dimens.corners),
+                    child: Stack(
+                      children: [
+                        SizedBox(
+                          height: 140,
+                          width: double.infinity,
+                          child: buildProductImage(photoPath ?? '', 360, 140),
+                        ),
+                        Positioned.fill(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.black.withValues(alpha: 0.08),
+                                  Colors.black.withValues(alpha: 0.55),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          left: Dimens.largePadding,
+                          right: Dimens.largePadding,
+                          bottom: Dimens.largePadding,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                name,
+                                style: context.theme.appTypography.titleMedium.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                type,
+                                style: context.theme.appTypography.bodySmall.copyWith(
+                                  color: Colors.white.withValues(alpha: 0.9),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
