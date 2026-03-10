@@ -9,6 +9,8 @@ part 'cart_state.dart';
 
 class CartCubit extends Cubit<CartState> {
   CartCubit() : super(CartInitial());
+  static const String differentRestaurantErrorMessage =
+      'Aynı anda farklı pastanelerden ürün ekleyemezsiniz. Lütfen önce sepetinizi temizleyin.';
 
   final CustomerCartService _cartService = CustomerCartService();
   final List<CartItemModel> _items = [];
@@ -32,11 +34,17 @@ class CartCubit extends Cubit<CartState> {
     }
   }
 
-  Future<void> addItem(ProductModel product) async {
+  Future<String?> addItem(ProductModel product) async {
     final customerUserId = _customerUserId;
     if (customerUserId.isEmpty) {
-      emit(CartError('Sepete eklemek için giriş yapın.'));
-      return;
+      const message = 'Sepete eklemek için giriş yapın.';
+      emit(CartError(message));
+      return message;
+    }
+
+    if (_hasItemsFromDifferentRestaurant(product)) {
+      emit(CartError(differentRestaurantErrorMessage));
+      return differentRestaurantErrorMessage;
     }
 
     try {
@@ -47,8 +55,11 @@ class CartCubit extends Cubit<CartState> {
         weightKg: product.weight,
       );
       await loadCart();
+      return null;
     } catch (e) {
-      emit(CartError(e.toString()));
+      final message = _extractErrorMessage(e);
+      emit(CartError(message));
+      return message;
     }
   }
 
@@ -136,5 +147,31 @@ class CartCubit extends Cubit<CartState> {
 
   bool isProductInCart(String productId) {
     return _items.any((item) => item.product.id == productId);
+  }
+
+  bool _hasItemsFromDifferentRestaurant(ProductModel product) {
+    final targetRestaurantId = product.restaurantId?.trim();
+    if (targetRestaurantId == null || targetRestaurantId.isEmpty) {
+      return false;
+    }
+
+    for (final item in _items) {
+      final cartRestaurantId = item.product.restaurantId?.trim();
+      if (cartRestaurantId == null || cartRestaurantId.isEmpty) {
+        continue;
+      }
+      if (cartRestaurantId.toLowerCase() != targetRestaurantId.toLowerCase()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  String _extractErrorMessage(Object error) {
+    final raw = error.toString().trim();
+    if (raw.startsWith('Exception: ')) {
+      return raw.replaceFirst('Exception: ', '').trim();
+    }
+    return raw;
   }
 }

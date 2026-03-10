@@ -285,13 +285,18 @@ class _CategoriesScreenBody extends StatelessWidget {
     );
   }
 
-  void _addToCart(final BuildContext context, ProductModel product) {
+  Future<void> _addToCart(final BuildContext context, ProductModel product) async {
     if (!product.restaurantIsOpen) {
       context.showErrorMessage(_closedRestaurantMessage);
       return;
     }
     final cartCubit = context.read<CartCubit>();
-    cartCubit.addItem(product);
-    context.showSuccessMessage('${product.name} sepete eklendi!');
+    final errorMessage = await cartCubit.addItem(product);
+    if (!context.mounted) return;
+    if (errorMessage == null) {
+      context.showSuccessMessage('${product.name} sepete eklendi!');
+      return;
+    }
+    context.showErrorMessage(errorMessage);
   }
 }

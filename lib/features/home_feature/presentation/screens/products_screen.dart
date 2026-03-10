@@ -387,18 +387,25 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                               child: AppIconButton(
                                                 iconPath: Assets.icons.shoppingCart,
                                                 backgroundColor: appColors.primary,
-                                                onPressed: () {
+                                                onPressed: () async {
                                                   if (!isRestaurantOpen) {
                                                     context.showErrorMessage(
                                                       _closedRestaurantMessage,
                                                     );
                                                     return;
                                                   }
-                                                  context
+                                                  final errorMessage = await context
                                                       .read<CartCubit>()
                                                       .addItem(product);
-                                                  context.showSuccessMessage(
-                                                    '${product.name} sepete eklendi!',
+                                                  if (!context.mounted) return;
+                                                  if (errorMessage == null) {
+                                                    context.showSuccessMessage(
+                                                      '${product.name} sepete eklendi!',
+                                                    );
+                                                    return;
+                                                  }
+                                                  context.showErrorMessage(
+                                                    errorMessage,
                                                   );
                                                 },
                                               ),

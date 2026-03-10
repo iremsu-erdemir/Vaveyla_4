@@ -412,7 +412,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     }
   }
 
-  void _addToCart() {
+  Future<void> _addToCart() async {
     final product = widget.product;
     if (product == null) return;
     final selectedProduct = product.copyWith(
@@ -420,8 +420,13 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
       weight: _selectedWeightKg,
     );
     final cartCubit = context.read<CartCubit>();
-    cartCubit.addItem(selectedProduct);
-    context.showSuccessMessage('${product.name} sepete eklendi!');
+    final errorMessage = await cartCubit.addItem(selectedProduct);
+    if (!mounted) return;
+    if (errorMessage == null) {
+      context.showSuccessMessage('${product.name} sepete eklendi!');
+      return;
+    }
+    context.showErrorMessage(errorMessage);
   }
 
   Widget _buildReviewTile(CustomerReviewModel review) {

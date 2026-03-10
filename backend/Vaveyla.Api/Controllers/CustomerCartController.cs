@@ -63,7 +63,12 @@ public sealed class CustomerCartController : ControllerBase
         }
         catch (InvalidOperationException ex)
         {
-            return NotFound(new { message = ex.Message });
+            if (string.Equals(ex.Message, "Product not found.", StringComparison.Ordinal))
+            {
+                return NotFound(new { message = ex.Message });
+            }
+
+            return BadRequest(new { message = ex.Message });
         }
     }
 

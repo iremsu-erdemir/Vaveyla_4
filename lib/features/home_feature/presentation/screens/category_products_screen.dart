@@ -140,17 +140,24 @@ class CategoryProductsScreen extends StatelessWidget {
                                     child: AppIconButton(
                                       iconPath: Assets.icons.shoppingCart,
                                       backgroundColor: appColors.primary,
-                                      onPressed: () {
+                                      onPressed: () async {
                                         if (!isRestaurantOpen) {
                                           context.showErrorMessage(
                                             _closedRestaurantMessage,
                                           );
                                           return;
                                         }
-                                        context.read<CartCubit>().addItem(product);
-                                        context.showSuccessMessage(
-                                          '${product.name} sepete eklendi!',
-                                        );
+                                        final errorMessage = await context
+                                            .read<CartCubit>()
+                                            .addItem(product);
+                                        if (!context.mounted) return;
+                                        if (errorMessage == null) {
+                                          context.showSuccessMessage(
+                                            '${product.name} sepete eklendi!',
+                                          );
+                                          return;
+                                        }
+                                        context.showErrorMessage(errorMessage);
                                       },
                                     ),
                                   ),

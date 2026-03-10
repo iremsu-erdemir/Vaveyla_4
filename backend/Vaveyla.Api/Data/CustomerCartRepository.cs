@@ -66,6 +66,17 @@ public sealed class CustomerCartRepository : ICustomerCartRepository
             throw new InvalidOperationException("Product not found.");
         }
 
+        var hasDifferentRestaurantItems = await _dbContext.CustomerCartItems
+            .AnyAsync(
+                x => x.CustomerUserId == customerUserId &&
+                     x.RestaurantId != product.RestaurantId,
+                cancellationToken);
+        if (hasDifferentRestaurantItems)
+        {
+            throw new InvalidOperationException(
+                "Aynı anda farklı pastanelerden ürün ekleyemezsiniz. Lütfen önce sepetinizi temizleyin.");
+        }
+
         var now = DateTime.UtcNow;
         var existing = await _dbContext.CustomerCartItems
             .FirstOrDefaultAsync(
