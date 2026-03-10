@@ -221,7 +221,7 @@ class _OrdersList extends StatelessWidget {
       separatorBuilder: (_, __) => const SizedBox(height: Dimens.largePadding),
       itemBuilder: (context, index) {
         final order = orders[index];
-        final accent = _statusColor(status);
+        final accent = _statusColor(order.status);
         return Container(
           padding: const EdgeInsets.all(Dimens.largePadding),
           decoration: BoxDecoration(
@@ -310,7 +310,7 @@ class _OrdersList extends StatelessWidget {
                             ),
                           ],
                         ),
-                        if (status != CourierOrderStatus.delivered) ...[
+                        if (order.status != CourierOrderStatus.delivered) ...[
                           const SizedBox(height: Dimens.padding),
                           Wrap(
                             spacing: Dimens.padding,
@@ -318,7 +318,7 @@ class _OrdersList extends StatelessWidget {
                             children: _buildActionButtons(
                               context,
                               order,
-                              status,
+                              order.status,
                               tabController,
                             ),
                           ),
@@ -334,7 +334,7 @@ class _OrdersList extends StatelessWidget {
                             ),
                             const Spacer(),
                             Text(
-                              _statusText(status),
+                              _statusText(order.status),
                               style: typography.labelSmall.copyWith(
                                 color: accent,
                                 fontWeight: FontWeight.w600,
@@ -374,36 +374,51 @@ class _OrdersList extends StatelessWidget {
     if (status == CourierOrderStatus.assigned) {
       return [
         FilledButton(
-          onPressed: () {
-            cubit.markPickedUp(order.id);
-            tabController.animateTo(1);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Sipariş #${order.id} alındı')),
-            );
+          onPressed: () async {
+            try {
+              await cubit.markPickedUp(order.id);
+              if (!context.mounted) return;
+              tabController.animateTo(1);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Sipariş #${order.id} kabul edildi')),
+              );
+            } catch (e) {
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Sipariş kabul edilemedi: $e')),
+              );
+            }
           },
           style: buttonStyle.copyWith(
             backgroundColor: WidgetStateProperty.all(colors.success),
           ),
-          child: const Text('Aldım'),
+          child: const Text('Siparişi Kabul Et'),
         ),
         FilledButton.icon(
-          onPressed: () {
-            cubit.markPickedUp(order.id);
-            tabController.animateTo(1);
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => MultiBlocProvider(
-                  providers: [
-                    BlocProvider.value(value: cubit),
-                    BlocProvider(
-                      create: (_) =>
-                          CourierLocationCubit()..getCurrentPosition(),
-                    ),
-                  ],
-                  child: CourierTrackingScreen(selectedOrder: order),
+          onPressed: () async {
+            try {
+              await cubit.markPickedUp(order.id);
+              if (!context.mounted) return;
+              tabController.animateTo(1);
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => MultiBlocProvider(
+                    providers: [
+                      BlocProvider.value(value: cubit),
+                      BlocProvider.value(
+                        value: context.read<CourierLocationCubit>(),
+                      ),
+                    ],
+                    child: CourierTrackingScreen(selectedOrder: order),
+                  ),
                 ),
-              ),
-            );
+              );
+            } catch (e) {
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Sipariş kabul edilemedi: $e')),
+              );
+            }
           },
           icon: const Icon(Icons.map, size: 18),
           label: const Text('Haritada Git'),
@@ -414,12 +429,20 @@ class _OrdersList extends StatelessWidget {
     if (status == CourierOrderStatus.pickedUp) {
       return [
         FilledButton(
-          onPressed: () {
-            cubit.markInTransit(order.id);
-            tabController.animateTo(1);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Sipariş #${order.id} yola çıktı')),
-            );
+          onPressed: () async {
+            try {
+              await cubit.markInTransit(order.id);
+              if (!context.mounted) return;
+              tabController.animateTo(1);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Sipariş #${order.id} yola çıktı')),
+              );
+            } catch (e) {
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Durum güncellenemedi: $e')),
+              );
+            }
           },
           style: buttonStyle,
           child: const Text('Yola Çıktım'),
@@ -435,9 +458,8 @@ class _OrdersList extends StatelessWidget {
                 builder: (_) => MultiBlocProvider(
                   providers: [
                     BlocProvider.value(value: cubit),
-                    BlocProvider(
-                      create: (_) =>
-                          CourierLocationCubit()..getCurrentPosition(),
+                    BlocProvider.value(
+                      value: context.read<CourierLocationCubit>(),
                     ),
                   ],
                   child: CourierTrackingScreen(selectedOrder: order),
@@ -450,12 +472,20 @@ class _OrdersList extends StatelessWidget {
           style: buttonStyle,
         ),
         FilledButton(
-          onPressed: () {
-            cubit.markDelivered(order.id);
-            tabController.animateTo(2);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Sipariş #${order.id} teslim edildi')),
-            );
+          onPressed: () async {
+            try {
+              await cubit.markDelivered(order.id);
+              if (!context.mounted) return;
+              tabController.animateTo(2);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Sipariş #${order.id} teslim edildi')),
+              );
+            } catch (e) {
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Teslim durumu kaydedilemedi: $e')),
+              );
+            }
           },
           style: buttonStyle.copyWith(
             backgroundColor: WidgetStateProperty.all(colors.success),

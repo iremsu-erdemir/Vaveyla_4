@@ -21,29 +21,32 @@ class CourierService {
   final List<String> _baseUrls;
 
   /// Kuryeye atanmış siparişleri getirir.
-  /// Backend'de /api/courier/orders endpoint'i yoksa mock data döner.
   Future<List<CourierOrderModel>> getOrders({
     required String courierUserId,
   }) async {
-    try {
-      final response = await _getWithFallback(
-        path: '/api/courier/orders?courierUserId=$courierUserId',
-      );
-      final data = _decodeJson(response);
-      if (data is List) {
-        return data
-            .whereType<Map>()
-            .map((item) =>
-                CourierOrderModel.fromJson(item.cast<String, dynamic>()))
-            .toList();
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('CourierService getOrders: $e - mock data kullanılıyor');
-      }
-      return _getMockOrders();
+    final response = await _getWithFallback(
+      path: '/api/courier/orders?courierUserId=$courierUserId',
+    );
+    final data = _decodeJson(response);
+    if (data is List) {
+      return data
+          .whereType<Map>()
+          .map((item) => CourierOrderModel.fromJson(item.cast<String, dynamic>()))
+          .toList();
     }
-    return _getMockOrders();
+    return [];
+  }
+
+  Future<CourierOrderModel> acceptOrder({
+    required String courierUserId,
+    required String id,
+  }) async {
+    final response = await _putWithFallback(
+      path: '/api/courier/orders/$id/accept?courierUserId=$courierUserId',
+      body: const {},
+    );
+    final data = _decodeJson(response) as Map<String, dynamic>;
+    return CourierOrderModel.fromJson(data);
   }
 
   Future<CourierOrderModel> updateOrderStatus({
@@ -72,76 +75,22 @@ class CourierService {
     required String orderId,
     required double lat,
     required double lng,
+    required DateTime timestampUtc,
   }) async {
     try {
       await _putWithFallback(
         path: '/api/courier/orders/$orderId/location?courierUserId=$courierUserId',
-        body: {'lat': lat, 'lng': lng},
+        body: {
+          'lat': lat,
+          'lng': lng,
+          'timestampUtc': timestampUtc.toUtc().toIso8601String(),
+        },
       );
     } catch (e) {
       if (kDebugMode) {
         debugPrint('CourierService updateCourierLocation: $e');
       }
     }
-  }
-
-  List<CourierOrderModel> _getMockOrders() {
-    return [
-      CourierOrderModel(
-        id: '1',
-        time: '14:30',
-        date: '03.03.2025',
-        imagePath: '',
-        preparationMinutes: 25,
-        items: '2x Donut, 1x Kahve',
-        total: 85,
-        status: CourierOrderStatus.assigned,
-        customerAddress: 'Muaffıklarhane Sk., Sabuni Mh., Edirne',
-        customerLat: 41.6757164,
-        customerLng: 26.5547864,
-        restaurantAddress: 'Balık Pazarı Cd., Dilaverbey Mh., Edirne',
-        restaurantLat: 41.6740066,
-        restaurantLng: 26.5528021,
-        customerName: 'Ahmet Yılmaz',
-        customerPhone: '0532 123 4567',
-      ),
-      CourierOrderModel(
-        id: '2',
-        time: '14:45',
-        date: '03.03.2025',
-        imagePath: '',
-        preparationMinutes: 20,
-        items: '1x Baklava, 2x Lokum',
-        total: 120,
-        status: CourierOrderStatus.inTransit,
-        customerAddress: 'Atatürk Blv., Abdurrahman Mh., Edirne',
-        customerLat: 41.6681158,
-        customerLng: 26.5702769,
-        restaurantAddress: 'Balık Pazarı Cd., Dilaverbey Mh., Edirne',
-        restaurantLat: 41.6741273,
-        restaurantLng: 26.5529304,
-        customerName: 'Ayşe Demir',
-        customerPhone: '0533 987 6543',
-      ),
-      CourierOrderModel(
-        id: '3',
-        time: '13:15',
-        date: '03.03.2025',
-        imagePath: '',
-        preparationMinutes: 15,
-        items: '3x Cupcake, 1x Çay',
-        total: 65,
-        status: CourierOrderStatus.delivered,
-        customerAddress: 'Saraçlar Cd., Edirne',
-        customerLat: 41.6771089,
-        customerLng: 26.5556832,
-        restaurantAddress: 'Muaffıklarhane Sk., Edirne',
-        restaurantLat: 41.6757164,
-        restaurantLng: 26.5547864,
-        customerName: 'Mehmet Kaya',
-        customerPhone: '0534 555 1234',
-      ),
-    ];
   }
 
   Future<http.Response> _getWithFallback({required String path}) async {

@@ -34,9 +34,16 @@ class CourierDashboardScreen extends StatelessWidget {
         BlocProvider(create: (_) => CourierNavCubit()),
         BlocProvider(
           create: (_) =>
-              CourierOrdersCubit(courierService, courierUserId)..loadOrders(),
+              CourierOrdersCubit(courierService, courierUserId)
+                ..loadOrders()
+                ..startPolling(),
         ),
-        BlocProvider(create: (_) => CourierLocationCubit()),
+        BlocProvider(
+          create: (_) => CourierLocationCubit(
+            courierService: courierService,
+            courierUserId: courierUserId,
+          ),
+        ),
         BlocProvider(create: (_) => CourierOrdersTabCubit()),
       ],
       child: const _CourierDashboardScreen(),

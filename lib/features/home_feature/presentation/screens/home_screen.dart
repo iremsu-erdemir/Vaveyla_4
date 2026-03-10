@@ -29,7 +29,9 @@ class HomeScreen extends StatelessWidget {
         BlocProvider(create: (context) => LocationCubit()),
         BlocProvider(
           create: (context) =>
-              HomeProductsCubit(ProductsService())..loadProducts(),
+              HomeProductsCubit(ProductsService())
+                ..loadProducts()
+                ..startPolling(),
         ),
       ],
       child: const _HomeScreen(),

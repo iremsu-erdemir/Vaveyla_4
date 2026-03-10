@@ -9,8 +9,10 @@ public interface ICustomerOrdersRepository
     Task<List<CustomerOrder>> GetOrdersForCustomerAsync(Guid customerUserId, CancellationToken cancellationToken);
     Task<List<CustomerOrder>> GetOrdersForRestaurantAsync(Guid restaurantId, CancellationToken cancellationToken);
     Task<List<CustomerOrder>> GetOrdersForCourierAsync(CancellationToken cancellationToken);
+    Task<List<CustomerOrder>> GetOrdersForCourierAsync(Guid courierUserId, CancellationToken cancellationToken);
     Task<CustomerOrder?> GetOrderAsync(Guid orderId, CancellationToken cancellationToken);
     Task UpdateOrderStatusAsync(CustomerOrder order, CancellationToken cancellationToken);
+    Task AddCourierLocationAsync(CourierLocationLog location, CancellationToken cancellationToken);
 }
 
 public sealed class CustomerOrdersRepository : ICustomerOrdersRepository
@@ -61,6 +63,19 @@ public sealed class CustomerOrdersRepository : ICustomerOrdersRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<List<CustomerOrder>> GetOrdersForCourierAsync(
+        Guid courierUserId,
+        CancellationToken cancellationToken)
+    {
+        return await _dbContext.CustomerOrders
+            .Where(o =>
+                o.Status == CustomerOrderStatus.Preparing ||
+                (o.AssignedCourierUserId == courierUserId &&
+                 o.Status != CustomerOrderStatus.Cancelled))
+            .OrderByDescending(o => o.CreatedAtUtc)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<CustomerOrder?> GetOrderAsync(
         Guid orderId,
         CancellationToken cancellationToken)
@@ -74,6 +89,14 @@ public sealed class CustomerOrdersRepository : ICustomerOrdersRepository
         CancellationToken cancellationToken)
     {
         _dbContext.CustomerOrders.Update(order);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task AddCourierLocationAsync(
+        CourierLocationLog location,
+        CancellationToken cancellationToken)
+    {
+        _dbContext.CourierLocationLogs.Add(location);
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }

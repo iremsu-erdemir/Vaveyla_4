@@ -106,7 +106,11 @@ public sealed class CustomerReviewsController : ControllerBase
             RestaurantId = resolvedRestaurantId.Value,
             TargetType = normalizedType,
             TargetId = request.TargetId,
-            ProductId = normalizedType == "menu" ? request.TargetId : null,
+            ProductId = await ResolveProductIdAsync(
+                normalizedType,
+                request.TargetId,
+                resolvedRestaurantId.Value,
+                cancellationToken),
             CustomerUserId = customerUserId,
             CustomerName = string.IsNullOrWhiteSpace(request.CustomerName) ? "Müşteri" : request.CustomerName.Trim(),
             Rating = request.Rating,
@@ -274,6 +278,66 @@ public sealed class CustomerReviewsController : ControllerBase
             return order == Guid.Empty ? requestedRestaurantId : order;
         }
         return requestedRestaurantId;
+    }
+
+    private async Task<Guid?> ResolveProductIdAsync(
+        string targetType,
+        Guid targetId,
+        Guid restaurantId,
+        CancellationToken cancellationToken)
+    {
+        if (targetType == "menu")
+        {
+            return targetId;
+        }
+
+        if (targetType != "order")
+        {
+            return null;
+        }
+
+        var order = await _dbContext.CustomerOrders
+            .Where(x => x.OrderId == targetId)
+            .Select(x => new { x.RestaurantId, x.Items })
+            .FirstOrDefaultAsync(cancellationToken);
+        if (order is null)
+        {
+            return null;
+        }
+
+        var effectiveRestaurantId = order.RestaurantId == Guid.Empty
+            ? restaurantId
+            : order.RestaurantId;
+        if (effectiveRestaurantId == Guid.Empty || string.IsNullOrWhiteSpace(order.Items))
+        {
+            return null;
+        }
+
+        var menuItems = await _dbContext.MenuItems
+            .Where(x => x.RestaurantId == effectiveRestaurantId)
+            .Select(x => new { x.MenuItemId, x.Name })
+            .ToListAsync(cancellationToken);
+        if (menuItems.Count == 0)
+        {
+            return null;
+        }
+
+        var normalizedItems = order.Items.ToLowerInvariant();
+        foreach (var menuItem in menuItems)
+        {
+            var name = menuItem.Name?.Trim();
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                continue;
+            }
+
+            if (normalizedItems.Contains(name.ToLowerInvariant()))
+            {
+                return menuItem.MenuItemId;
+            }
+        }
+
+        return null;
     }
 
     private static bool TryNormalizeTargetType(string? value, out string normalized)

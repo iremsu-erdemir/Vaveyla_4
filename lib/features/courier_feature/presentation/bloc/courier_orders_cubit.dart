@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_sweet_shop_app_ui/features/courier_feature/data/models/courier_order_model.dart';
 import 'package:flutter_sweet_shop_app_ui/features/courier_feature/data/services/courier_service.dart';
@@ -7,11 +9,24 @@ class CourierOrdersCubit extends Cubit<List<CourierOrderModel>> {
 
   final CourierService _service;
   final String _courierUserId;
+  Timer? _pollTimer;
 
   Future<void> loadOrders() async {
-    final loaded = await _service.getOrders(courierUserId: _courierUserId);
-    final merged = _mergeWithCurrentState(loaded);
-    emit(merged);
+    try {
+      final loaded = await _service.getOrders(courierUserId: _courierUserId);
+      final merged = _mergeWithCurrentState(loaded);
+      emit(merged);
+    } catch (_) {
+      // Polling sırasında geçici ağ/API hatalarında UI'ı çökertmemek için
+      // mevcut state korunur.
+    }
+  }
+
+  void startPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      loadOrders();
+    });
   }
 
   /// Yerel olarak güncellenmiş durumları korur. Yenile sonrası teslim edilen
@@ -45,7 +60,7 @@ class CourierOrdersCubit extends Cubit<List<CourierOrderModel>> {
   }
 
   Future<void> markPickedUp(String id) async {
-    await _updateStatus(id, CourierOrderStatus.pickedUp);
+    await _acceptOrder(id);
   }
 
   Future<void> markInTransit(String id) async {
@@ -57,23 +72,36 @@ class CourierOrdersCubit extends Cubit<List<CourierOrderModel>> {
   }
 
   Future<void> _updateStatus(String id, CourierOrderStatus to) async {
+    final updated = await _service.updateOrderStatus(
+      courierUserId: _courierUserId,
+      id: id,
+      status: to,
+    );
+    emit(
+      state.map((o) => o.id == id ? o.copyWith(status: updated.status) : o).toList(),
+    );
+  }
+
+  Future<void> _acceptOrder(String id) async {
     try {
-      final updated = await _service.updateOrderStatus(
-        courierUserId: _courierUserId,
-        id: id,
-        status: to,
+      await _service.acceptOrder(courierUserId: _courierUserId, id: id);
+      emit(
+        state
+            .map((o) => o.id == id ? o.copyWith(status: CourierOrderStatus.pickedUp) : o)
+            .toList(),
       );
-      emit(state.map((o) => o.id == id ? updated : o).toList());
     } catch (_) {
-      // Mock: local update when API fails
-      emit(state.map((o) {
-        if (o.id == id) return o.copyWith(status: to);
-        return o;
-      }).toList());
+      rethrow;
     }
   }
 
   List<CourierOrderModel> getByStatus(CourierOrderStatus status) {
     return state.where((o) => o.status == status).toList();
+  }
+
+  @override
+  Future<void> close() {
+    _pollTimer?.cancel();
+    return super.close();
   }
 }

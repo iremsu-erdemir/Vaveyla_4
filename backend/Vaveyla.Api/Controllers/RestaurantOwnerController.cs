@@ -512,7 +512,7 @@ public sealed class RestaurantOwnerController : ControllerBase
         {
             RestaurantOrderStatus.Pending => CustomerOrderStatus.Pending,
             RestaurantOrderStatus.Preparing => CustomerOrderStatus.Preparing,
-            RestaurantOrderStatus.Completed => CustomerOrderStatus.Delivered,
+            RestaurantOrderStatus.Completed => CustomerOrderStatus.Preparing,
             RestaurantOrderStatus.Rejected => CustomerOrderStatus.Cancelled,
             _ => CustomerOrderStatus.Pending,
         };
@@ -524,8 +524,8 @@ public sealed class RestaurantOwnerController : ControllerBase
         {
             CustomerOrderStatus.Pending => "pending",
             CustomerOrderStatus.Preparing => "preparing",
-            CustomerOrderStatus.Assigned => "preparing",
-            CustomerOrderStatus.InTransit => "preparing",
+            CustomerOrderStatus.Assigned => "completed",
+            CustomerOrderStatus.InTransit => "completed",
             CustomerOrderStatus.Delivered => "completed",
             CustomerOrderStatus.Cancelled => "rejected",
             _ => "pending",

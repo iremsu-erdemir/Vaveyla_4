@@ -18,6 +18,11 @@ class CustomerOrderModel {
     this.restaurantId = '',
     this.imagePath = '',
     this.preparationMinutes,
+    this.customerLat,
+    this.customerLng,
+    this.courierLat,
+    this.courierLng,
+    this.courierLocationUpdatedAtUtc,
   });
 
   final String id;
@@ -29,6 +34,11 @@ class CustomerOrderModel {
   final String restaurantId;
   final String imagePath;
   final int? preparationMinutes;
+  final double? customerLat;
+  final double? customerLng;
+  final double? courierLat;
+  final double? courierLng;
+  final DateTime? courierLocationUpdatedAtUtc;
 
   factory CustomerOrderModel.fromJson(Map<String, dynamic> json) {
     return CustomerOrderModel(
@@ -41,6 +51,12 @@ class CustomerOrderModel {
       restaurantId: json['restaurantId']?.toString() ?? '',
       imagePath: json['imagePath']?.toString() ?? '',
       preparationMinutes: _parseNullableInt(json['preparationMinutes']),
+      customerLat: _parseNullableDouble(json['customerLat']),
+      customerLng: _parseNullableDouble(json['customerLng']),
+      courierLat: _parseNullableDouble(json['courierLat']),
+      courierLng: _parseNullableDouble(json['courierLng']),
+      courierLocationUpdatedAtUtc:
+          _parseNullableDateTime(json['courierLocationUpdatedAtUtc']),
     );
   }
 
@@ -53,6 +69,18 @@ class CustomerOrderModel {
     if (value == null) return null;
     if (value is int) return value;
     return int.tryParse(value.toString());
+  }
+
+  static double? _parseNullableDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    return double.tryParse(value.toString());
+  }
+
+  static DateTime? _parseNullableDateTime(dynamic value) {
+    if (value == null) return null;
+    return DateTime.tryParse(value.toString())?.toLocal();
   }
 
   static CustomerOrderStatus _parseStatus(String? value) {

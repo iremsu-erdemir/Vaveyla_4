@@ -217,7 +217,8 @@ class _RestaurantOwnerSettingsScreenState
                         title: 'Telefon',
                         value: settings.phone,
                         iconPath: Assets.icons.call,
-                        onTap: () => _showEditPhoneSheet(context, settings.phone),
+                        onTap:
+                            () => _showEditPhoneSheet(context, settings.phone),
                       ),
                       _SettingsListTile(
                         title: 'Çalışma saatleri',
@@ -507,92 +508,100 @@ class _RestaurantOwnerSettingsScreenState
       ),
       builder:
           (sheetContext) => StatefulBuilder(
-            builder: (sheetContext, setModalState) => Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(Dimens.extraLargePadding),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      'Telefon',
-                      style: sheetContext.theme.appTypography.titleLarge,
-                    ),
-                    const SizedBox(height: Dimens.largePadding),
-                    TextField(
-                      controller: localDigitsController,
-                      autofocus: true,
-                      keyboardType: TextInputType.phone,
-                      maxLength: 10,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(10),
-                      ],
-                      onChanged: (_) {
-                        if (validationMessage != null) {
-                          setModalState(() => validationMessage = null);
-                        }
-                      },
-                      decoration: InputDecoration(
-                        prefixText: '+90 ',
-                        counterText: '',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(Dimens.corners),
+            builder:
+                (sheetContext, setModalState) => Padding(
+                  padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(Dimens.extraLargePadding),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          'Telefon',
+                          style: sheetContext.theme.appTypography.titleLarge,
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: Dimens.largePadding),
-                    AppButton(
-                      title: 'Kaydet',
-                      onPressed: () async {
-                        final localDigits = localDigitsController.text.trim();
-                        if (localDigits.isEmpty) {
-                          setModalState(
-                            () => validationMessage = 'Bu alan boş bırakılamaz',
-                          );
-                          return;
-                        }
+                        const SizedBox(height: Dimens.largePadding),
+                        TextField(
+                          controller: localDigitsController,
+                          autofocus: true,
+                          keyboardType: TextInputType.phone,
+                          maxLength: 10,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(10),
+                          ],
+                          onChanged: (_) {
+                            if (validationMessage != null) {
+                              setModalState(() => validationMessage = null);
+                            }
+                          },
+                          decoration: InputDecoration(
+                            prefixText: '+90 ',
+                            counterText: '',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(
+                                Dimens.corners,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: Dimens.largePadding),
+                        AppButton(
+                          title: 'Kaydet',
+                          onPressed: () async {
+                            final localDigits =
+                                localDigitsController.text.trim();
+                            if (localDigits.isEmpty) {
+                              setModalState(
+                                () =>
+                                    validationMessage =
+                                        'Bu alan boş bırakılamaz',
+                              );
+                              return;
+                            }
 
-                        if (localDigits.length < 10) {
-                          setModalState(
-                            () => validationMessage = 'Eksik girdiniz',
-                          );
-                          return;
-                        }
+                            if (localDigits.length < 10) {
+                              setModalState(
+                                () => validationMessage = 'Eksik girdiniz',
+                              );
+                              return;
+                            }
 
-                        final fullPhone = '+90$localDigits';
-                        try {
-                          await context.read<RestaurantSettingsCubit>().setPhone(
-                            fullPhone,
-                          );
-                          if (!sheetContext.mounted) return;
-                          Navigator.pop(sheetContext);
-                          if (!context.mounted) return;
-                          _showSuccess(context, 'Telefon güncellendi');
-                        } catch (e) {
-                          if (!sheetContext.mounted) return;
-                          setModalState(
-                            () => validationMessage = e.toString(),
-                          );
-                        }
-                      },
+                            final fullPhone = '+90$localDigits';
+                            try {
+                              await context
+                                  .read<RestaurantSettingsCubit>()
+                                  .setPhone(fullPhone);
+                              if (!sheetContext.mounted) return;
+                              Navigator.pop(sheetContext);
+                              if (!context.mounted) return;
+                              _showSuccess(context, 'Telefon güncellendi');
+                            } catch (e) {
+                              if (!sheetContext.mounted) return;
+                              setModalState(
+                                () => validationMessage = e.toString(),
+                              );
+                            }
+                          },
+                        ),
+                        if (validationMessage != null) ...[
+                          const SizedBox(height: Dimens.padding),
+                          Text(
+                            validationMessage!,
+                            textAlign: TextAlign.center,
+                            style: sheetContext.theme.appTypography.bodySmall
+                                .copyWith(
+                                  color: sheetContext.theme.appColors.error,
+                                ),
+                          ),
+                        ],
+                      ],
                     ),
-                    if (validationMessage != null) ...[
-                      const SizedBox(height: Dimens.padding),
-                      Text(
-                        validationMessage!,
-                        textAlign: TextAlign.center,
-                        style: sheetContext.theme.appTypography.bodySmall
-                            .copyWith(color: sheetContext.theme.appColors.error),
-                      ),
-                    ],
-                  ],
+                  ),
                 ),
-              ),
-            ),
           ),
     );
   }

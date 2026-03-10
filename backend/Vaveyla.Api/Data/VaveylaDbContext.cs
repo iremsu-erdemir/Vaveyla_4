@@ -21,6 +21,7 @@ public sealed class VaveylaDbContext : DbContext
     public DbSet<ReviewReport> ReviewReports => Set<ReviewReport>();
     public DbSet<CustomerOrder> CustomerOrders => Set<CustomerOrder>();
     public DbSet<CustomerCartItem> CustomerCartItems => Set<CustomerCartItem>();
+    public DbSet<CourierLocationLog> CourierLocationLogs => Set<CourierLocationLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -192,6 +193,10 @@ public sealed class VaveylaDbContext : DbContext
         customerOrder.Property(x => x.CustomerName).HasMaxLength(120);
         customerOrder.Property(x => x.CustomerPhone).HasMaxLength(40);
         customerOrder.Property(x => x.RestaurantAddress).HasMaxLength(400);
+        customerOrder.Property(x => x.AssignedCourierUserId);
+        customerOrder.Property(x => x.CourierLat);
+        customerOrder.Property(x => x.CourierLng);
+        customerOrder.Property(x => x.CourierLocationUpdatedAtUtc);
         customerOrder.Property(x => x.Status)
             .HasConversion<byte>()
             .IsRequired();
@@ -201,6 +206,22 @@ public sealed class VaveylaDbContext : DbContext
         customerOrder.HasIndex(x => x.CustomerUserId);
         customerOrder.HasIndex(x => x.RestaurantId);
         customerOrder.HasIndex(x => x.Status);
+        customerOrder.HasIndex(x => x.AssignedCourierUserId);
+
+        var courierLocation = modelBuilder.Entity<CourierLocationLog>();
+        courierLocation.ToTable("CourierLocationLogs");
+        courierLocation.HasKey(x => x.CourierLocationLogId);
+        courierLocation.Property(x => x.OrderId).IsRequired();
+        courierLocation.Property(x => x.CourierUserId).IsRequired();
+        courierLocation.Property(x => x.Latitude).IsRequired();
+        courierLocation.Property(x => x.Longitude).IsRequired();
+        courierLocation.Property(x => x.TimestampUtc).IsRequired();
+        courierLocation.Property(x => x.CreatedAtUtc)
+            .HasDefaultValueSql("SYSUTCDATETIME()")
+            .IsRequired();
+        courierLocation.HasIndex(x => x.OrderId);
+        courierLocation.HasIndex(x => x.CourierUserId);
+        courierLocation.HasIndex(x => x.TimestampUtc);
 
         var cartItem = modelBuilder.Entity<CustomerCartItem>();
         cartItem.ToTable("CustomerCartItems");

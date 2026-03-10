@@ -57,6 +57,24 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     return (unitPrice * _selectedWeightKg).round();
   }
 
+  double get _calculatedRating {
+    if (_reviews.isNotEmpty) {
+      final total = _reviews.fold<int>(0, (sum, review) => sum + review.rating);
+      return total / _reviews.length;
+    }
+    return widget.product?.rate ?? 0;
+  }
+
+  int get _calculatedReviewCount {
+    if (_totalReviewCount > 0) {
+      return _totalReviewCount;
+    }
+    if (_reviews.isNotEmpty) {
+      return _reviews.length;
+    }
+    return widget.product?.reviewCount ?? 0;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -202,8 +220,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                 ),
                               ),
                               AppRatingSummary(
-                                rating: widget.product?.rate ?? 0,
-                                reviewCount: widget.product?.reviewCount ?? 0,
+                                rating: _calculatedRating,
+                                reviewCount: _calculatedReviewCount,
                               ),
                             ],
                           ),
@@ -283,7 +301,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Yorumlar (${_totalReviewCount > 0 ? _totalReviewCount : _reviews.length})',
+                                'Yorumlar ($_calculatedReviewCount)',
                                 style: appTypography.bodyLarge.copyWith(
                                   fontSize: 18,
                                 ),

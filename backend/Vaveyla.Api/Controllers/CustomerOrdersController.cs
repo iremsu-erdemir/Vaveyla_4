@@ -54,6 +54,11 @@ public sealed class CustomerOrdersController : ControllerBase
                 o.Items,
                 menuMap.TryGetValue(o.RestaurantId, out var menuItems) ? menuItems : new List<MenuItem>())),
             preparationMinutes = (int?)null,
+            customerLat = o.CustomerLat,
+            customerLng = o.CustomerLng,
+            courierLat = o.CourierLat,
+            courierLng = o.CourierLng,
+            courierLocationUpdatedAtUtc = o.CourierLocationUpdatedAtUtc,
         }).ToList();
 
         return Ok(result);
@@ -105,6 +110,41 @@ public sealed class CustomerOrdersController : ControllerBase
             status = "pending",
             total = order.Total,
         });
+    }
+
+    [HttpGet("orders/{orderId:guid}/review-products")]
+    public async Task<ActionResult<List<object>>> GetReviewProducts(
+        [FromQuery] Guid customerUserId,
+        [FromRoute] Guid orderId,
+        CancellationToken cancellationToken)
+    {
+        if (customerUserId == Guid.Empty)
+        {
+            return BadRequest(new { message = "Customer user id is required." });
+        }
+
+        var order = await _repository.GetOrderAsync(orderId, cancellationToken);
+        if (order is null)
+        {
+            return NotFound(new { message = "Order not found." });
+        }
+        if (order.CustomerUserId != customerUserId)
+        {
+            return NotFound(new { message = "Order not found." });
+        }
+
+        var menuItems = await _restaurantRepo.GetMenuItemsAsync(order.RestaurantId, cancellationToken);
+        var orderedNames = ExtractOrderItemNames(order.Items);
+        var matched = MatchOrderedMenuItems(orderedNames, menuItems);
+
+        var result = matched.Select(x => new
+        {
+            id = x.MenuItemId,
+            name = x.Name,
+            imagePath = NormalizeImagePath(x.ImagePath ?? string.Empty),
+        }).ToList();
+
+        return Ok(result);
     }
 
     private static string MapStatus(CustomerOrderStatus status)
@@ -169,6 +209,74 @@ public sealed class CustomerOrdersController : ControllerBase
 
         var normalized = imagePath.Trim().TrimStart('/');
         return $"{Request.Scheme}://{Request.Host}/{normalized}";
+    }
+
+    private static List<string> ExtractOrderItemNames(string itemsText)
+    {
+        var result = new List<string>();
+        if (string.IsNullOrWhiteSpace(itemsText))
+        {
+            return result;
+        }
+
+        var parts = itemsText.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        foreach (var part in parts)
+        {
+            var value = part.Trim();
+            var xIndex = value.IndexOf('x');
+            if (xIndex > 0)
+            {
+                var quantityText = value[..xIndex].Trim();
+                if (int.TryParse(quantityText, out _))
+                {
+                    value = value[(xIndex + 1)..].Trim();
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                result.Add(value);
+            }
+        }
+
+        return result;
+    }
+
+    private static List<MenuItem> MatchOrderedMenuItems(
+        IReadOnlyList<string> orderedNames,
+        IReadOnlyList<MenuItem> menuItems)
+    {
+        var matched = new List<MenuItem>();
+        var used = new HashSet<Guid>();
+
+        foreach (var orderedName in orderedNames)
+        {
+            var normalizedOrdered = orderedName.Trim().ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(normalizedOrdered))
+            {
+                continue;
+            }
+
+            var exact = menuItems.FirstOrDefault(x =>
+                !string.IsNullOrWhiteSpace(x.Name) &&
+                x.Name.Trim().Equals(orderedName, StringComparison.OrdinalIgnoreCase));
+            if (exact != null && used.Add(exact.MenuItemId))
+            {
+                matched.Add(exact);
+                continue;
+            }
+
+            var fuzzy = menuItems.FirstOrDefault(x =>
+                !string.IsNullOrWhiteSpace(x.Name) &&
+                (normalizedOrdered.Contains(x.Name.Trim().ToLowerInvariant()) ||
+                 x.Name.Trim().ToLowerInvariant().Contains(normalizedOrdered)));
+            if (fuzzy != null && used.Add(fuzzy.MenuItemId))
+            {
+                matched.Add(fuzzy);
+            }
+        }
+
+        return matched;
     }
 }
 

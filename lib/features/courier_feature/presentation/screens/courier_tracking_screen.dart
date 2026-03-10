@@ -25,6 +25,7 @@ class CourierTrackingScreen extends StatefulWidget {
 class _CourierTrackingScreenState extends State<CourierTrackingScreen> {
   final MapController _mapController = MapController();
   final GoogleGeocodingService _geocodingService = GoogleGeocodingService();
+  late final CourierLocationCubit _locationCubit;
   CourierOrderModel? _activeOrder;
   /// Adres metninden geocode edilen koordinatlar (order.id -> LatLng)
   final Map<String, LatLng> _geocodedAddresses = {};
@@ -34,17 +35,18 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen> {
   @override
   void initState() {
     super.initState();
+    _locationCubit = context.read<CourierLocationCubit>();
     _activeOrder = widget.selectedOrder;
     if (_activeOrder != null) {
-      context.read<CourierLocationCubit>().startTracking();
+      _locationCubit.startTracking(orderId: _activeOrder!.id);
     } else {
-      context.read<CourierLocationCubit>().getCurrentPosition();
+      _locationCubit.startTracking();
     }
   }
 
   @override
   void dispose() {
-    context.read<CourierLocationCubit>().stopTracking();
+    _locationCubit.stopTracking();
     super.dispose();
   }
 
@@ -300,15 +302,19 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          locState.status ==
-                                                  CourierLocationStatus.tracking
-                                              ? 'Canlı konum takibi aktif'
-                                              : 'Konum yükleniyor...',
+                                          _statusText(locState),
                                           style: typography.titleSmall
                                               .copyWith(
                                                 fontWeight: FontWeight.w600,
                                               ),
                                         ),
+                                        if (locState.message != null &&
+                                            locState.message!.trim().isNotEmpty)
+                                          Text(
+                                            locState.message!,
+                                            style: typography.bodySmall
+                                                .copyWith(color: colors.error),
+                                          ),
                                         if (locState.latitude != null &&
                                             locState.longitude != null)
                                           Text(
@@ -325,10 +331,19 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen> {
                                       onPressed: () {
                                         context
                                             .read<CourierLocationCubit>()
-                                            .startTracking();
+                                            .startTracking(orderId: _activeOrder?.id);
                                       },
                                       icon: const Icon(Icons.play_arrow, size: 20),
                                       label: const Text('Takibi Başlat'),
+                                    ),
+                                  if (locState.status ==
+                                      CourierLocationStatus.tracking)
+                                    TextButton.icon(
+                                      onPressed: () {
+                                        context.read<CourierLocationCubit>().stopTracking();
+                                      },
+                                      icon: const Icon(Icons.stop, size: 20),
+                                      label: const Text('Takibi Durdur'),
                                     ),
                                 ],
                               ),
@@ -431,5 +446,21 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen> {
           );
         },
     );
+  }
+
+  String _statusText(CourierLocationState state) {
+    switch (state.status) {
+      case CourierLocationStatus.tracking:
+        return 'Canlı konum takibi aktif';
+      case CourierLocationStatus.loading:
+        return 'Konum alınıyor...';
+      case CourierLocationStatus.denied:
+        return 'Konum izni gerekli';
+      case CourierLocationStatus.error:
+        return 'Konum alınamadı';
+      case CourierLocationStatus.success:
+      case CourierLocationStatus.idle:
+        return 'Takip beklemede';
+    }
   }
 }

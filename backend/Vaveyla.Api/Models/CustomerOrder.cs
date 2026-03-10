@@ -26,6 +26,10 @@ public sealed class CustomerOrder
     public double? RestaurantLng { get; set; }
     public string? CustomerName { get; set; }
     public string? CustomerPhone { get; set; }
+    public Guid? AssignedCourierUserId { get; set; }
+    public double? CourierLat { get; set; }
+    public double? CourierLng { get; set; }
+    public DateTime? CourierLocationUpdatedAtUtc { get; set; }
     public CustomerOrderStatus Status { get; set; }
     public DateTime CreatedAtUtc { get; set; }
 }

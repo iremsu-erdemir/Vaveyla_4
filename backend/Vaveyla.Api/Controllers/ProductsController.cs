@@ -34,8 +34,10 @@ public sealed class ProductsController : ControllerBase
     {
         var all = await _repository.GetAllProductsAsync(cancellationToken);
         var reviewStats = await _dbContext.RestaurantReviews
-            .Where(r => r.TargetType == "menu")
-            .GroupBy(r => r.TargetId)
+            .Where(r =>
+                (r.TargetType == "menu" && r.TargetId != Guid.Empty) ||
+                (r.TargetType == "order" && r.ProductId.HasValue))
+            .GroupBy(r => r.TargetType == "menu" ? r.TargetId : r.ProductId!.Value)
             .Select(g => new
             {
                 ProductId = g.Key,

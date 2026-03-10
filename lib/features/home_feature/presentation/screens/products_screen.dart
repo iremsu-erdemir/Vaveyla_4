@@ -161,7 +161,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
     final appColors = context.theme.appColors;
     return BlocProvider(
       create: (_) =>
-          AllProductsCubit(ProductsService())..loadProducts(type: widget.initialType),
+          AllProductsCubit(ProductsService())
+            ..loadProducts(type: widget.initialType)
+            ..startPolling(),
       child: AppScaffold(
         appBar: GeneralAppBar(
           title: widget.title,

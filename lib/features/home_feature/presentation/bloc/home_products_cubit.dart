@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_sweet_shop_app_ui/features/cart_feature/data/models/product_model.dart';
 import 'package:flutter_sweet_shop_app_ui/features/home_feature/data/services/products_service.dart';
@@ -42,9 +44,12 @@ class HomeProductsCubit extends Cubit<HomeProductsState> {
   HomeProductsCubit(this._service) : super(const HomeProductsState());
 
   final ProductsService _service;
+  Timer? _pollTimer;
 
-  Future<void> loadProducts() async {
-    emit(state.copyWith(isLoading: true, error: null));
+  Future<void> loadProducts({bool showLoading = true}) async {
+    if (showLoading) {
+      emit(state.copyWith(isLoading: true, error: null));
+    }
     try {
       final results = await Future.wait([
         _service.getProducts(),
@@ -58,6 +63,7 @@ class HomeProductsCubit extends Cubit<HomeProductsState> {
         newProducts: results[2],
         popular: results[3],
         isLoading: false,
+        error: null,
       ));
     } catch (e) {
       emit(state.copyWith(
@@ -65,5 +71,18 @@ class HomeProductsCubit extends Cubit<HomeProductsState> {
         error: e.toString(),
       ));
     }
+  }
+
+  void startPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      loadProducts(showLoading: false);
+    });
+  }
+
+  @override
+  Future<void> close() {
+    _pollTimer?.cancel();
+    return super.close();
   }
 }

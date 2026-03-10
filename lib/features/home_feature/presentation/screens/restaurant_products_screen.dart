@@ -158,7 +158,8 @@ class RestaurantProductsScreen extends StatelessWidget {
     final appColors = context.theme.appColors;
     return BlocProvider(
       create: (_) => AllProductsCubit(ProductsService())
-        ..loadProducts(restaurantId: restaurantId),
+        ..loadProducts(restaurantId: restaurantId)
+        ..startPolling(),
       child: AppScaffold(
         appBar: GeneralAppBar(
           title: restaurantName,

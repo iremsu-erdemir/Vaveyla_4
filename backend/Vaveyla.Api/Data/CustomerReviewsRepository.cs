@@ -37,8 +37,17 @@ public sealed class CustomerReviewsRepository : ICustomerReviewsRepository
         int pageSize,
         CancellationToken cancellationToken)
     {
-        var query = _dbContext.RestaurantReviews
-            .Where(x => x.TargetType == targetType && x.TargetId == targetId);
+        var query = _dbContext.RestaurantReviews.AsQueryable();
+        if (targetType == "menu")
+        {
+            query = query.Where(x =>
+                (x.TargetType == "menu" && x.TargetId == targetId) ||
+                (x.TargetType == "order" && x.ProductId.HasValue && x.ProductId.Value == targetId));
+        }
+        else
+        {
+            query = query.Where(x => x.TargetType == targetType && x.TargetId == targetId);
+        }
         if (restaurantId.HasValue && restaurantId.Value != Guid.Empty)
         {
             query = query.Where(x => x.RestaurantId == restaurantId.Value);

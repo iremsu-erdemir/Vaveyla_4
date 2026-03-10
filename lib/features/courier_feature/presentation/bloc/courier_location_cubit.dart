@@ -2,16 +2,27 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:flutter_sweet_shop_app_ui/features/courier_feature/data/services/courier_service.dart';
 
 part 'courier_location_state.dart';
 
 /// Kurye konumunu canlı takip için yönetir.
 class CourierLocationCubit extends Cubit<CourierLocationState> {
-  CourierLocationCubit() : super(const CourierLocationState());
+  CourierLocationCubit({
+    required CourierService courierService,
+    required String courierUserId,
+  }) : _courierService = courierService,
+       _courierUserId = courierUserId,
+       super(const CourierLocationState());
 
   StreamSubscription<Position>? _positionSubscription;
+  final CourierService _courierService;
+  final String _courierUserId;
+  String? _activeOrderId;
+  DateTime? _lastSyncAtUtc;
 
-  Future<void> startTracking() async {
+  Future<void> startTracking({String? orderId}) async {
+    _activeOrderId = orderId;
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       emit(state.copyWith(
@@ -40,14 +51,15 @@ class CourierLocationCubit extends Cubit<CourierLocationState> {
     _positionSubscription = Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.high,
-        distanceFilter: 10,
+        distanceFilter: 5,
       ),
-    ).listen((position) {
+    ).listen((position) async {
       emit(state.copyWith(
         latitude: position.latitude,
         longitude: position.longitude,
         status: CourierLocationStatus.tracking,
       ));
+      await _syncLocationIfNeeded(position);
     });
   }
 
@@ -55,7 +67,9 @@ class CourierLocationCubit extends Cubit<CourierLocationState> {
     emit(state.copyWith(status: CourierLocationStatus.loading));
     try {
       final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
       );
       emit(state.copyWith(
         latitude: position.latitude,
@@ -82,7 +96,31 @@ class CourierLocationCubit extends Cubit<CourierLocationState> {
   void stopTracking() {
     _positionSubscription?.cancel();
     _positionSubscription = null;
+    _activeOrderId = null;
+    _lastSyncAtUtc = null;
     emit(state.copyWith(status: CourierLocationStatus.idle));
+  }
+
+  Future<void> _syncLocationIfNeeded(Position position) async {
+    final orderId = _activeOrderId;
+    if (orderId == null || orderId.isEmpty) {
+      return;
+    }
+
+    final now = DateTime.now().toUtc();
+    if (_lastSyncAtUtc != null &&
+        now.difference(_lastSyncAtUtc!).inSeconds < 3) {
+      return;
+    }
+
+    _lastSyncAtUtc = now;
+    await _courierService.updateCourierLocation(
+      courierUserId: _courierUserId,
+      orderId: orderId,
+      lat: position.latitude,
+      lng: position.longitude,
+      timestampUtc: now,
+    );
   }
 
   @override

@@ -6,9 +6,11 @@ import 'package:flutter_sweet_shop_app_ui/core/utils/app_feedback.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/modern_order_card.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_button.dart';
 import 'package:flutter_sweet_shop_app_ui/features/cart_feature/data/models/customer_order_model.dart';
-import 'package:flutter_sweet_shop_app_ui/features/home_feature/data/models/customer_review_model.dart';
+import 'package:flutter_sweet_shop_app_ui/features/cart_feature/data/models/reviewable_order_item_model.dart';
+import 'package:flutter_sweet_shop_app_ui/features/cart_feature/data/services/customer_order_service.dart';
 import 'package:flutter_sweet_shop_app_ui/features/home_feature/data/services/customer_review_service.dart';
 import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/bloc/customer_orders_cubit.dart';
+import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/screens/customer_order_tracking_screen.dart';
 
 import '../../../../core/theme/dimens.dart';
 
@@ -104,7 +106,7 @@ class OrdersListWidget extends StatelessWidget {
       case CustomerOrderStatus.inTransit:
         return 'Yolda';
       case CustomerOrderStatus.completed:
-        return 'Tamamlandı';
+        return 'Siparis teslim edildi';
       case CustomerOrderStatus.canceled:
         return 'İptal edildi';
     }
@@ -157,7 +159,18 @@ class OrdersListWidget extends StatelessWidget {
         ),
         onPressed: status == CustomerOrderStatus.completed
             ? () => _showOrderReviewSheet(context, order)
-            : () {},
+            : status == CustomerOrderStatus.canceled
+            ? () {}
+            : () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => BlocProvider.value(
+                      value: context.read<CustomerOrdersCubit>(),
+                      child: CustomerOrderTrackingScreen(orderId: order.id),
+                    ),
+                  ),
+                );
+              },
       ),
     );
   }
@@ -167,6 +180,7 @@ class OrdersListWidget extends StatelessWidget {
     CustomerOrderModel order,
   ) async {
     final reviewService = CustomerReviewService();
+    final orderService = CustomerOrderService();
     final userId = AppSession.userId;
     if (userId.isEmpty || order.restaurantId.isEmpty) {
       if (!context.mounted) return;
@@ -174,19 +188,29 @@ class OrdersListWidget extends StatelessWidget {
       return;
     }
 
-    final commentController = TextEditingController();
-    var rating = 5;
-    var existingReviews = <CustomerReviewModel>[];
+    List<ReviewableOrderItemModel> reviewableProducts = const [];
     try {
-      final loaded = await reviewService.getReviews(
-        targetType: 'order',
-        targetId: order.id,
-        restaurantId: order.restaurantId,
-        page: 1,
-        pageSize: 5,
+      reviewableProducts = await orderService.getReviewableProducts(
+        customerUserId: userId,
+        orderId: order.id,
       );
-      existingReviews = loaded.items;
-    } catch (_) {}
+    } catch (e) {
+      if (!context.mounted) return;
+      context.showErrorMessage('Ürünler yüklenemedi: $e');
+      return;
+    }
+    if (reviewableProducts.isEmpty) {
+      if (!context.mounted) return;
+      context.showErrorMessage('Bu siparişte yorumlanabilir ürün bulunamadı.');
+      return;
+    }
+
+    final ratings = <String, int>{
+      for (final product in reviewableProducts) product.id: 5,
+    };
+    final controllers = <String, TextEditingController>{
+      for (final product in reviewableProducts) product.id: TextEditingController(),
+    };
 
     await showModalBottomSheet<void>(
       context: context,
@@ -202,74 +226,106 @@ class OrdersListWidget extends StatelessWidget {
           ),
           child: StatefulBuilder(
             builder: (context, setSheetState) {
-              return Column(
+              return SizedBox(
+                height: MediaQuery.of(sheetContext).size.height * 0.75,
+                child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Sipariş Değerlendir',
+                    'Sipariş Ürünlerini Değerlendir',
                     style: context.theme.appTypography.titleMedium,
                   ),
                   const SizedBox(height: Dimens.padding),
-                  Row(
-                    children: List.generate(5, (index) {
-                      final star = index + 1;
-                      return IconButton(
-                        icon: Icon(
-                          star <= rating ? Icons.star : Icons.star_border,
-                          color: Colors.amber,
-                        ),
-                        onPressed: () => setSheetState(() => rating = star),
-                      );
-                    }),
-                  ),
-                  TextField(
-                    controller: commentController,
-                    maxLines: 3,
-                    decoration: const InputDecoration(
-                      hintText: 'Yorumunuzu yazın',
+                  Expanded(
+                    child: ListView.separated(
+                      itemCount: reviewableProducts.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: Dimens.padding),
+                      itemBuilder: (context, index) {
+                        final product = reviewableProducts[index];
+                        final currentRating = ratings[product.id] ?? 5;
+                        return Container(
+                          padding: const EdgeInsets.all(Dimens.padding),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: context.theme.appColors.gray.withValues(alpha: 0.4),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                product.name,
+                                style: context.theme.appTypography.titleSmall.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              Row(
+                                children: List.generate(5, (starIndex) {
+                                  final star = starIndex + 1;
+                                  return IconButton(
+                                    visualDensity: VisualDensity.compact,
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(),
+                                    icon: Icon(
+                                      star <= currentRating
+                                          ? Icons.star
+                                          : Icons.star_border,
+                                      color: Colors.amber,
+                                    ),
+                                    onPressed: () => setSheetState(
+                                      () => ratings[product.id] = star,
+                                    ),
+                                  );
+                                }),
+                              ),
+                              TextField(
+                                controller: controllers[product.id],
+                                maxLines: 2,
+                                decoration: const InputDecoration(
+                                  hintText: 'Bu ürün için yorumunuz',
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
                   ),
-                  if (existingReviews.isNotEmpty) ...[
-                    const SizedBox(height: Dimens.padding),
-                    Text(
-                      'Mevcut Yorumlar',
-                      style: context.theme.appTypography.titleSmall,
-                    ),
-                    const SizedBox(height: Dimens.smallPadding),
-                    ...existingReviews.map((review) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: Dimens.smallPadding),
-                        child: Text(
-                          '${review.customerName}: ${review.comment}',
-                          style: context.theme.appTypography.bodySmall,
-                        ),
-                      );
-                    }),
-                  ],
                   const SizedBox(height: Dimens.padding),
                   SizedBox(
                     width: double.infinity,
                     child: AppButton(
-                      title: 'Gönder',
+                      title: 'Tum Yorumlari Gonder',
                       margin: EdgeInsets.zero,
                       onPressed: () async {
-                        final comment = commentController.text.trim();
-                        if (comment.isEmpty) return;
+                        final hasEmptyComment = reviewableProducts.any((product) {
+                          final comment = controllers[product.id]?.text.trim() ?? '';
+                          return comment.isEmpty;
+                        });
+                        if (hasEmptyComment) {
+                          if (!context.mounted) return;
+                          context.showErrorMessage('Lutfen tum urunler icin yorum yazin.');
+                          return;
+                        }
+
                         try {
-                          await reviewService.createReview(
-                            customerUserId: userId,
-                            restaurantId: order.restaurantId,
-                            targetType: 'order',
-                            targetId: order.id,
-                            rating: rating,
-                            comment: comment,
-                            customerName: AppSession.fullName,
-                          );
+                          for (final product in reviewableProducts) {
+                            await reviewService.createReview(
+                              customerUserId: userId,
+                              restaurantId: order.restaurantId,
+                              targetType: 'menu',
+                              targetId: product.id,
+                              rating: ratings[product.id] ?? 5,
+                              comment: controllers[product.id]!.text.trim(),
+                              customerName: AppSession.fullName,
+                            );
+                          }
                           if (!context.mounted) return;
                           Navigator.of(sheetContext).pop();
                           context.showSuccessMessage(
-                            'Sipariş yorumunuz kaydedildi.',
+                            'Siparisteki tum urun yorumlari kaydedildi.',
                           );
                         } catch (error) {
                           if (!context.mounted) return;
@@ -279,11 +335,16 @@ class OrdersListWidget extends StatelessWidget {
                     ),
                   ),
                 ],
+              ),
               );
             },
           ),
         );
       },
     );
+
+    for (final controller in controllers.values) {
+      controller.dispose();
+    }
   }
 }

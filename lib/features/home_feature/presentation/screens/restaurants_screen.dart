@@ -17,7 +17,10 @@ class RestaurantsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => AllProductsCubit(ProductsService())..loadProducts(),
+      create: (_) =>
+          AllProductsCubit(ProductsService())
+            ..loadProducts()
+            ..startPolling(),
       child: AppScaffold(
         appBar: const GeneralAppBar(title: 'Restoranlar'),
         body: BlocBuilder<AllProductsCubit, AllProductsState>(

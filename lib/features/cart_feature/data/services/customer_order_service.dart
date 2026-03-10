@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_sweet_shop_app_ui/core/services/auth_service.dart';
 import 'package:flutter_sweet_shop_app_ui/features/cart_feature/data/models/customer_order_model.dart';
+import 'package:flutter_sweet_shop_app_ui/features/cart_feature/data/models/reviewable_order_item_model.dart';
 import 'package:http/http.dart' as http;
 
 class CustomerOrderService {
@@ -60,6 +61,27 @@ class CustomerOrderService {
       },
     );
     return _decodeJson(response) as Map<String, dynamic>;
+  }
+
+  Future<List<ReviewableOrderItemModel>> getReviewableProducts({
+    required String customerUserId,
+    required String orderId,
+  }) async {
+    final response = await _getWithFallback(
+      path:
+          '/api/customer/orders/$orderId/review-products?customerUserId=$customerUserId',
+    );
+    final data = _decodeJson(response);
+    if (data is List) {
+      return data
+          .whereType<Map>()
+          .map(
+            (item) =>
+                ReviewableOrderItemModel.fromJson(item.cast<String, dynamic>()),
+          )
+          .toList();
+    }
+    return [];
   }
 
   Future<http.Response> _postWithFallback({
