@@ -113,6 +113,38 @@ namespace Vaveyla.Api.Migrations
                     b.ToTable("CustomerCartItems", (string)null);
                 });
 
+            modelBuilder.Entity("Vaveyla.Api.Models.CustomerFavorite", b =>
+                {
+                    b.Property<Guid>("FavoriteId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
+
+                    b.Property<Guid>("CustomerUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("FavoriteType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid>("TargetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("FavoriteId");
+
+                    b.HasIndex("CustomerUserId");
+
+                    b.HasIndex("CustomerUserId", "FavoriteType", "TargetId")
+                        .IsUnique();
+
+                    b.ToTable("CustomerFavorites", (string)null);
+                });
+
             modelBuilder.Entity("Vaveyla.Api.Models.CustomerOrder", b =>
                 {
                     b.Property<Guid>("OrderId")

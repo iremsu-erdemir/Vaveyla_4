@@ -1210,3 +1210,11 @@ c:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\build-temp-chat-ow
 c:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\build-temp-chat-owner\Vaveyla.Api.runtimeconfig.json
 c:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\build-temp-chat-owner\Vaveyla.Api.dll
 c:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\build-temp-chat-owner\Vaveyla.Api.pdb
+c:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\build-temp-favorites\appsettings.Development.json
+c:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\build-temp-favorites\appsettings.json
+c:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\build-temp-favorites\Vaveyla.Api.staticwebassets.runtime.json
+c:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\build-temp-favorites\Vaveyla.Api.exe
+c:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\build-temp-favorites\Vaveyla.Api.deps.json
+c:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\build-temp-favorites\Vaveyla.Api.runtimeconfig.json
+c:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\build-temp-favorites\Vaveyla.Api.dll
+c:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\build-temp-favorites\Vaveyla.Api.pdb

@@ -20,6 +20,7 @@ public sealed class VaveylaDbContext : DbContext
     public DbSet<RestaurantReview> RestaurantReviews => Set<RestaurantReview>();
     public DbSet<ReviewReport> ReviewReports => Set<ReviewReport>();
     public DbSet<RestaurantChatMessage> RestaurantChatMessages => Set<RestaurantChatMessage>();
+    public DbSet<CustomerFavorite> CustomerFavorites => Set<CustomerFavorite>();
     public DbSet<CustomerOrder> CustomerOrders => Set<CustomerOrder>();
     public DbSet<CustomerCartItem> CustomerCartItems => Set<CustomerCartItem>();
     public DbSet<CourierLocationLog> CourierLocationLogs => Set<CourierLocationLog>();
@@ -196,6 +197,19 @@ public sealed class VaveylaDbContext : DbContext
         chatMessage.HasIndex(x => x.RestaurantId);
         chatMessage.HasIndex(x => x.CustomerUserId);
         chatMessage.HasIndex(x => x.CreatedAtUtc);
+
+        var customerFavorite = modelBuilder.Entity<CustomerFavorite>();
+        customerFavorite.ToTable("CustomerFavorites");
+        customerFavorite.HasKey(x => x.FavoriteId);
+        customerFavorite.Property(x => x.CustomerUserId).IsRequired();
+        customerFavorite.Property(x => x.FavoriteType).HasMaxLength(20).IsRequired();
+        customerFavorite.Property(x => x.TargetId).IsRequired();
+        customerFavorite.Property(x => x.CreatedAtUtc)
+            .HasDefaultValueSql("SYSUTCDATETIME()")
+            .IsRequired();
+        customerFavorite.HasIndex(x => x.CustomerUserId);
+        customerFavorite.HasIndex(x => new { x.CustomerUserId, x.FavoriteType, x.TargetId })
+            .IsUnique();
 
         var customerOrder = modelBuilder.Entity<CustomerOrder>();
         customerOrder.ToTable("CustomerOrders");

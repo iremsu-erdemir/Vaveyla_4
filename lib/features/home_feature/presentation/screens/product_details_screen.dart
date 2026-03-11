@@ -19,6 +19,7 @@ import '../../../cart_feature/data/models/product_model.dart';
 import '../../../cart_feature/presentation/bloc/cart_cubit.dart';
 import '../../data/data_source/local/sample_data.dart';
 import '../../data/models/customer_review_model.dart';
+import '../../data/services/customer_favorites_service.dart';
 import '../../data/services/customer_review_service.dart';
 import '../widgets/product_details_app_bar.dart';
 
@@ -34,8 +35,10 @@ class ProductDetailsScreen extends StatefulWidget {
 class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   String _selectedWeight = weights.contains('1 kg') ? '1 kg' : weights.first;
   final CustomerReviewService _reviewService = CustomerReviewService();
+  final CustomerFavoritesService _favoritesService = CustomerFavoritesService();
   List<CustomerReviewModel> _reviews = const [];
   bool _isLoadingReviews = false;
+  bool _isFavorite = false;
   int _reviewPage = 1;
   bool _hasMoreReviews = false;
   int _totalReviewCount = 0;
@@ -78,6 +81,22 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   void initState() {
     super.initState();
     _loadReviews();
+    _loadFavoriteState();
+  }
+
+  Future<void> _loadFavoriteState() async {
+    final userId = AppSession.userId;
+    final productId = widget.product?.id ?? '';
+    if (userId.isEmpty || productId.isEmpty) {
+      return;
+    }
+    try {
+      final favorites = await _favoritesService.getFavorites(customerUserId: userId);
+      if (!mounted) return;
+      setState(() {
+        _isFavorite = favorites.products.any((x) => x.id == productId);
+      });
+    } catch (_) {}
   }
 
   Future<void> _loadReviews({bool reset = true}) async {
@@ -136,7 +155,10 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
         child: Stack(
           children: [
             _buildProductImage(context),
-            ProductDetailsAppBar(),
+            ProductDetailsAppBar(
+              isFavorite: _isFavorite,
+              onFavoriteTap: _toggleFavorite,
+            ),
             Positioned(
               bottom: 0,
               child: Stack(
@@ -419,6 +441,36 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
       return;
     }
     context.showErrorMessage(errorMessage);
+  }
+
+  Future<void> _toggleFavorite() async {
+    final userId = AppSession.userId;
+    final productId = widget.product?.id ?? '';
+    if (userId.isEmpty || productId.isEmpty) {
+      context.showErrorMessage('Favori için giriş yapmalısınız.');
+      return;
+    }
+    try {
+      if (_isFavorite) {
+        await _favoritesService.removeProductFavorite(
+          customerUserId: userId,
+          productId: productId,
+        );
+      } else {
+        await _favoritesService.addProductFavorite(
+          customerUserId: userId,
+          productId: productId,
+        );
+      }
+      if (!mounted) return;
+      setState(() => _isFavorite = !_isFavorite);
+      context.showSuccessMessage(
+        _isFavorite ? 'Favorilere eklendi.' : 'Favorilerden çıkarıldı.',
+      );
+    } catch (error) {
+      if (!mounted) return;
+      context.showErrorMessage(error.toString());
+    }
   }
 
   Widget _buildReviewTile(CustomerReviewModel review) {

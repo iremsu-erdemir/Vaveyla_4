@@ -19,6 +19,7 @@ import 'package:flutter_sweet_shop_app_ui/features/cart_feature/presentation/scr
 import 'package:flutter_sweet_shop_app_ui/features/cart_feature/presentation/screens/payment_methods_screen.dart';
 import 'package:flutter_sweet_shop_app_ui/core/utils/app_navigator.dart';
 import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/screens/splash_screen.dart';
+import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/screens/favorites_screen.dart';
 import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/screens/feedback_screen.dart';
 import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/screens/help_support_screen.dart';
 
@@ -397,6 +398,14 @@ class _ProfileTabState extends State<ProfileTab> {
                                 : appColors.gray4,
                       ),
                     ),
+                    padding: EdgeInsets.zero,
+                  ),
+                  AppListTile(
+                    onTap: () {
+                      appPush(context, const FavoritesScreen());
+                    },
+                    title: 'Favoriler',
+                    leadingIconPath: Assets.icons.heart,
                     padding: EdgeInsets.zero,
                   ),
                   AppListTile(
