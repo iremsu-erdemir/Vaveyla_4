@@ -17,6 +17,7 @@ builder.Services.AddScoped<IRestaurantOwnerRepository, RestaurantOwnerRepository
 builder.Services.AddScoped<ICustomerOrdersRepository, CustomerOrdersRepository>();
 builder.Services.AddScoped<ICustomerCartRepository, CustomerCartRepository>();
 builder.Services.AddScoped<ICustomerReviewsRepository, CustomerReviewsRepository>();
+builder.Services.AddScoped<ICustomerChatsRepository, CustomerChatsRepository>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>

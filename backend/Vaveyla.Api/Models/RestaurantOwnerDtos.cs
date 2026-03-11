@@ -57,6 +57,28 @@ public sealed record RestaurantReviewDto(
 
 public sealed record UpdateReviewReplyRequest(string OwnerReply);
 
+public sealed record OwnerChatConversationDto(
+    Guid CustomerUserId,
+    string CustomerName,
+    string LastMessage,
+    string LastMessageSenderType,
+    DateTime LastMessageAtUtc,
+    int MessageCount);
+
+public sealed record OwnerChatMessageDto(
+    Guid Id,
+    Guid RestaurantId,
+    Guid CustomerUserId,
+    Guid SenderUserId,
+    string SenderType,
+    string SenderName,
+    string Message,
+    DateTime CreatedAtUtc);
+
+public sealed record OwnerSendChatMessageRequest(
+    Guid CustomerUserId,
+    string Message);
+
 public sealed record RestaurantSettingsDto
 {
     public Guid RestaurantId { get; init; }

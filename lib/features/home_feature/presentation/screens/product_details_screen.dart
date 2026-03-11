@@ -9,7 +9,6 @@ import 'package:flutter_sweet_shop_app_ui/core/utils/app_feedback.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_rating_summary.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_button.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_choice_chip.dart';
-import 'package:flutter_sweet_shop_app_ui/core/widgets/app_icon_buttons.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_read_more_text.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_scaffold.dart';
 import 'package:flutter_sweet_shop_app_ui/features/restaurant_owner_feature/widgets/product_image_widget.dart';
@@ -262,14 +261,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                     'Tatlı & Pasta',
                               ),
                             ),
-                            trailing: AppIconButton(
-                              iconPath: Assets.icons.call,
-                              onPressed: () => _openRestaurantWhatsApp(context),
-                              iconColor: appColor.primary,
-                              backgroundColor: appColor.primary.withValues(
-                                alpha: 0.2,
-                              ),
-                            ),
                           ),
                           Divider(height: 0),
                           SizedBox(height: Dimens.padding),
@@ -385,6 +376,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     );
   }
 
+  // ignore: unused_element
   Future<void> _openRestaurantWhatsApp(BuildContext context) async {
     final phone = widget.product?.restaurantPhone;
     if (phone == null || phone.trim().isEmpty) {

@@ -366,6 +366,47 @@ namespace Vaveyla.Api.Migrations
                     b.ToTable("Restaurants", (string)null);
                 });
 
+            modelBuilder.Entity("Vaveyla.Api.Models.RestaurantChatMessage", b =>
+                {
+                    b.Property<Guid>("ChatMessageId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
+
+                    b.Property<Guid>("CustomerUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1500)
+                        .HasColumnType("nvarchar(1500)");
+
+                    b.Property<Guid>("RestaurantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SenderType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid>("SenderUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("ChatMessageId");
+
+                    b.HasIndex("CreatedAtUtc");
+
+                    b.HasIndex("CustomerUserId");
+
+                    b.HasIndex("RestaurantId");
+
+                    b.ToTable("RestaurantChatMessages", (string)null);
+                });
+
             modelBuilder.Entity("Vaveyla.Api.Models.RestaurantOrder", b =>
                 {
                     b.Property<Guid>("OrderId")

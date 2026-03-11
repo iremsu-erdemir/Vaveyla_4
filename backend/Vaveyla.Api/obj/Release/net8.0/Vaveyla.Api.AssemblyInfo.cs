@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Vaveyla.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4f5e5451db410c6f907c5e677282358e52ecaf63")]
 [assembly: System.Reflection.AssemblyProductAttribute("Vaveyla.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Vaveyla.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

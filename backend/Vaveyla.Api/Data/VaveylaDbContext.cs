@@ -19,6 +19,7 @@ public sealed class VaveylaDbContext : DbContext
     public DbSet<RestaurantOrder> RestaurantOrders => Set<RestaurantOrder>();
     public DbSet<RestaurantReview> RestaurantReviews => Set<RestaurantReview>();
     public DbSet<ReviewReport> ReviewReports => Set<ReviewReport>();
+    public DbSet<RestaurantChatMessage> RestaurantChatMessages => Set<RestaurantChatMessage>();
     public DbSet<CustomerOrder> CustomerOrders => Set<CustomerOrder>();
     public DbSet<CustomerCartItem> CustomerCartItems => Set<CustomerCartItem>();
     public DbSet<CourierLocationLog> CourierLocationLogs => Set<CourierLocationLog>();
@@ -180,6 +181,21 @@ public sealed class VaveylaDbContext : DbContext
         reviewReport.HasIndex(x => x.ReviewId);
         reviewReport.HasIndex(x => x.ReporterUserId);
         reviewReport.HasIndex(x => new { x.ReviewId, x.ReporterUserId }).IsUnique();
+
+        var chatMessage = modelBuilder.Entity<RestaurantChatMessage>();
+        chatMessage.ToTable("RestaurantChatMessages");
+        chatMessage.HasKey(x => x.ChatMessageId);
+        chatMessage.Property(x => x.RestaurantId).IsRequired();
+        chatMessage.Property(x => x.CustomerUserId).IsRequired();
+        chatMessage.Property(x => x.SenderUserId).IsRequired();
+        chatMessage.Property(x => x.SenderType).HasMaxLength(20).IsRequired();
+        chatMessage.Property(x => x.Message).HasMaxLength(1500).IsRequired();
+        chatMessage.Property(x => x.CreatedAtUtc)
+            .HasDefaultValueSql("SYSUTCDATETIME()")
+            .IsRequired();
+        chatMessage.HasIndex(x => x.RestaurantId);
+        chatMessage.HasIndex(x => x.CustomerUserId);
+        chatMessage.HasIndex(x => x.CreatedAtUtc);
 
         var customerOrder = modelBuilder.Entity<CustomerOrder>();
         customerOrder.ToTable("CustomerOrders");

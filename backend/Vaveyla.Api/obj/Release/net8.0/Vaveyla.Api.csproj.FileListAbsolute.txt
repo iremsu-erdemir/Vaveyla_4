@@ -303,3 +303,4 @@ C:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\Vaveyla.Api\obj\Re
 C:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\Vaveyla.Api\obj\Release\net8.0\Vaveyla.Api.pdb
 C:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\Vaveyla.Api\obj\Release\net8.0\Vaveyla.Api.genruntimeconfig.cache
 C:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\Vaveyla.Api\obj\Release\net8.0\ref\Vaveyla.Api.dll
+C:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\Vaveyla.Api\obj\Release\net8.0\Vaveyla.Api.sourcelink.json

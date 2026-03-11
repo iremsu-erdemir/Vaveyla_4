@@ -227,7 +227,7 @@ class _SplashScreenState extends State<SplashScreen> {
                             ),
                             SizedBox(height: fieldSpacing),
                             _LoginInputField(
-                              hintText: 'Şifre',
+                              hintText: 'Şifre (6+ karakter, harf-rakam-sembol)',
                               icon: Icons.lock,
                               obscureText: _obscurePassword,
                               height: inputHeight,

@@ -8,6 +8,7 @@ import 'package:flutter_sweet_shop_app_ui/core/widgets/app_scaffold.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/general_app_bar.dart';
 import 'package:flutter_sweet_shop_app_ui/features/home_feature/data/services/products_service.dart';
 import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/bloc/all_products_cubit.dart';
+import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/screens/restaurant_chat_screen.dart';
 import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/screens/restaurant_products_screen.dart';
 import 'package:flutter_sweet_shop_app_ui/features/restaurant_owner_feature/widgets/product_image_widget.dart';
 
@@ -124,8 +125,52 @@ class RestaurantsScreen extends StatelessWidget {
                           ),
                         ),
                         Positioned(
-                          left: Dimens.largePadding,
                           right: Dimens.largePadding,
+                          bottom: Dimens.largePadding,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(16),
+                            onTap: () {
+                              appPush(
+                                context,
+                                RestaurantChatScreen(
+                                  restaurantId: restaurantId,
+                                  restaurantName: name,
+                                ),
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: Dimens.padding,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.chat_bubble_outline_rounded,
+                                    size: 16,
+                                    color: context.theme.appColors.primary,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Sohbet',
+                                    style: context.theme.appTypography.labelSmall.copyWith(
+                                      color: context.theme.appColors.primary,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          left: Dimens.largePadding,
+                          right: 124,
                           bottom: Dimens.largePadding,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,

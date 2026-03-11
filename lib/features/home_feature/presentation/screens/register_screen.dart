@@ -311,7 +311,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                             SizedBox(height: fieldSpacing),
                             _RegisterInputField(
-                              hintText: 'Şifre',
+                              hintText: 'Şifre (6+ karakter, harf-rakam-sembol)',
                               icon: Icons.lock,
                               obscureText: _obscurePassword,
                               height: inputHeight,

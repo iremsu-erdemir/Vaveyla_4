@@ -6,6 +6,7 @@ import 'package:flutter_sweet_shop_app_ui/core/services/auth_service.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:flutter_sweet_shop_app_ui/features/restaurant_owner_feature/data/models/menu_item_model.dart';
+import 'package:flutter_sweet_shop_app_ui/features/restaurant_owner_feature/data/models/owner_chat_models.dart';
 import 'package:flutter_sweet_shop_app_ui/features/restaurant_owner_feature/data/models/order_model.dart';
 import 'package:flutter_sweet_shop_app_ui/features/restaurant_owner_feature/presentation/bloc/restaurant_settings_cubit.dart';
 
@@ -198,6 +199,58 @@ class RestaurantOwnerService {
       path: '/api/owner/reviews/$reviewId/reply?ownerUserId=$ownerUserId',
       body: {'ownerReply': ownerReply},
     );
+  }
+
+  Future<List<OwnerChatConversationModel>> getChatConversations({
+    required String ownerUserId,
+  }) async {
+    final response = await _getWithFallback(
+      path: '/api/owner/chats/conversations?ownerUserId=$ownerUserId',
+    );
+    final data = _decodeJson(response);
+    if (data is List) {
+      return data
+          .whereType<Map>()
+          .map(
+            (item) => OwnerChatConversationModel.fromJson(
+              item.cast<String, dynamic>(),
+            ),
+          )
+          .toList();
+    }
+    return [];
+  }
+
+  Future<List<OwnerChatMessageModel>> getChatMessages({
+    required String ownerUserId,
+    required String customerUserId,
+    int limit = 200,
+  }) async {
+    final response = await _getWithFallback(
+      path:
+          '/api/owner/chats/messages?ownerUserId=$ownerUserId&customerUserId=$customerUserId&limit=$limit',
+    );
+    final data = _decodeJson(response);
+    if (data is List) {
+      return data
+          .whereType<Map>()
+          .map((item) => OwnerChatMessageModel.fromJson(item.cast<String, dynamic>()))
+          .toList();
+    }
+    return [];
+  }
+
+  Future<OwnerChatMessageModel> sendOwnerMessage({
+    required String ownerUserId,
+    required String customerUserId,
+    required String message,
+  }) async {
+    final response = await _postWithFallback(
+      path: '/api/owner/chats/messages?ownerUserId=$ownerUserId',
+      body: {'customerUserId': customerUserId, 'message': message},
+    );
+    final data = _decodeJson(response) as Map<String, dynamic>;
+    return OwnerChatMessageModel.fromJson(data);
   }
 
   Future<String> uploadMenuImage({

@@ -19,6 +19,7 @@ import 'package:flutter_sweet_shop_app_ui/core/services/app_session.dart';
 import 'package:flutter_sweet_shop_app_ui/core/services/auth_service.dart';
 import 'package:flutter_sweet_shop_app_ui/features/restaurant_owner_feature/presentation/screens/restaurant_owner_menu_screen.dart';
 import 'package:flutter_sweet_shop_app_ui/features/restaurant_owner_feature/presentation/screens/restaurant_owner_orders_screen.dart';
+import 'package:flutter_sweet_shop_app_ui/features/restaurant_owner_feature/presentation/screens/restaurant_owner_chats_screen.dart';
 import 'package:flutter_sweet_shop_app_ui/features/restaurant_owner_feature/presentation/screens/restaurant_owner_reports_screen.dart';
 import 'package:flutter_sweet_shop_app_ui/features/restaurant_owner_feature/presentation/screens/restaurant_owner_settings_screen.dart';
 import 'package:flutter_sweet_shop_app_ui/features/restaurant_owner_feature/presentation/screens/restaurant_owner_stat_details_screen.dart';
@@ -71,6 +72,7 @@ class _RestaurantOwnerDashboardScreen extends StatelessWidget {
           const RestaurantOwnerOrdersScreen(),
           const RestaurantOwnerMenuScreen(),
           const RestaurantOwnerSettingsScreen(),
+          const RestaurantOwnerChatsScreen(),
         ];
         return AppScaffold(
           padding: EdgeInsets.zero,
@@ -127,6 +129,14 @@ class _RestaurantOwnerDashboardScreen extends StatelessWidget {
                     color: colors.primary,
                   ),
                   label: 'Ayarlar',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.chat_bubble_outline, color: colors.gray4),
+                  selectedIcon: Icon(
+                    Icons.chat_bubble_outline,
+                    color: colors.primary,
+                  ),
+                  label: 'Sohbet',
                 ),
               ],
             ),

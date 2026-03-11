@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Vaveyla.Api.Data;
 using Vaveyla.Api.Models;
 
@@ -11,15 +12,18 @@ public sealed class RestaurantOwnerController : ControllerBase
     private readonly IRestaurantOwnerRepository _repository;
     private readonly ICustomerOrdersRepository _customerOrdersRepository;
     private readonly IWebHostEnvironment _environment;
+    private readonly VaveylaDbContext _dbContext;
 
     public RestaurantOwnerController(
         IRestaurantOwnerRepository repository,
         ICustomerOrdersRepository customerOrdersRepository,
-        IWebHostEnvironment environment)
+        IWebHostEnvironment environment,
+        VaveylaDbContext dbContext)
     {
         _repository = repository;
         _customerOrdersRepository = customerOrdersRepository;
         _environment = environment;
+        _dbContext = dbContext;
     }
 
     [HttpPost("uploads/menu")]
@@ -406,6 +410,160 @@ public sealed class RestaurantOwnerController : ControllerBase
             request.OwnerReply.Trim(),
             cancellationToken);
         return NoContent();
+    }
+
+    [HttpGet("chats/conversations")]
+    public async Task<ActionResult<List<OwnerChatConversationDto>>> GetChatConversations(
+        [FromQuery] Guid ownerUserId,
+        CancellationToken cancellationToken)
+    {
+        if (ownerUserId == Guid.Empty)
+        {
+            return BadRequest(new { message = "Owner user id is required." });
+        }
+
+        var restaurant = await _repository.GetOrCreateRestaurantAsync(ownerUserId, cancellationToken);
+        var messages = await _dbContext.RestaurantChatMessages
+            .Where(x => x.RestaurantId == restaurant.RestaurantId)
+            .OrderByDescending(x => x.CreatedAtUtc)
+            .ToListAsync(cancellationToken);
+
+        var customerIds = messages
+            .Select(x => x.CustomerUserId)
+            .Distinct()
+            .ToList();
+        var customerNames = await _dbContext.Users
+            .Where(x => customerIds.Contains(x.UserId))
+            .ToDictionaryAsync(x => x.UserId, x => x.FullName, cancellationToken);
+
+        var result = messages
+            .GroupBy(x => x.CustomerUserId)
+            .Select(group =>
+            {
+                var latest = group.First();
+                var customerName = customerNames.TryGetValue(group.Key, out var value)
+                    ? value
+                    : "Müşteri";
+                return new OwnerChatConversationDto(
+                    group.Key,
+                    customerName,
+                    latest.Message,
+                    latest.SenderType,
+                    latest.CreatedAtUtc,
+                    group.Count());
+            })
+            .OrderByDescending(x => x.LastMessageAtUtc)
+            .ToList();
+
+        return Ok(result);
+    }
+
+    [HttpGet("chats/messages")]
+    public async Task<ActionResult<List<OwnerChatMessageDto>>> GetChatMessages(
+        [FromQuery] Guid ownerUserId,
+        [FromQuery] Guid customerUserId,
+        CancellationToken cancellationToken,
+        [FromQuery] int limit = 200)
+    {
+        if (ownerUserId == Guid.Empty)
+        {
+            return BadRequest(new { message = "Owner user id is required." });
+        }
+        if (customerUserId == Guid.Empty)
+        {
+            return BadRequest(new { message = "Customer user id is required." });
+        }
+        if (limit < 1) limit = 1;
+        if (limit > 300) limit = 300;
+
+        var restaurant = await _repository.GetOrCreateRestaurantAsync(ownerUserId, cancellationToken);
+        var ownerName = await _dbContext.Users
+            .Where(x => x.UserId == ownerUserId)
+            .Select(x => x.FullName)
+            .FirstOrDefaultAsync(cancellationToken);
+        var customerName = await _dbContext.Users
+            .Where(x => x.UserId == customerUserId)
+            .Select(x => x.FullName)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var messages = await _dbContext.RestaurantChatMessages
+            .Where(x => x.RestaurantId == restaurant.RestaurantId && x.CustomerUserId == customerUserId)
+            .OrderByDescending(x => x.CreatedAtUtc)
+            .Take(limit)
+            .ToListAsync(cancellationToken);
+        messages.Reverse();
+
+        var response = messages
+            .Select(x => new OwnerChatMessageDto(
+                x.ChatMessageId,
+                x.RestaurantId,
+                x.CustomerUserId,
+                x.SenderUserId,
+                x.SenderType,
+                string.Equals(x.SenderType, "restaurant", StringComparison.OrdinalIgnoreCase)
+                    ? string.IsNullOrWhiteSpace(ownerName) ? "Restoran" : ownerName
+                    : string.IsNullOrWhiteSpace(customerName) ? "Müşteri" : customerName,
+                x.Message,
+                x.CreatedAtUtc))
+            .ToList();
+        return Ok(response);
+    }
+
+    [HttpPost("chats/messages")]
+    public async Task<ActionResult<OwnerChatMessageDto>> SendOwnerMessage(
+        [FromQuery] Guid ownerUserId,
+        [FromBody] OwnerSendChatMessageRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (ownerUserId == Guid.Empty)
+        {
+            return BadRequest(new { message = "Owner user id is required." });
+        }
+        if (request.CustomerUserId == Guid.Empty)
+        {
+            return BadRequest(new { message = "Customer user id is required." });
+        }
+        if (string.IsNullOrWhiteSpace(request.Message))
+        {
+            return BadRequest(new { message = "Message is required." });
+        }
+
+        var restaurant = await _repository.GetOrCreateRestaurantAsync(ownerUserId, cancellationToken);
+        var customerExists = await _dbContext.Users.AnyAsync(
+            x => x.UserId == request.CustomerUserId,
+            cancellationToken);
+        if (!customerExists)
+        {
+            return NotFound(new { message = "Customer not found." });
+        }
+
+        var message = new RestaurantChatMessage
+        {
+            ChatMessageId = Guid.NewGuid(),
+            RestaurantId = restaurant.RestaurantId,
+            CustomerUserId = request.CustomerUserId,
+            SenderUserId = ownerUserId,
+            SenderType = "restaurant",
+            Message = request.Message.Trim(),
+            CreatedAtUtc = DateTime.UtcNow,
+        };
+        _dbContext.RestaurantChatMessages.Add(message);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        var ownerName = await _dbContext.Users
+            .Where(x => x.UserId == ownerUserId)
+            .Select(x => x.FullName)
+            .FirstOrDefaultAsync(cancellationToken);
+        var dto = new OwnerChatMessageDto(
+            message.ChatMessageId,
+            message.RestaurantId,
+            message.CustomerUserId,
+            message.SenderUserId,
+            message.SenderType,
+            string.IsNullOrWhiteSpace(ownerName) ? "Restoran" : ownerName,
+            message.Message,
+            message.CreatedAtUtc);
+        return Ok(dto);
     }
 
     private static RestaurantOrderDto MapOrder(
