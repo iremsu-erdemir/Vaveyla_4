@@ -1,6 +1,6 @@
 enum CourierOrderStatus {
   assigned,   // Atanmış - Teslim alınacak
-  pickedUp,   // Alındı - Restorandan alındı
+  pickedUp,   // Alındı - Pastaneden alındı
   inTransit,  // Yolda - Müşteriye gidiliyor
   delivered,  // Teslim edildi
 }

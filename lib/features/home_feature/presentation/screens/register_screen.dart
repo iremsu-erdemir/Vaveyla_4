@@ -23,7 +23,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _obscureConfirmPassword = true;
   bool _isSubmitting = false;
   late final TapGestureRecognizer _loginTap;
-  final List<String> _roles = const ['Restoran Sahibi', 'Müşteri', 'Kurye'];
+  final List<String> _roles = const ['Pastane Sahibi', 'Müşteri', 'Kurye'];
   late String _selectedRole;
   final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -90,7 +90,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   int _roleIdFor(String role) {
     switch (role) {
-      case 'Restoran Sahibi':
+      case 'Pastane Sahibi':
         return 1;
       case 'Müşteri':
         return 2;

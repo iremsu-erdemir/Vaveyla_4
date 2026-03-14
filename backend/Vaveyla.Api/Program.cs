@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Vaveyla.Api.Data;
+using Vaveyla.Api.Hubs;
 using Vaveyla.Api.Models;
 using Vaveyla.Api.Services;
 
@@ -22,6 +23,10 @@ builder.Services.AddScoped<ICustomerOrdersRepository, CustomerOrdersRepository>(
 builder.Services.AddScoped<ICustomerCartRepository, CustomerCartRepository>();
 builder.Services.AddScoped<ICustomerReviewsRepository, CustomerReviewsRepository>();
 builder.Services.AddScoped<ICustomerChatsRepository, CustomerChatsRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IPushNotificationSender, NoopPushNotificationSender>();
+builder.Services.AddSignalR();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -50,6 +55,7 @@ app.UseCors("AllowAll");
 app.UseStaticFiles();
 
 app.MapControllers();
+app.MapHub<NotificationHub>("/hubs/notifications");
 
 using (var scope = app.Services.CreateScope())
 {

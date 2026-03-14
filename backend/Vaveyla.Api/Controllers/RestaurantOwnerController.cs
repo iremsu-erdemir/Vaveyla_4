@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Vaveyla.Api.Data;
 using Vaveyla.Api.Models;
+using Vaveyla.Api.Services;
 
 namespace Vaveyla.Api.Controllers;
 
@@ -13,17 +14,20 @@ public sealed class RestaurantOwnerController : ControllerBase
     private readonly ICustomerOrdersRepository _customerOrdersRepository;
     private readonly IWebHostEnvironment _environment;
     private readonly VaveylaDbContext _dbContext;
+    private readonly INotificationService _notificationService;
 
     public RestaurantOwnerController(
         IRestaurantOwnerRepository repository,
         ICustomerOrdersRepository customerOrdersRepository,
         IWebHostEnvironment environment,
-        VaveylaDbContext dbContext)
+        VaveylaDbContext dbContext,
+        INotificationService notificationService)
     {
         _repository = repository;
         _customerOrdersRepository = customerOrdersRepository;
         _environment = environment;
         _dbContext = dbContext;
+        _notificationService = notificationService;
     }
 
     [HttpPost("uploads/menu")]
@@ -300,8 +304,13 @@ public sealed class RestaurantOwnerController : ControllerBase
             return BadRequest(new { message = "Invalid order status." });
         }
 
+        var previousStatus = order.Status;
         order.Status = MapRestaurantToCustomerStatus(status);
         await _customerOrdersRepository.UpdateOrderStatusAsync(order, cancellationToken);
+        await _notificationService.NotifyOwnerOrderStatusChangedAsync(
+            order,
+            previousStatus,
+            cancellationToken);
         var menuItems = await _repository.GetMenuItemsAsync(restaurant.RestaurantId, cancellationToken);
         return Ok(MapCustomerOrder(order, menuItems));
     }
@@ -530,7 +539,7 @@ public sealed class RestaurantOwnerController : ControllerBase
                 x.SenderUserId,
                 x.SenderType,
                 string.Equals(x.SenderType, "restaurant", StringComparison.OrdinalIgnoreCase)
-                    ? string.IsNullOrWhiteSpace(ownerName) ? "Restoran" : ownerName
+                    ? string.IsNullOrWhiteSpace(ownerName) ? "Pastane" : ownerName
                     : string.IsNullOrWhiteSpace(customerName) ? "Müşteri" : customerName,
                 x.Message,
                 x.CreatedAtUtc))
@@ -589,7 +598,7 @@ public sealed class RestaurantOwnerController : ControllerBase
             message.CustomerUserId,
             message.SenderUserId,
             message.SenderType,
-            string.IsNullOrWhiteSpace(ownerName) ? "Restoran" : ownerName,
+            string.IsNullOrWhiteSpace(ownerName) ? "Pastane" : ownerName,
             message.Message,
             message.CreatedAtUtc);
         return Ok(dto);
@@ -731,7 +740,8 @@ public sealed class RestaurantOwnerController : ControllerBase
         {
             RestaurantOrderStatus.Pending => CustomerOrderStatus.Pending,
             RestaurantOrderStatus.Preparing => CustomerOrderStatus.Preparing,
-            RestaurantOrderStatus.Completed => CustomerOrderStatus.Preparing,
+            // Owner "Hazir" means prepared and ready to be assigned to courier.
+            RestaurantOrderStatus.Completed => CustomerOrderStatus.Assigned,
             RestaurantOrderStatus.Rejected => CustomerOrderStatus.Cancelled,
             _ => CustomerOrderStatus.Pending,
         };

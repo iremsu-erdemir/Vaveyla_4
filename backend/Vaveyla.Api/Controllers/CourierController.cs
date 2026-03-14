@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Vaveyla.Api.Data;
 using Vaveyla.Api.Models;
+using Vaveyla.Api.Services;
 
 namespace Vaveyla.Api.Controllers;
 
@@ -10,13 +11,16 @@ public sealed class CourierController : ControllerBase
 {
     private readonly ICustomerOrdersRepository _ordersRepo;
     private readonly IRestaurantOwnerRepository _restaurantRepo;
+    private readonly INotificationService _notificationService;
 
     public CourierController(
         ICustomerOrdersRepository ordersRepo,
-        IRestaurantOwnerRepository restaurantRepo)
+        IRestaurantOwnerRepository restaurantRepo,
+        INotificationService notificationService)
     {
         _ordersRepo = ordersRepo;
         _restaurantRepo = restaurantRepo;
+        _notificationService = notificationService;
     }
 
     [HttpGet("orders")]
@@ -101,6 +105,7 @@ public sealed class CourierController : ControllerBase
         order.AssignedCourierUserId = courierUserId;
         order.Status = CustomerOrderStatus.Assigned;
         await _ordersRepo.UpdateOrderStatusAsync(order, cancellationToken);
+        await _notificationService.NotifyCourierAcceptedAsync(order, cancellationToken);
 
         return Ok(new
         {
@@ -145,8 +150,13 @@ public sealed class CourierController : ControllerBase
             return BadRequest(new { message = "Invalid status transition." });
         }
 
+        var previousStatus = order.Status;
         order.Status = newStatus.Value;
         await _ordersRepo.UpdateOrderStatusAsync(order, cancellationToken);
+        await _notificationService.NotifyCourierStatusChangedAsync(
+            order,
+            previousStatus,
+            cancellationToken);
 
         return Ok(new
         {

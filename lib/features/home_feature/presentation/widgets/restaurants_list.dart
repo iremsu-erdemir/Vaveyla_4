@@ -23,7 +23,7 @@ class RestaurantsList extends StatelessWidget {
           final restaurantId = product.restaurantId;
           if (restaurantId == null || restaurantId.isEmpty) continue;
           byRestaurant[restaurantId] = (
-            product.restaurantName ?? 'Restoran',
+            product.restaurantName ?? 'Pastane',
             product.restaurantType ?? 'Kategori',
             product.restaurantPhotoPath,
             product.restaurantIsOpen,
@@ -49,7 +49,7 @@ class RestaurantsList extends StatelessWidget {
                 onTap: () {
                   if (!isOpen) {
                     context.showErrorMessage(
-                      'Bu restoran şu anda hizmet verememektedir.',
+                      'Bu pastane şu anda hizmet verememektedir.',
                     );
                     return;
                   }

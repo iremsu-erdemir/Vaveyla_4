@@ -2,7 +2,7 @@ namespace Vaveyla.Api.Models;
 
 public enum CustomerOrderStatus : byte
 {
-    Pending = 1,      // Beklemede - restoran onayı
+    Pending = 1,      // Beklemede - pastane onayı
     Preparing = 2,    // Hazırlanıyor
     Assigned = 3,     // Kuryeye atandı
     InTransit = 4,    // Yolda

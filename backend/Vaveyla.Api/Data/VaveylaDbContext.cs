@@ -24,6 +24,8 @@ public sealed class VaveylaDbContext : DbContext
     public DbSet<CustomerOrder> CustomerOrders => Set<CustomerOrder>();
     public DbSet<CustomerCartItem> CustomerCartItems => Set<CustomerCartItem>();
     public DbSet<CourierLocationLog> CourierLocationLogs => Set<CourierLocationLog>();
+    public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<UserDeviceToken> UserDeviceTokens => Set<UserDeviceToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -275,5 +277,41 @@ public sealed class VaveylaDbContext : DbContext
             .IsRequired();
         cartItem.HasIndex(x => x.CustomerUserId);
         cartItem.HasIndex(x => new { x.CustomerUserId, x.ProductId, x.WeightKg }).IsUnique();
+
+        var notification = modelBuilder.Entity<Notification>();
+        notification.ToTable("Notifications");
+        notification.HasKey(x => x.NotificationId);
+        notification.Property(x => x.UserId).IsRequired();
+        notification.Property(x => x.UserRole)
+            .HasConversion<byte>()
+            .IsRequired();
+        notification.Property(x => x.Type)
+            .HasConversion<byte>()
+            .IsRequired();
+        notification.Property(x => x.Title).HasMaxLength(160).IsRequired();
+        notification.Property(x => x.Message).HasMaxLength(1200).IsRequired();
+        notification.Property(x => x.DataJson).HasMaxLength(4000);
+        notification.Property(x => x.RelatedOrderId);
+        notification.Property(x => x.IsRead).HasDefaultValue(false).IsRequired();
+        notification.Property(x => x.ReadAtUtc);
+        notification.Property(x => x.CreatedAtUtc)
+            .HasDefaultValueSql("SYSUTCDATETIME()")
+            .IsRequired();
+        notification.HasIndex(x => x.UserId);
+        notification.HasIndex(x => new { x.UserId, x.IsRead, x.CreatedAtUtc });
+        notification.HasIndex(x => x.RelatedOrderId);
+
+        var userDeviceToken = modelBuilder.Entity<UserDeviceToken>();
+        userDeviceToken.ToTable("UserDeviceTokens");
+        userDeviceToken.HasKey(x => x.DeviceTokenId);
+        userDeviceToken.Property(x => x.UserId).IsRequired();
+        userDeviceToken.Property(x => x.Platform).HasMaxLength(20).IsRequired();
+        userDeviceToken.Property(x => x.Token).HasMaxLength(500).IsRequired();
+        userDeviceToken.Property(x => x.LastSeenAtUtc).IsRequired();
+        userDeviceToken.Property(x => x.CreatedAtUtc)
+            .HasDefaultValueSql("SYSUTCDATETIME()")
+            .IsRequired();
+        userDeviceToken.HasIndex(x => x.UserId);
+        userDeviceToken.HasIndex(x => new { x.UserId, x.Token }).IsUnique();
     }
 }

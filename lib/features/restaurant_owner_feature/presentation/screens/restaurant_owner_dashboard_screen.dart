@@ -6,6 +6,7 @@ import 'package:flutter_sweet_shop_app_ui/core/theme/theme.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_scaffold.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_svg_viewer.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/bordered_container.dart';
+import 'package:flutter_sweet_shop_app_ui/core/widgets/notification_bell_button.dart';
 import 'package:flutter_sweet_shop_app_ui/core/utils/formatters.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/shaded_container.dart';
 import 'package:flutter_sweet_shop_app_ui/features/restaurant_owner_feature/data/models/menu_item_model.dart';
@@ -71,8 +72,8 @@ class _RestaurantOwnerDashboardScreen extends StatelessWidget {
           const _DashboardTab(),
           const RestaurantOwnerOrdersScreen(),
           const RestaurantOwnerMenuScreen(),
-          const RestaurantOwnerSettingsScreen(),
           const RestaurantOwnerChatsScreen(),
+          const RestaurantOwnerSettingsScreen(),
         ];
         return AppScaffold(
           padding: EdgeInsets.zero,
@@ -123,20 +124,20 @@ class _RestaurantOwnerDashboardScreen extends StatelessWidget {
                   label: 'Menü',
                 ),
                 NavigationDestination(
-                  icon: AppSvgViewer(Assets.icons.setting2),
-                  selectedIcon: AppSvgViewer(
-                    Assets.icons.setting2,
-                    color: colors.primary,
-                  ),
-                  label: 'Ayarlar',
-                ),
-                NavigationDestination(
                   icon: Icon(Icons.chat_bubble_outline, color: colors.gray4),
                   selectedIcon: Icon(
                     Icons.chat_bubble_outline,
                     color: colors.primary,
                   ),
                   label: 'Sohbet',
+                ),
+                NavigationDestination(
+                  icon: AppSvgViewer(Assets.icons.setting2),
+                  selectedIcon: AppSvgViewer(
+                    Assets.icons.setting2,
+                    color: colors.primary,
+                  ),
+                  label: 'Ayarlar',
                 ),
               ],
             ),
@@ -171,7 +172,7 @@ class _DashboardTab extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _DashboardHeader(
-                    title: 'Restoran Paneli',
+                    title: 'Pastane Paneli',
                     subtitle: 'Hoş geldiniz! Bugünkü özetiniz',
                   ),
                   const SizedBox(height: Dimens.largePadding),
@@ -497,6 +498,7 @@ class _DashboardHeader extends StatelessWidget {
               ],
             ),
           ),
+          const NotificationBellButton(),
         ],
       ),
     );

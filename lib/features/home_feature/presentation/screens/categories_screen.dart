@@ -34,7 +34,7 @@ class CategoriesScreen extends StatelessWidget {
 
 class _CategoriesScreenBody extends StatelessWidget {
   static const _closedRestaurantMessage =
-      'Bu restoran şu anda hizmet verememektedir.';
+      'Bu pastane şu anda hizmet verememektedir.';
 
   const _CategoriesScreenBody();
 

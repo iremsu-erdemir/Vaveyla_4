@@ -7,6 +7,7 @@ import 'package:flutter_sweet_shop_app_ui/core/utils/formatters.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_scaffold.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_svg_viewer.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/bordered_container.dart';
+import 'package:flutter_sweet_shop_app_ui/core/widgets/notification_bell_button.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/shaded_container.dart';
 import 'package:flutter_sweet_shop_app_ui/features/courier_feature/data/models/courier_order_model.dart';
 import 'package:flutter_sweet_shop_app_ui/features/courier_feature/presentation/bloc/courier_nav_cubit.dart';
@@ -440,6 +441,7 @@ class _DashboardHeader extends StatelessWidget {
               ],
             ),
           ),
+          const NotificationBellButton(),
         ],
       ),
     );

@@ -1,6 +1,6 @@
-# Restoran Paneli - Satıcı Giriş Bilgileri
+# Pastane Paneli - Satıcı Giriş Bilgileri
 
-Bu dokümanda müşteri panelinde görünen satıcıların (restoran/pastane) restoran paneline giriş bilgileri yer almaktadır. **Tüm satıcılar Edirne'de faaliyet gösteren gerçek işletmelerdir.**
+Bu dokümanda müşteri panelinde görünen satıcıların (pastane) pastane paneline giriş bilgileri yer almaktadır. **Tüm satıcılar Edirne'de faaliyet gösteren gerçek işletmelerdir.**
 
 ## Giriş Bilgileri
 
@@ -32,11 +32,11 @@ Bu dokümanda müşteri panelinde görünen satıcıların (restoran/pastane) re
 
 ## Ürün Entegrasyonu
 
-Her satıcı kendi e-postası ile restoran paneline giriş yaptığında:
+Her satıcı kendi e-postası ile pastane paneline giriş yaptığında:
 
 - **Menü** sekmesinde kendi ürünlerini görür ve yönetir
-- **Siparişler** sekmesinde kendi restoranına gelen siparişleri görür
-- **Ayarlar** sekmesinde restoran bilgilerini güncelleyebilir
+- **Siparişler** sekmesinde kendi pastanesine gelen siparişleri görür
+- **Ayarlar** sekmesinde pastane bilgilerini güncelleyebilir
 
 ### Mevlana Pastaneleri Ürünleri
 - **Doğum günü pastası:** 7 farklı çeşit (126₺ - 185₺)
@@ -53,6 +53,6 @@ Her satıcı kendi e-postası ile restoran paneline giriş yaptığında:
 
 ## Kullanım
 
-1. Uygulamada **Restoran Sahibi** olarak giriş yapın (roleId: 1)
+1. Uygulamada **Pastane Sahibi** olarak giriş yapın (roleId: 1)
 2. Yukarıdaki e-posta ve şifre ile giriş yapın
-3. Restoran panelinde Menü sekmesinden ürünlerinizi görüntüleyin ve yönetin
+3. Pastane panelinde Menü sekmesinden ürünlerinizi görüntüleyin ve yönetin

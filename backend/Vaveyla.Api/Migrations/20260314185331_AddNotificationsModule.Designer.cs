@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Vaveyla.Api.Data;
 
@@ -11,9 +12,11 @@ using Vaveyla.Api.Data;
 namespace Vaveyla.Api.Migrations
 {
     [DbContext(typeof(VaveylaDbContext))]
-    partial class VaveylaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260314185331_AddNotificationsModule")]
+    partial class AddNotificationsModule
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

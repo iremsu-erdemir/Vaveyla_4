@@ -70,6 +70,7 @@ public sealed class CustomerOrdersRepository : ICustomerOrdersRepository
         return await _dbContext.CustomerOrders
             .Where(o =>
                 o.Status == CustomerOrderStatus.Preparing ||
+                o.Status == CustomerOrderStatus.Assigned ||
                 (o.AssignedCourierUserId == courierUserId &&
                  o.Status != CustomerOrderStatus.Cancelled))
             .OrderByDescending(o => o.CreatedAtUtc)

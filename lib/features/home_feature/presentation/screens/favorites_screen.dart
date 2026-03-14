@@ -143,7 +143,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     fontWeight: FontWeight.w600,
                   ),
                   tabs: const [
-                    Tab(text: 'Favori Restoranlar'),
+                    Tab(text: 'Favori Pastaneler'),
                     Tab(text: 'Favori Ürünler'),
                   ],
                 ),
@@ -381,7 +381,7 @@ class _FavoritesEmptyState extends StatelessWidget {
           Icon(Icons.restaurant_menu, size: 44, color: colors.gray4),
           const SizedBox(height: 16),
           Text(
-            'Henüz favori ürün veya restoran eklemediniz.',
+            'Henüz favori ürün veya pastane eklemediniz.',
             style: typography.bodySmall.copyWith(color: colors.gray4),
           ),
         ],

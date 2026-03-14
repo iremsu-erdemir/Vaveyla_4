@@ -51,8 +51,8 @@ public sealed class RestaurantOwnerRepository : IRestaurantOwnerRepository
         {
             RestaurantId = Guid.NewGuid(),
             OwnerUserId = ownerUserId,
-            Name = "Yeni Restoran",
-            Type = "Restoran",
+            Name = "Yeni Pastane",
+            Type = "Pastane",
             Address = "Adres bilgisi girilmedi",
             Phone = "+90",
             WorkingHours = "09:00 - 22:00",

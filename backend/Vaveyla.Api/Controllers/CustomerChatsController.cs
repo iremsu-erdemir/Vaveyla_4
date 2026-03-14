@@ -166,7 +166,7 @@ public sealed class CustomerChatsController : ControllerBase
             senderType = message.SenderType,
             senderName = isCustomer
                 ? string.IsNullOrWhiteSpace(customerName) ? "Müşteri" : customerName
-                : string.IsNullOrWhiteSpace(restaurantOwnerName) ? "Restoran" : restaurantOwnerName,
+                : string.IsNullOrWhiteSpace(restaurantOwnerName) ? "Pastane" : restaurantOwnerName,
             message = message.Message,
             createdAtUtc = message.CreatedAtUtc,
         };

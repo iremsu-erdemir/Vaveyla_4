@@ -520,7 +520,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
             Padding(
               padding: const EdgeInsets.only(top: 6),
               child: Text(
-                'Restoran yanıtı: ${review.ownerReply!}',
+                'Pastane yanıtı: ${review.ownerReply!}',
                 style: context.theme.appTypography.bodySmall.copyWith(
                   color: appColor.primary,
                 ),

@@ -4,8 +4,8 @@ using Vaveyla.Api.Models;
 namespace Vaveyla.Api.Data;
 
 /// <summary>
-/// Seed verisi: Restoran hesapları ve müşteri panelinde görünen ürünler.
-/// Restoran paneli giriş bilgileri (SATICI_GIRIS_BILGILERI.md):
+/// Seed verisi: Pastane hesapları ve müşteri panelinde görünen ürünler.
+/// Pastane paneli giriş bilgileri (SATICI_GIRIS_BILGILERI.md):
 /// - mevlana@vaveyla.com / Test123! (Mevlana Pastaneleri - Edirne)
 /// - sar@vaveyla.com / Test123! (Şar Pastanesi - Edirne)
 /// - safran@vaveyla.com / Test123! (Safran Pastanesi - Edirne)

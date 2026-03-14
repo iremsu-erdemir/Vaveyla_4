@@ -4,6 +4,7 @@ import 'package:flutter_sweet_shop_app_ui/core/theme/dimens.dart';
 import 'package:flutter_sweet_shop_app_ui/core/theme/theme.dart';
 import 'package:flutter_sweet_shop_app_ui/core/utils/sized_context.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_icon_buttons.dart';
+import 'package:flutter_sweet_shop_app_ui/core/widgets/notification_bell_button.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_search_bar.dart';
 import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/bloc/location_cubit.dart';
 
@@ -42,7 +43,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
       children: [
         AppBar(
           backgroundColor: colors.primary,
-          actions: [AppIconButton(iconPath: Assets.icons.notification)],
+          actions: const [NotificationBellButton()],
           title: Row(
             spacing: Dimens.padding,
             children: [

@@ -72,7 +72,7 @@ class _RestaurantOwnerSettingsScreenState
       builder: (context, settings) {
         return AppScaffold(
           appBar: GeneralAppBar(
-            title: 'Restoran Ayarları',
+            title: 'Pastane Ayarları',
             showBackIcon: false,
           ),
           body: SingleChildScrollView(
@@ -113,8 +113,8 @@ class _RestaurantOwnerSettingsScreenState
                             _showSuccess(
                               context,
                               path != null && path.isNotEmpty
-                                  ? 'Restoran fotoğrafı güncellendi'
-                                  : 'Restoran fotoğrafı kaldırıldı',
+                                  ? 'Pastane fotoğrafı güncellendi'
+                                  : 'Pastane fotoğrafı kaldırıldı',
                             );
                           } catch (e) {
                             if (!context.mounted) return;
@@ -158,7 +158,7 @@ class _RestaurantOwnerSettingsScreenState
                 ),
                 const SizedBox(height: Dimens.extraLargePadding),
                 _SectionHeader(
-                  title: 'Restoran Bilgileri',
+                  title: 'Pastane Bilgileri',
                   subtitle: 'Görünür bilgilerinizi düzenleyin',
                 ),
                 const SizedBox(height: Dimens.largePadding),
@@ -166,13 +166,13 @@ class _RestaurantOwnerSettingsScreenState
                   child: Column(
                     children: [
                       _SettingsListTile(
-                        title: 'Restoran adı',
+                        title: 'Pastane adı',
                         value: settings.restaurantName,
                         iconPath: Assets.icons.shop,
                         onTap:
                             () => _showEditFieldSheet(
                               context,
-                              'Restoran adı',
+                              'Pastane adı',
                               settings.restaurantName,
                               (v) async {
                                 await context
@@ -181,19 +181,19 @@ class _RestaurantOwnerSettingsScreenState
                                 if (!context.mounted) return;
                                 _showSuccess(
                                   context,
-                                  'Restoran adı güncellendi',
+                                  'Pastane adı güncellendi',
                                 );
                               },
                             ),
                       ),
                       _SettingsListTile(
-                        title: 'Restoran türü',
+                        title: 'Pastane türü',
                         value: settings.restaurantType,
                         iconPath: Assets.icons.category,
                         onTap:
                             () => _showEditFieldSheet(
                               context,
-                              'Restoran türü',
+                              'Pastane türü',
                               settings.restaurantType,
                               (v) async {
                                 await context
@@ -202,7 +202,7 @@ class _RestaurantOwnerSettingsScreenState
                                 if (!context.mounted) return;
                                 _showSuccess(
                                   context,
-                                  'Restoran türü güncellendi',
+                                  'Pastane türü güncellendi',
                                 );
                               },
                             ),
@@ -269,11 +269,11 @@ class _RestaurantOwnerSettingsScreenState
                           _showSuccess(
                             context,
                             settings.isOpen
-                                ? 'Restoran kapalı olarak işaretlendi'
-                                : 'Restoran açıldı',
+                                ? 'Pastane kapalı olarak işaretlendi'
+                                : 'Pastane açıldı',
                           );
                         },
-                        title: 'Restoran durumu',
+                        title: 'Pastane durumu',
                         leadingIconPath: Assets.icons.shop,
                         trailing: Transform.scale(
                           scale: 0.7,
@@ -286,8 +286,8 @@ class _RestaurantOwnerSettingsScreenState
                               _showSuccess(
                                 context,
                                 v
-                                    ? 'Restoran açıldı'
-                                    : 'Restoran kapalı olarak işaretlendi',
+                                    ? 'Pastane açıldı'
+                                    : 'Pastane kapalı olarak işaretlendi',
                               );
                             },
                             activeTrackColor: colors.primary,

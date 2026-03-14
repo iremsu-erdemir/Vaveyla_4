@@ -184,7 +184,7 @@ public sealed class CustomerFavoritesController : ControllerBase
         switch (text)
         {
             case "restaurant":
-            case "restoran":
+            case "pastane":
                 normalized = "restaurant";
                 return true;
             case "product":

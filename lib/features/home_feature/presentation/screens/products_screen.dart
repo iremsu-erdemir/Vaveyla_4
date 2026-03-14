@@ -37,7 +37,7 @@ class ProductsScreen extends StatefulWidget {
 
 class _ProductsScreenState extends State<ProductsScreen> {
   static const _closedRestaurantMessage =
-      'Bu restoran şu anda hizmet verememektedir.';
+      'Bu pastane şu anda hizmet verememektedir.';
 
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';

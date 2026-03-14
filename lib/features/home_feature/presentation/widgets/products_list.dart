@@ -14,7 +14,7 @@ import '../screens/product_details_screen.dart';
 
 class ProductsList extends StatelessWidget {
   static const _closedRestaurantMessage =
-      'Bu restoran şu anda hizmet verememektedir.';
+      'Bu pastane şu anda hizmet verememektedir.';
 
   const ProductsList({super.key});
 

@@ -14,7 +14,7 @@ class FavoriteRestaurantModel {
   factory FavoriteRestaurantModel.fromJson(Map<String, dynamic> json) {
     return FavoriteRestaurantModel(
       id: json['id']?.toString() ?? '',
-      name: json['name']?.toString() ?? 'Restoran',
+      name: json['name']?.toString() ?? 'Pastane',
       type: json['type']?.toString() ?? 'Kategori',
       photoPath: json['photoPath']?.toString(),
     );
@@ -47,7 +47,7 @@ class FavoriteProductModel {
       price: _parseInt(json['price']),
       imagePath: json['imagePath']?.toString() ?? '',
       restaurantId: json['restaurantId']?.toString() ?? '',
-      restaurantName: json['restaurantName']?.toString() ?? 'Restoran',
+      restaurantName: json['restaurantName']?.toString() ?? 'Pastane',
       restaurantType: json['restaurantType']?.toString(),
     );
   }

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Vaveyla.Api.Data;
 using Vaveyla.Api.Models;
+using Vaveyla.Api.Services;
 
 namespace Vaveyla.Api.Controllers;
 
@@ -10,13 +11,16 @@ public sealed class CustomerOrdersController : ControllerBase
 {
     private readonly ICustomerOrdersRepository _repository;
     private readonly IRestaurantOwnerRepository _restaurantRepo;
+    private readonly INotificationService _notificationService;
 
     public CustomerOrdersController(
         ICustomerOrdersRepository repository,
-        IRestaurantOwnerRepository restaurantRepo)
+        IRestaurantOwnerRepository restaurantRepo,
+        INotificationService notificationService)
     {
         _repository = repository;
         _restaurantRepo = restaurantRepo;
+        _notificationService = notificationService;
     }
 
     [HttpGet("orders")]
@@ -103,6 +107,7 @@ public sealed class CustomerOrdersController : ControllerBase
         }
 
         await _repository.CreateOrderAsync(order, cancellationToken);
+        await _notificationService.NotifyOrderCreatedAsync(order, cancellationToken);
 
         return Ok(new
         {

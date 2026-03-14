@@ -20,7 +20,7 @@ import 'product_details_screen.dart';
 
 class RestaurantProductsScreen extends StatelessWidget {
   static const _closedRestaurantMessage =
-      'Bu restoran şu anda hizmet verememektedir.';
+      'Bu pastane şu anda hizmet verememektedir.';
 
   const RestaurantProductsScreen({
     super.key,
@@ -75,7 +75,7 @@ class RestaurantProductsScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Restoranı Değerlendir',
+                    'Pastaneyi Değerlendir',
                     style: context.theme.appTypography.titleMedium,
                   ),
                   const SizedBox(height: Dimens.padding),
@@ -137,7 +137,7 @@ class RestaurantProductsScreen extends StatelessWidget {
                           if (!context.mounted) return;
                           Navigator.of(sheetContext).pop();
                           context.showSuccessMessage(
-                            'Restoran yorumu kaydedildi.',
+                            'Pastane yorumu kaydedildi.',
                           );
                         } catch (error) {
                           if (!context.mounted) return;
@@ -168,7 +168,7 @@ class RestaurantProductsScreen extends StatelessWidget {
           title: restaurantName,
           actions: [
             IconButton(
-              tooltip: 'Restoranı değerlendir',
+              tooltip: 'Pastaneyi değerlendir',
               icon: const Icon(Icons.star_rate_rounded),
               onPressed: () => _showRestaurantReviewSheet(context),
             ),
@@ -180,7 +180,7 @@ class RestaurantProductsScreen extends StatelessWidget {
               return const Center(child: CircularProgressIndicator());
             }
             if (state.products.isEmpty) {
-              return const Center(child: Text('Bu restoranda ürün yok.'));
+              return const Center(child: Text('Bu pastanede ürün yok.'));
             }
             return GridView.builder(
               padding: const EdgeInsets.all(Dimens.largePadding),

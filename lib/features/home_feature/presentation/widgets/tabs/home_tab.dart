@@ -46,7 +46,7 @@ class HomeTab extends StatelessWidget {
             onPressed: () {
               appPush(context, const RestaurantsScreen());
             },
-            title: 'Restoranlar',
+            title: 'Pastaneler',
           ),
           const RestaurantsList(),
           ProductsList(),

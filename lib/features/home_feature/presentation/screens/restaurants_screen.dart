@@ -89,7 +89,7 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
       create:
           (_) => AllProductsCubit(ProductsService())..loadProducts()..startPolling(),
       child: AppScaffold(
-        appBar: const GeneralAppBar(title: 'Restoranlar'),
+        appBar: const GeneralAppBar(title: 'Pastaneler'),
         body: BlocBuilder<AllProductsCubit, AllProductsState>(
           builder: (context, state) {
             if (state.isLoading) {
@@ -102,7 +102,7 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
               final id = product.restaurantId;
               if (id == null || id.isEmpty) continue;
               byRestaurant[id] = (
-                product.restaurantName ?? 'Restoran',
+                product.restaurantName ?? 'Pastane',
                 product.restaurantType ?? 'Kategori',
                 product.restaurantPhotoPath,
                 product.restaurantIsOpen,
@@ -110,7 +110,7 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
             }
             final restaurants = byRestaurant.entries.toList();
             if (restaurants.isEmpty) {
-              return const Center(child: Text('Restoran bulunamadı.'));
+              return const Center(child: Text('Pastane bulunamadı.'));
             }
 
             return ListView.separated(
@@ -127,7 +127,7 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
                   onTap: () {
                     if (!isOpen) {
                       context.showErrorMessage(
-                        'Bu restoran şu anda hizmet verememektedir.',
+                        'Bu pastane şu anda hizmet verememektedir.',
                       );
                       return;
                     }
