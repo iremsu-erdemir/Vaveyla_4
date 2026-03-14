@@ -14,6 +14,11 @@ public interface ICustomerChatsRepository
     Task<RestaurantChatMessage> AddMessageAsync(
         RestaurantChatMessage message,
         CancellationToken cancellationToken);
+
+    Task<bool> DeleteCustomerMessageAsync(
+        Guid chatMessageId,
+        Guid customerUserId,
+        CancellationToken cancellationToken);
 }
 
 public sealed class CustomerChatsRepository : ICustomerChatsRepository
@@ -57,5 +62,26 @@ public sealed class CustomerChatsRepository : ICustomerChatsRepository
         _dbContext.RestaurantChatMessages.Add(message);
         await _dbContext.SaveChangesAsync(cancellationToken);
         return message;
+    }
+
+    public async Task<bool> DeleteCustomerMessageAsync(
+        Guid chatMessageId,
+        Guid customerUserId,
+        CancellationToken cancellationToken)
+    {
+        var message = await _dbContext.RestaurantChatMessages.FirstOrDefaultAsync(
+            x => x.ChatMessageId == chatMessageId &&
+                 x.CustomerUserId == customerUserId &&
+                 x.SenderUserId == customerUserId &&
+                 x.SenderType == "customer",
+            cancellationToken);
+        if (message is null)
+        {
+            return false;
+        }
+
+        _dbContext.RestaurantChatMessages.Remove(message);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return true;
     }
 }

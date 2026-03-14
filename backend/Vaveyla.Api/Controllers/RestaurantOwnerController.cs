@@ -458,6 +458,35 @@ public sealed class RestaurantOwnerController : ControllerBase
         return Ok(result);
     }
 
+    [HttpDelete("chats/conversations/{customerUserId:guid}")]
+    public async Task<ActionResult> DeleteChatConversation(
+        [FromRoute] Guid customerUserId,
+        [FromQuery] Guid ownerUserId,
+        CancellationToken cancellationToken)
+    {
+        if (ownerUserId == Guid.Empty)
+        {
+            return BadRequest(new { message = "Owner user id is required." });
+        }
+        if (customerUserId == Guid.Empty)
+        {
+            return BadRequest(new { message = "Customer user id is required." });
+        }
+
+        var restaurant = await _repository.GetOrCreateRestaurantAsync(ownerUserId, cancellationToken);
+        var messages = await _dbContext.RestaurantChatMessages
+            .Where(x => x.RestaurantId == restaurant.RestaurantId && x.CustomerUserId == customerUserId)
+            .ToListAsync(cancellationToken);
+        if (messages.Count == 0)
+        {
+            return NotFound(new { message = "Conversation not found." });
+        }
+
+        _dbContext.RestaurantChatMessages.RemoveRange(messages);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return NoContent();
+    }
+
     [HttpGet("chats/messages")]
     public async Task<ActionResult<List<OwnerChatMessageDto>>> GetChatMessages(
         [FromQuery] Guid ownerUserId,
@@ -564,6 +593,38 @@ public sealed class RestaurantOwnerController : ControllerBase
             message.Message,
             message.CreatedAtUtc);
         return Ok(dto);
+    }
+
+    [HttpDelete("chats/messages/{messageId:guid}")]
+    public async Task<ActionResult> DeleteOwnerMessage(
+        [FromRoute] Guid messageId,
+        [FromQuery] Guid ownerUserId,
+        CancellationToken cancellationToken)
+    {
+        if (messageId == Guid.Empty)
+        {
+            return BadRequest(new { message = "Message id is required." });
+        }
+        if (ownerUserId == Guid.Empty)
+        {
+            return BadRequest(new { message = "Owner user id is required." });
+        }
+
+        var restaurant = await _repository.GetOrCreateRestaurantAsync(ownerUserId, cancellationToken);
+        var message = await _dbContext.RestaurantChatMessages.FirstOrDefaultAsync(
+            x => x.ChatMessageId == messageId &&
+                 x.RestaurantId == restaurant.RestaurantId &&
+                 x.SenderUserId == ownerUserId &&
+                 x.SenderType == "restaurant",
+            cancellationToken);
+        if (message is null)
+        {
+            return NotFound(new { message = "Message not found or cannot be deleted." });
+        }
+
+        _dbContext.RestaurantChatMessages.Remove(message);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return NoContent();
     }
 
     private static RestaurantOrderDto MapOrder(

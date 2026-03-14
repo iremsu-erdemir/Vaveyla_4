@@ -16,9 +16,9 @@ class RestaurantOwnerService {
     String? baseUrl,
     List<String>? baseUrls,
   }) : _baseUrls =
-            baseUrl != null || (baseUrls != null && baseUrls.isNotEmpty)
-                ? AuthService(baseUrl: baseUrl, baseUrls: baseUrls).baseUrls
-                : authService.baseUrls;
+           baseUrl != null || (baseUrls != null && baseUrls.isNotEmpty)
+               ? AuthService(baseUrl: baseUrl, baseUrls: baseUrls).baseUrls
+               : authService.baseUrls;
 
   final AuthService authService;
   final List<String> _baseUrls;
@@ -105,7 +105,10 @@ class RestaurantOwnerService {
     if (data is List) {
       return data
           .whereType<Map>()
-          .map((item) => RestaurantOrderModel.fromJson(item.cast<String, dynamic>()))
+          .map(
+            (item) =>
+                RestaurantOrderModel.fromJson(item.cast<String, dynamic>()),
+          )
           .toList();
     }
     return [];
@@ -221,6 +224,16 @@ class RestaurantOwnerService {
     return [];
   }
 
+  Future<void> deleteChatConversation({
+    required String ownerUserId,
+    required String customerUserId,
+  }) async {
+    await _deleteWithFallback(
+      path:
+          '/api/owner/chats/conversations/$customerUserId?ownerUserId=$ownerUserId',
+    );
+  }
+
   Future<List<OwnerChatMessageModel>> getChatMessages({
     required String ownerUserId,
     required String customerUserId,
@@ -234,7 +247,10 @@ class RestaurantOwnerService {
     if (data is List) {
       return data
           .whereType<Map>()
-          .map((item) => OwnerChatMessageModel.fromJson(item.cast<String, dynamic>()))
+          .map(
+            (item) =>
+                OwnerChatMessageModel.fromJson(item.cast<String, dynamic>()),
+          )
           .toList();
     }
     return [];
@@ -251,6 +267,15 @@ class RestaurantOwnerService {
     );
     final data = _decodeJson(response) as Map<String, dynamic>;
     return OwnerChatMessageModel.fromJson(data);
+  }
+
+  Future<void> deleteOwnerMessage({
+    required String ownerUserId,
+    required String messageId,
+  }) async {
+    await _deleteWithFallback(
+      path: '/api/owner/chats/messages/$messageId?ownerUserId=$ownerUserId',
+    );
   }
 
   Future<String> uploadMenuImage({
@@ -297,7 +322,9 @@ class RestaurantOwnerService {
         }
       }
     }
-    throw AuthException('Sunucuya bağlanılamadı. Lütfen bağlantınızı kontrol edin.');
+    throw AuthException(
+      'Sunucuya bağlanılamadı. Lütfen bağlantınızı kontrol edin.',
+    );
   }
 
   Future<http.Response> _postWithFallback({
@@ -319,7 +346,9 @@ class RestaurantOwnerService {
         }
       }
     }
-    throw AuthException('Sunucuya bağlanılamadı. Lütfen bağlantınızı kontrol edin.');
+    throw AuthException(
+      'Sunucuya bağlanılamadı. Lütfen bağlantınızı kontrol edin.',
+    );
   }
 
   Future<http.Response> _putWithFallback({
@@ -341,7 +370,9 @@ class RestaurantOwnerService {
         }
       }
     }
-    throw AuthException('Sunucuya bağlanılamadı. Lütfen bağlantınızı kontrol edin.');
+    throw AuthException(
+      'Sunucuya bağlanılamadı. Lütfen bağlantınızı kontrol edin.',
+    );
   }
 
   Future<http.Response> _deleteWithFallback({required String path}) async {
@@ -356,7 +387,9 @@ class RestaurantOwnerService {
         }
       }
     }
-    throw AuthException('Sunucuya bağlanılamadı. Lütfen bağlantınızı kontrol edin.');
+    throw AuthException(
+      'Sunucuya bağlanılamadı. Lütfen bağlantınızı kontrol edin.',
+    );
   }
 
   Future<http.Response> _multipartWithFallback({
@@ -379,7 +412,9 @@ class RestaurantOwnerService {
             ),
           );
         } else {
-          request.files.add(await http.MultipartFile.fromPath('file', filePath));
+          request.files.add(
+            await http.MultipartFile.fromPath('file', filePath),
+          );
         }
         final response = await request.send();
         final body = await response.stream.bytesToString();
@@ -398,7 +433,9 @@ class RestaurantOwnerService {
         }
       }
     }
-    throw AuthException('Sunucuya bağlanılamadı. Lütfen bağlantınızı kontrol edin.');
+    throw AuthException(
+      'Sunucuya bağlanılamadı. Lütfen bağlantınızı kontrol edin.',
+    );
   }
 
   dynamic _decodeJson(http.Response response) {

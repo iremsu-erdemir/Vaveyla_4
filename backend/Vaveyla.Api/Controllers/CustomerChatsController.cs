@@ -121,6 +121,33 @@ public sealed class CustomerChatsController : ControllerBase
         return Ok(MapMessage(created, customerName, restaurantOwnerName));
     }
 
+    [HttpDelete("messages/{messageId:guid}")]
+    public async Task<ActionResult> DeleteCustomerMessage(
+        [FromRoute] Guid messageId,
+        [FromQuery] Guid customerUserId,
+        CancellationToken cancellationToken)
+    {
+        if (messageId == Guid.Empty)
+        {
+            return BadRequest(new { message = "Message id is required." });
+        }
+        if (customerUserId == Guid.Empty)
+        {
+            return BadRequest(new { message = "Customer user id is required." });
+        }
+
+        var deleted = await _repository.DeleteCustomerMessageAsync(
+            messageId,
+            customerUserId,
+            cancellationToken);
+        if (!deleted)
+        {
+            return NotFound(new { message = "Message not found or cannot be deleted." });
+        }
+
+        return NoContent();
+    }
+
     private static object MapMessage(
         RestaurantChatMessage message,
         string? customerName,

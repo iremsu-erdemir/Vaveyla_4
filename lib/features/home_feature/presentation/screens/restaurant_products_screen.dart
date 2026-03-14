@@ -9,15 +9,12 @@ import 'package:flutter_sweet_shop_app_ui/core/utils/formatters.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_button.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_scaffold.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/general_app_bar.dart';
-import 'package:flutter_sweet_shop_app_ui/features/cart_feature/presentation/bloc/cart_cubit.dart';
 import 'package:flutter_sweet_shop_app_ui/features/home_feature/data/models/customer_review_model.dart';
 import 'package:flutter_sweet_shop_app_ui/features/home_feature/data/services/customer_review_service.dart';
 import 'package:flutter_sweet_shop_app_ui/features/home_feature/data/services/products_service.dart';
 import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/bloc/all_products_cubit.dart';
 import 'package:flutter_sweet_shop_app_ui/features/restaurant_owner_feature/widgets/product_image_widget.dart';
 
-import '../../../../core/gen/assets.gen.dart';
-import '../../../../core/widgets/app_icon_buttons.dart';
 import '../../../../core/widgets/shaded_container.dart';
 import 'product_details_screen.dart';
 
@@ -68,7 +65,8 @@ class RestaurantProductsScreen extends StatelessWidget {
             right: Dimens.largePadding,
             top: Dimens.largePadding,
             bottom:
-                MediaQuery.of(sheetContext).viewInsets.bottom + Dimens.largePadding,
+                MediaQuery.of(sheetContext).viewInsets.bottom +
+                Dimens.largePadding,
           ),
           child: StatefulBuilder(
             builder: (context, setSheetState) {
@@ -107,7 +105,9 @@ class RestaurantProductsScreen extends StatelessWidget {
                     const SizedBox(height: Dimens.smallPadding),
                     ...existingReviews.map((review) {
                       return Padding(
-                        padding: const EdgeInsets.only(bottom: Dimens.smallPadding),
+                        padding: const EdgeInsets.only(
+                          bottom: Dimens.smallPadding,
+                        ),
                         child: Text(
                           '${review.customerName}: ${review.comment}',
                           style: context.theme.appTypography.bodySmall,
@@ -136,7 +136,9 @@ class RestaurantProductsScreen extends StatelessWidget {
                           );
                           if (!context.mounted) return;
                           Navigator.of(sheetContext).pop();
-                          context.showSuccessMessage('Restoran yorumu kaydedildi.');
+                          context.showSuccessMessage(
+                            'Restoran yorumu kaydedildi.',
+                          );
                         } catch (error) {
                           if (!context.mounted) return;
                           context.showErrorMessage(error);
@@ -155,11 +157,12 @@ class RestaurantProductsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final appColors = context.theme.appColors;
     return BlocProvider(
-      create: (_) => AllProductsCubit(ProductsService())
-        ..loadProducts(restaurantId: restaurantId)
-        ..startPolling(),
+      create:
+          (_) =>
+              AllProductsCubit(ProductsService())
+                ..loadProducts(restaurantId: restaurantId)
+                ..startPolling(),
       child: AppScaffold(
         appBar: GeneralAppBar(
           title: restaurantName,
@@ -209,54 +212,45 @@ class RestaurantProductsScreen extends StatelessWidget {
                             Padding(
                               padding: const EdgeInsets.all(Dimens.padding),
                               child: ClipRRect(
-                                borderRadius: BorderRadius.circular(Dimens.corners),
-                                child: buildProductImage(product.imageUrl, 200, 114),
+                                borderRadius: BorderRadius.circular(
+                                  Dimens.corners,
+                                ),
+                                child: buildProductImage(
+                                  product.imageUrl,
+                                  200,
+                                  114,
+                                ),
                               ),
                             ),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: Dimens.padding),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: Dimens.padding,
+                              ),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Expanded(
                                     child: Text(
                                       product.name,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: context.theme.appTypography.titleSmall,
+                                      style:
+                                          context
+                                              .theme
+                                              .appTypography
+                                              .titleSmall,
                                     ),
                                   ),
                                   Text(
                                     formatPrice(product.price),
-                                    style: context.theme.appTypography.labelLarge
+                                    style: context
+                                        .theme
+                                        .appTypography
+                                        .labelLarge
                                         .copyWith(fontWeight: FontWeight.w700),
                                   ),
                                 ],
-                              ),
-                            ),
-                            SizedBox(
-                              width: 30,
-                              height: 30,
-                              child: AppIconButton(
-                                iconPath: Assets.icons.shoppingCart,
-                                backgroundColor: appColors.primary,
-                                onPressed: () async {
-                                  if (!isRestaurantOpen) {
-                                    context.showErrorMessage(_closedRestaurantMessage);
-                                    return;
-                                  }
-                                  final errorMessage = await context
-                                      .read<CartCubit>()
-                                      .addItem(product);
-                                  if (!context.mounted) return;
-                                  if (errorMessage == null) {
-                                    context.showSuccessMessage(
-                                      '${product.name} sepete eklendi!',
-                                    );
-                                    return;
-                                  }
-                                  context.showErrorMessage(errorMessage);
-                                },
                               ),
                             ),
                           ],
@@ -281,14 +275,17 @@ class RestaurantProductsScreen extends StatelessWidget {
                               ),
                               decoration: BoxDecoration(
                                 color: Colors.black.withValues(alpha: 0.7),
-                                borderRadius: BorderRadius.circular(Dimens.smallCorners),
+                                borderRadius: BorderRadius.circular(
+                                  Dimens.smallCorners,
+                                ),
                               ),
                               child: Text(
                                 'Kapalı',
-                                style: context.theme.appTypography.labelSmall.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                ),
+                                style: context.theme.appTypography.labelSmall
+                                    .copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                               ),
                             ),
                           ),

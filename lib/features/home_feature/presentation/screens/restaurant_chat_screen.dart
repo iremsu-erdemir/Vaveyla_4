@@ -3,6 +3,7 @@ import 'package:flutter_sweet_shop_app_ui/core/services/app_session.dart';
 import 'package:flutter_sweet_shop_app_ui/core/theme/dimens.dart';
 import 'package:flutter_sweet_shop_app_ui/core/theme/theme.dart';
 import 'package:flutter_sweet_shop_app_ui/core/utils/app_feedback.dart';
+import 'package:flutter_sweet_shop_app_ui/core/widgets/app_confirm_dialog.dart';
 import 'package:flutter_sweet_shop_app_ui/features/home_feature/data/models/restaurant_chat_message_model.dart';
 import 'package:flutter_sweet_shop_app_ui/features/home_feature/data/services/restaurant_chat_service.dart';
 
@@ -24,6 +25,7 @@ class _RestaurantChatScreenState extends State<RestaurantChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final RestaurantChatService _chatService = RestaurantChatService();
   final List<RestaurantChatMessageModel> _messages = [];
+  final Set<String> _deletingMessageIds = <String>{};
   bool _isLoading = true;
   bool _isSending = false;
 
@@ -103,6 +105,45 @@ class _RestaurantChatScreenState extends State<RestaurantChatScreen> {
     }
   }
 
+  Future<void> _deleteMessage(RestaurantChatMessageModel message) async {
+    final customerUserId = AppSession.userId;
+    if (customerUserId.isEmpty || _deletingMessageIds.contains(message.id)) {
+      return;
+    }
+
+    final approved = await AppConfirmDialog.show(
+      context,
+      title: 'Mesaj silinsin mi?',
+      message: 'Bu mesaji silmek istediginizden emin misiniz?',
+      confirmText: 'Sil',
+      cancelText: 'Vazgec',
+      isDestructive: true,
+    );
+    if (approved != true || !mounted) {
+      return;
+    }
+
+    setState(() => _deletingMessageIds.add(message.id));
+    try {
+      await _chatService.deleteCustomerMessage(
+        customerUserId: customerUserId,
+        messageId: message.id,
+      );
+      if (!mounted) return;
+      setState(() {
+        _messages.removeWhere((x) => x.id == message.id);
+      });
+      context.showSuccessMessage('Mesaj silindi.');
+    } catch (error) {
+      if (!mounted) return;
+      context.showErrorMessage(error.toString());
+    } finally {
+      if (mounted) {
+        setState(() => _deletingMessageIds.remove(message.id));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.theme.appColors;
@@ -145,7 +186,9 @@ class _RestaurantChatScreenState extends State<RestaurantChatScreen> {
                     ? Center(
                       child: Text(
                         'Henüz mesaj yok. İlk mesajı siz gönderin.',
-                        style: typography.bodySmall.copyWith(color: colors.gray4),
+                        style: typography.bodySmall.copyWith(
+                          color: colors.gray4,
+                        ),
                       ),
                     )
                     : ListView.builder(
@@ -156,44 +199,140 @@ class _RestaurantChatScreenState extends State<RestaurantChatScreen> {
                         final isMine =
                             message.senderType.toLowerCase() == 'customer' &&
                             message.senderUserId == AppSession.userId;
+                        final isDeleting = _deletingMessageIds.contains(
+                          message.id,
+                        );
                         return Align(
                           alignment:
-                              isMine ? Alignment.centerRight : Alignment.centerLeft,
-                          child: Container(
-                            margin: const EdgeInsets.only(bottom: Dimens.padding),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: Dimens.largePadding,
-                              vertical: Dimens.padding,
-                            ),
-                            constraints: BoxConstraints(
-                              maxWidth: MediaQuery.of(context).size.width * 0.75,
-                            ),
-                            decoration: BoxDecoration(
-                              color:
+                              isMine
+                                  ? Alignment.centerRight
+                                  : Alignment.centerLeft,
+                          child: Opacity(
+                            opacity: isDeleting ? 0.55 : 1,
+                            child: Container(
+                              margin: const EdgeInsets.only(
+                                bottom: Dimens.padding,
+                              ),
+                              child:
                                   isMine
-                                      ? colors.primary.withValues(alpha: 0.16)
-                                      : colors.white,
-                              borderRadius: BorderRadius.circular(Dimens.corners),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  message.message,
-                                  style: typography.bodySmall.copyWith(
-                                    color: colors.primaryTint2,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  _formatTime(message.createdAtUtc),
-                                  style: typography.bodySmall.copyWith(
-                                    color: colors.gray4,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ],
+                                      ? Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: Dimens.largePadding,
+                                              vertical: Dimens.padding,
+                                            ),
+                                            constraints: BoxConstraints(
+                                              maxWidth:
+                                                  MediaQuery.of(
+                                                    context,
+                                                  ).size.width *
+                                                  0.66,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: colors.primary.withValues(
+                                                alpha: 0.16,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                    Dimens.corners,
+                                                  ),
+                                            ),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.end,
+                                              children: [
+                                                Text(
+                                                  message.message,
+                                                  style: typography.bodySmall
+                                                      .copyWith(
+                                                        color:
+                                                            colors.primaryTint2,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  _formatTime(
+                                                    message.createdAtUtc,
+                                                  ),
+                                                  style: typography.bodySmall
+                                                      .copyWith(
+                                                        color: colors.gray4,
+                                                        fontSize: 11,
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          SizedBox(
+                                            width: 22,
+                                            height: 22,
+                                            child: IconButton(
+                                              padding: EdgeInsets.zero,
+                                              splashRadius: 14,
+                                              onPressed:
+                                                  isDeleting
+                                                      ? null
+                                                      : () => _deleteMessage(
+                                                        message,
+                                                      ),
+                                              icon: Icon(
+                                                Icons.delete_outline_rounded,
+                                                size: 16,
+                                                color: colors.error,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      )
+                                      : Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: Dimens.largePadding,
+                                          vertical: Dimens.padding,
+                                        ),
+                                        constraints: BoxConstraints(
+                                          maxWidth:
+                                              MediaQuery.of(
+                                                context,
+                                              ).size.width *
+                                              0.75,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: colors.white,
+                                          borderRadius: BorderRadius.circular(
+                                            Dimens.corners,
+                                          ),
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.end,
+                                          children: [
+                                            Text(
+                                              message.message,
+                                              style: typography.bodySmall
+                                                  .copyWith(
+                                                    color: colors.primaryTint2,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              _formatTime(message.createdAtUtc),
+                                              style: typography.bodySmall
+                                                  .copyWith(
+                                                    color: colors.gray4,
+                                                    fontSize: 11,
+                                                  ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
                             ),
                           ),
                         );

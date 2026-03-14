@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:flutter_sweet_shop_app_ui/features/cart_feature/presentation/bloc/cart_cubit.dart';
 import 'package:flutter_sweet_shop_app_ui/core/theme/theme.dart';
 import 'package:flutter_sweet_shop_app_ui/core/utils/app_navigator.dart';
 import 'package:flutter_sweet_shop_app_ui/core/utils/app_feedback.dart';
@@ -17,7 +16,6 @@ import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/scr
 
 import '../../../../core/gen/assets.gen.dart';
 import '../../../../core/theme/dimens.dart';
-import '../../../../core/widgets/app_icon_buttons.dart';
 import '../../../../core/widgets/app_scaffold.dart';
 import '../../../../core/widgets/general_app_bar.dart';
 import '../../../../core/widgets/shaded_container.dart';
@@ -28,11 +26,7 @@ import 'package:flutter_sweet_shop_app_ui/features/restaurant_owner_feature/widg
 import 'product_details_screen.dart';
 
 class ProductsScreen extends StatefulWidget {
-  const ProductsScreen({
-    super.key,
-    this.initialType,
-    this.title = 'Ürünler',
-  });
+  const ProductsScreen({super.key, this.initialType, this.title = 'Ürünler'});
 
   final String? initialType;
   final String title;
@@ -91,12 +85,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
     }
   }
 
-  double _distanceKm(
-    double lat1,
-    double lng1,
-    double lat2,
-    double lng2,
-  ) {
+  double _distanceKm(double lat1, double lng1, double lat2, double lng2) {
     const earthRadiusKm = 6371.0;
     final dLat = _degToRad(lat2 - lat1);
     final dLng = _degToRad(lng2 - lng1);
@@ -113,18 +102,20 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
   List<ProductModel> _applyFilter(List<ProductModel> products) {
     final query = _searchQuery.trim().toLowerCase();
-    var filtered = products.where((product) {
-      final name = product.name.toString().toLowerCase();
-      final category = (product.categoryName?.toString() ?? '').toLowerCase();
-      final categoryMatches =
-          _selectedCategory == null ||
-          _selectedCategory!.isEmpty ||
-          (product.categoryName?.toString() ?? '').toLowerCase() ==
-              _selectedCategory!.toLowerCase();
-      final searchMatches =
-          query.isEmpty || name.contains(query) || category.contains(query);
-      return categoryMatches && searchMatches;
-    }).toList();
+    var filtered =
+        products.where((product) {
+          final name = product.name.toString().toLowerCase();
+          final category =
+              (product.categoryName?.toString() ?? '').toLowerCase();
+          final categoryMatches =
+              _selectedCategory == null ||
+              _selectedCategory!.isEmpty ||
+              (product.categoryName?.toString() ?? '').toLowerCase() ==
+                  _selectedCategory!.toLowerCase();
+          final searchMatches =
+              query.isEmpty || name.contains(query) || category.contains(query);
+          return categoryMatches && searchMatches;
+        }).toList();
 
     switch (_sortOption) {
       case ProductSortOption.topRated:
@@ -158,12 +149,12 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final appColors = context.theme.appColors;
     return BlocProvider(
-      create: (_) =>
-          AllProductsCubit(ProductsService())
-            ..loadProducts(type: widget.initialType)
-            ..startPolling(),
+      create:
+          (_) =>
+              AllProductsCubit(ProductsService())
+                ..loadProducts(type: widget.initialType)
+                ..startPolling(),
       child: AppScaffold(
         appBar: GeneralAppBar(
           title: widget.title,
@@ -193,12 +184,13 @@ class _ProductsScreenState extends State<ProductsScreen> {
                 GestureDetector(
                   onTap: () async {
                     final state = context.read<AllProductsCubit>().state;
-                    final categories = state.products
-                        .map((x) => x.categoryName?.trim() ?? '')
-                        .where((x) => x.isNotEmpty)
-                        .toSet()
-                        .toList()
-                      ..sort();
+                    final categories =
+                        state.products
+                            .map((x) => x.categoryName?.trim() ?? '')
+                            .where((x) => x.isNotEmpty)
+                            .toSet()
+                            .toList()
+                          ..sort();
                     final result = await appPush(
                       context,
                       SortAndFilterScreen(
@@ -233,12 +225,13 @@ class _ProductsScreenState extends State<ProductsScreen> {
                 GestureDetector(
                   onTap: () async {
                     final state = context.read<AllProductsCubit>().state;
-                    final categories = state.products
-                        .map((x) => x.categoryName?.trim() ?? '')
-                        .where((x) => x.isNotEmpty)
-                        .toSet()
-                        .toList()
-                      ..sort();
+                    final categories =
+                        state.products
+                            .map((x) => x.categoryName?.trim() ?? '')
+                            .where((x) => x.isNotEmpty)
+                            .toSet()
+                            .toList()
+                          ..sort();
                     final result = await appPush(
                       context,
                       SortAndFilterScreen(
@@ -293,8 +286,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     );
                   }
                   return GridView.builder(
-                    gridDelegate:
-                        SliverGridDelegateWithFixedCrossAxisCount(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       mainAxisSpacing: Dimens.largePadding,
                       crossAxisSpacing: Dimens.largePadding,
@@ -325,13 +317,16 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Padding(
-                                    padding: const EdgeInsets.all(Dimens.padding),
+                                    padding: const EdgeInsets.all(
+                                      Dimens.padding,
+                                    ),
                                     child: SizedBox(
                                       height: 114,
                                       width: context.widthPx,
                                       child: ClipRRect(
-                                        borderRadius:
-                                            BorderRadius.circular(Dimens.corners),
+                                        borderRadius: BorderRadius.circular(
+                                          Dimens.corners,
+                                        ),
                                         child: _buildProductImage(
                                           context,
                                           product.imageUrl,
@@ -354,10 +349,11 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                             Expanded(
                                               child: Text(
                                                 product.name,
-                                                style: context
-                                                    .theme
-                                                    .appTypography
-                                                    .titleSmall,
+                                                style:
+                                                    context
+                                                        .theme
+                                                        .appTypography
+                                                        .titleSmall,
                                                 overflow: TextOverflow.ellipsis,
                                               ),
                                             ),
@@ -381,35 +377,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                                     fontWeight: FontWeight.bold,
                                                   ),
                                             ),
-                                            SizedBox(
-                                              width: 30,
-                                              height: 30,
-                                              child: AppIconButton(
-                                                iconPath: Assets.icons.shoppingCart,
-                                                backgroundColor: appColors.primary,
-                                                onPressed: () async {
-                                                  if (!isRestaurantOpen) {
-                                                    context.showErrorMessage(
-                                                      _closedRestaurantMessage,
-                                                    );
-                                                    return;
-                                                  }
-                                                  final errorMessage = await context
-                                                      .read<CartCubit>()
-                                                      .addItem(product);
-                                                  if (!context.mounted) return;
-                                                  if (errorMessage == null) {
-                                                    context.showSuccessMessage(
-                                                      '${product.name} sepete eklendi!',
-                                                    );
-                                                    return;
-                                                  }
-                                                  context.showErrorMessage(
-                                                    errorMessage,
-                                                  );
-                                                },
-                                              ),
-                                            ),
                                           ],
                                         ),
                                       ],
@@ -421,7 +388,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                 Positioned.fill(
                                   child: IgnorePointer(
                                     child: Container(
-                                      color: Colors.grey.withValues(alpha: 0.35),
+                                      color: Colors.grey.withValues(
+                                        alpha: 0.35,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -436,14 +405,19 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                       vertical: 2,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: Colors.black.withValues(alpha: 0.7),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.7,
+                                      ),
                                       borderRadius: BorderRadius.circular(
                                         Dimens.smallCorners,
                                       ),
                                     ),
                                     child: Text(
                                       'Kapalı',
-                                      style: context.theme.appTypography.labelSmall
+                                      style: context
+                                          .theme
+                                          .appTypography
+                                          .labelSmall
                                           .copyWith(
                                             color: Colors.white,
                                             fontWeight: FontWeight.w700,

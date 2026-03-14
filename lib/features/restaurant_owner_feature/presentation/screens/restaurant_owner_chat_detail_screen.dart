@@ -4,6 +4,7 @@ import 'package:flutter_sweet_shop_app_ui/core/services/auth_service.dart';
 import 'package:flutter_sweet_shop_app_ui/core/theme/dimens.dart';
 import 'package:flutter_sweet_shop_app_ui/core/theme/theme.dart';
 import 'package:flutter_sweet_shop_app_ui/core/utils/app_feedback.dart';
+import 'package:flutter_sweet_shop_app_ui/core/widgets/app_confirm_dialog.dart';
 import 'package:flutter_sweet_shop_app_ui/features/restaurant_owner_feature/data/models/owner_chat_models.dart';
 import 'package:flutter_sweet_shop_app_ui/features/restaurant_owner_feature/data/services/restaurant_owner_service.dart';
 
@@ -29,6 +30,7 @@ class _RestaurantOwnerChatDetailScreenState
     authService: AuthService(),
   );
   final List<OwnerChatMessageModel> _messages = [];
+  final Set<String> _deletingMessageIds = <String>{};
   bool _isLoading = true;
   bool _isSending = false;
 
@@ -98,6 +100,45 @@ class _RestaurantOwnerChatDetailScreenState
     }
   }
 
+  Future<void> _deleteMessage(OwnerChatMessageModel message) async {
+    final ownerUserId = AppSession.userId;
+    if (ownerUserId.isEmpty || _deletingMessageIds.contains(message.id)) {
+      return;
+    }
+
+    final approved = await AppConfirmDialog.show(
+      context,
+      title: 'Mesaj silinsin mi?',
+      message: 'Bu mesaji silmek istediginizden emin misiniz?',
+      confirmText: 'Sil',
+      cancelText: 'Vazgec',
+      isDestructive: true,
+    );
+    if (approved != true || !mounted) {
+      return;
+    }
+
+    setState(() => _deletingMessageIds.add(message.id));
+    try {
+      await _service.deleteOwnerMessage(
+        ownerUserId: ownerUserId,
+        messageId: message.id,
+      );
+      if (!mounted) return;
+      setState(() {
+        _messages.removeWhere((x) => x.id == message.id);
+      });
+      context.showSuccessMessage('Mesaj silindi.');
+    } catch (error) {
+      if (!mounted) return;
+      context.showErrorMessage(error.toString());
+    } finally {
+      if (mounted) {
+        setState(() => _deletingMessageIds.remove(message.id));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.theme.appColors;
@@ -121,7 +162,9 @@ class _RestaurantOwnerChatDetailScreenState
                     ? Center(
                       child: Text(
                         'Henüz mesaj yok.',
-                        style: typography.bodySmall.copyWith(color: colors.gray4),
+                        style: typography.bodySmall.copyWith(
+                          color: colors.gray4,
+                        ),
                       ),
                     )
                     : ListView.builder(
@@ -129,38 +172,76 @@ class _RestaurantOwnerChatDetailScreenState
                       itemCount: _messages.length,
                       itemBuilder: (context, index) {
                         final msg = _messages[index];
-                        final isMine = msg.isRestaurant;
+                        final isMine =
+                            msg.isRestaurant &&
+                            msg.senderUserId == AppSession.userId;
+                        final isDeleting = _deletingMessageIds.contains(msg.id);
                         return Align(
                           alignment:
-                              isMine ? Alignment.centerRight : Alignment.centerLeft,
-                          child: Container(
-                            margin: const EdgeInsets.only(bottom: Dimens.padding),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: Dimens.largePadding,
-                              vertical: Dimens.padding,
-                            ),
-                            constraints: BoxConstraints(
-                              maxWidth: MediaQuery.of(context).size.width * 0.75,
-                            ),
-                            decoration: BoxDecoration(
-                              color:
-                                  isMine
-                                      ? colors.primary.withValues(alpha: 0.16)
-                                      : colors.white,
-                              borderRadius: BorderRadius.circular(Dimens.corners),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(msg.message),
-                                const SizedBox(height: 4),
-                                Text(
-                                  _formatTime(msg.createdAtUtc),
-                                  style: typography.labelSmall.copyWith(
-                                    color: colors.gray4,
-                                  ),
+                              isMine
+                                  ? Alignment.centerRight
+                                  : Alignment.centerLeft,
+                          child: Opacity(
+                            opacity: isDeleting ? 0.55 : 1,
+                            child: Container(
+                              margin: const EdgeInsets.only(
+                                bottom: Dimens.padding,
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: Dimens.largePadding,
+                                vertical: Dimens.padding,
+                              ),
+                              constraints: BoxConstraints(
+                                maxWidth:
+                                    MediaQuery.of(context).size.width * 0.75,
+                              ),
+                              decoration: BoxDecoration(
+                                color:
+                                    isMine
+                                        ? colors.primary.withValues(alpha: 0.16)
+                                        : colors.white,
+                                borderRadius: BorderRadius.circular(
+                                  Dimens.corners,
                                 ),
-                              ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(msg.message),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        _formatTime(msg.createdAtUtc),
+                                        style: typography.labelSmall.copyWith(
+                                          color: colors.gray4,
+                                        ),
+                                      ),
+                                      if (isMine) ...[
+                                        const SizedBox(width: 6),
+                                        SizedBox(
+                                          width: 22,
+                                          height: 22,
+                                          child: IconButton(
+                                            padding: EdgeInsets.zero,
+                                            splashRadius: 14,
+                                            onPressed:
+                                                isDeleting
+                                                    ? null
+                                                    : () => _deleteMessage(msg),
+                                            icon: Icon(
+                                              Icons.delete_outline_rounded,
+                                              size: 16,
+                                              color: colors.error,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         );

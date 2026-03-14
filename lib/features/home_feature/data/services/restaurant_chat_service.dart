@@ -36,7 +36,10 @@ class RestaurantChatService {
     }
     return rawItems
         .whereType<Map>()
-        .map((item) => RestaurantChatMessageModel.fromJson(item.cast<String, dynamic>()))
+        .map(
+          (item) =>
+              RestaurantChatMessageModel.fromJson(item.cast<String, dynamic>()),
+        )
         .toList();
   }
 
@@ -54,6 +57,16 @@ class RestaurantChatService {
       throw AuthException('Mesaj gönderilemedi.');
     }
     return RestaurantChatMessageModel.fromJson(data);
+  }
+
+  Future<void> deleteCustomerMessage({
+    required String customerUserId,
+    required String messageId,
+  }) async {
+    await _deleteWithFallback(
+      path:
+          '/api/customer/chats/messages/$messageId?customerUserId=$customerUserId',
+    );
   }
 
   Future<http.Response> _getWithFallback({required String path}) async {
@@ -87,6 +100,21 @@ class RestaurantChatService {
       } on Exception catch (error) {
         if (kDebugMode) {
           debugPrint('RestaurantChatService POST hata ($baseUrl): $error');
+        }
+      }
+    }
+    throw AuthException('Sunucuya bağlanılamadı.');
+  }
+
+  Future<http.Response> _deleteWithFallback({required String path}) async {
+    for (final baseUrl in _baseUrls) {
+      try {
+        return await http
+            .delete(Uri.parse('$baseUrl$path'))
+            .timeout(const Duration(seconds: 8));
+      } on Exception catch (error) {
+        if (kDebugMode) {
+          debugPrint('RestaurantChatService DELETE hata ($baseUrl): $error');
         }
       }
     }

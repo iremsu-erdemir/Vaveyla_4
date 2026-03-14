@@ -26,7 +26,6 @@ class _SplashScreenState extends State<SplashScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
-  final ScrollController _scrollController = ScrollController();
   final RegExp _hasUpperCase = RegExp(r'[A-ZÇĞİÖŞÜ]');
   final RegExp _hasLowerCase = RegExp(r'[a-zçğıöşü]');
   final RegExp _hasDigit = RegExp(r'[0-9]');
@@ -36,7 +35,6 @@ class _SplashScreenState extends State<SplashScreen> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
-    _scrollController.dispose();
     super.dispose();
   }
 
@@ -115,8 +113,8 @@ class _SplashScreenState extends State<SplashScreen> {
         result.roleId == 1
             ? const RestaurantOwnerDashboardScreen()
             : result.roleId == 3
-                ? const CourierDashboardScreen()
-                : const HomeScreen(),
+            ? const CourierDashboardScreen()
+            : const HomeScreen(),
       );
     } catch (error) {
       if (!mounted) {
@@ -146,23 +144,27 @@ class _SplashScreenState extends State<SplashScreen> {
       safeAreaTop: false,
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final height = constraints.maxHeight;
           final width = constraints.maxWidth;
+          final height = constraints.maxHeight;
           final isCompact = width < 360;
-          final headerHeight = (height * 0.32).clamp(180.0, 280.0);
+          // Width-based header height keeps the composition stable
+          // across web and physical devices with different aspect ratios.
+          final headerVisibleHeight = (width * 0.80).clamp(100.0, 800.0);
           final titleFontSize = (width * 0.085).clamp(26.0, 34.0);
-          final headerTopOffset = (height * 0.03).clamp(8.0, 24.0);
           final inputHeight = isCompact ? 46.0 : 52.0;
           final horizontalPadding =
               width < Dimens.smallDeviceBreakPoint
                   ? Dimens.largePadding
                   : Dimens.extraLargePadding;
-          final contentTopPadding = headerHeight * 0.8;
+          final maxTopPadding = headerVisibleHeight * 0.82;
+          // Keep form visible on short screens by capping top spacing with height.
+          final contentTopPadding = (height * 0.42).clamp(160.0, maxTopPadding);
           final contentBottomPadding = Dimens.extraLargePadding;
           final contentMaxWidth = width > 520 ? 420.0 : width;
           final fieldSpacing = isCompact ? Dimens.padding : Dimens.largePadding;
           final sectionSpacing =
               isCompact ? Dimens.largePadding : Dimens.extraLargePadding;
+          final logoTopOnHeader = headerVisibleHeight * 0.45;
 
           return Stack(
             children: [
@@ -171,16 +173,33 @@ class _SplashScreenState extends State<SplashScreen> {
 
               /// ÜST HEADER
               Positioned(
-                top: headerTopOffset,
+                top: 0,
                 left: 0,
                 right: 0,
                 child: SizedBox(
-                  height: headerHeight,
+                  height: headerVisibleHeight,
                   width: width,
                   child: Image.asset(
                     'assets/images/splash header.png',
-                    width: width,
                     fit: BoxFit.fitWidth,
+                    alignment: const Alignment(0, -1),
+                  ),
+                ),
+              ),
+
+              /// LOGO YAZISI
+              Positioned(
+                top: logoTopOnHeader,
+                left: horizontalPadding,
+                right: horizontalPadding,
+                child: Text(
+                  'VAVEYLA',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.lobsterTwo(
+                    color: colors.secondaryShade1,
+                    fontWeight: FontWeight.w700,
+                    fontSize: titleFontSize + 4,
+                    letterSpacing: 1.0,
                   ),
                 ),
               ),
@@ -188,119 +207,102 @@ class _SplashScreenState extends State<SplashScreen> {
               /// FORM ALANI
               SafeArea(
                 top: false,
-                child: Center(
-                  child: Scrollbar(
-                    controller: _scrollController,
-                    thumbVisibility: true,
-                    child: SingleChildScrollView(
-                      controller: _scrollController,
-                      primary: false,
-                      padding: EdgeInsets.fromLTRB(
-                        horizontalPadding,
-                        contentTopPadding,
-                        horizontalPadding,
-                        contentBottomPadding,
-                      ),
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(maxWidth: contentMaxWidth),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SizedBox(height: sectionSpacing),
-                            Text(
-                              'VAVEYLA',
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.lobsterTwo(
-                                color: colors.primary,
-                                fontWeight: FontWeight.w700,
-                                fontSize: titleFontSize + 4,
-                                letterSpacing: 1.0,
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalPadding,
+                    contentTopPadding,
+                    horizontalPadding,
+                    contentBottomPadding,
+                  ),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: contentMaxWidth),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(height: sectionSpacing),
+                          _LoginInputField(
+                            hintText: 'E-posta',
+                            icon: Icons.person,
+                            keyboardType: TextInputType.emailAddress,
+                            height: inputHeight,
+                            controller: _emailController,
+                          ),
+                          SizedBox(height: fieldSpacing),
+                          _LoginInputField(
+                            hintText: '',
+                            icon: Icons.lock,
+                            obscureText: _obscurePassword,
+                            height: inputHeight,
+                            controller: _passwordController,
+                            suffixIcon: IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
+                              color: colors.gray4,
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
                               ),
                             ),
-                            SizedBox(height: sectionSpacing),
-                            _LoginInputField(
-                              hintText: 'E-posta',
-                              icon: Icons.person,
-                              keyboardType: TextInputType.emailAddress,
-                              height: inputHeight,
-                              controller: _emailController,
+                          ),
+                          SizedBox(
+                            height: fieldSpacing + Dimens.extraLargePadding,
+                          ),
+                          AppButton(
+                            title: 'Giriş Yap',
+                            onPressed: _handleLogin,
+                            margin: EdgeInsets.zero,
+                            borderRadius: 28,
+                            textStyle: typography.titleMedium.copyWith(
+                              color: colors.white,
+                              fontWeight: FontWeight.w600,
                             ),
-                            SizedBox(height: fieldSpacing),
-                            _LoginInputField(
-                              hintText: 'Şifre (6+ karakter, harf-rakam-sembol)',
-                              icon: Icons.lock,
-                              obscureText: _obscurePassword,
-                              height: inputHeight,
-                              controller: _passwordController,
-                              suffixIcon: IconButton(
-                                onPressed: () {
-                                  setState(() {
-                                    _obscurePassword = !_obscurePassword;
-                                  });
-                                },
+                          ),
+                          SizedBox(height: Dimens.padding),
+                          TextButton(
+                            onPressed: () {},
+                            child: Text(
+                              'Şifrenizi mi unuttunuz?',
+                              style: typography.bodySmall.copyWith(
                                 color: colors.gray4,
-                                icon: Icon(
-                                  _obscurePassword
-                                      ? Icons.visibility_off
-                                      : Icons.visibility,
-                                ),
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
-                            SizedBox(
-                              height: fieldSpacing + Dimens.extraLargePadding,
-                            ),
-                            AppButton(
-                              title: 'Giriş Yap',
-                              onPressed: _handleLogin,
-                              margin: EdgeInsets.zero,
-                              borderRadius: 28,
-                              textStyle: typography.titleMedium.copyWith(
-                                color: colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            SizedBox(height: Dimens.padding),
-                            TextButton(
-                              onPressed: () {},
-                              child: Text(
-                                'Şifrenizi mi unuttunuz?',
+                          ),
+                          SizedBox(height: Dimens.smallPadding),
+                          Wrap(
+                            alignment: WrapAlignment.center,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              Text(
+                                'Hesabınız yok mu? ',
                                 style: typography.bodySmall.copyWith(
                                   color: colors.gray4,
-                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
-                            ),
-                            SizedBox(height: Dimens.smallPadding),
-                            Wrap(
-                              alignment: WrapAlignment.center,
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              children: [
-                                Text(
-                                  'Hesabınız yok mu? ',
-                                  style: typography.bodySmall.copyWith(
-                                    color: colors.gray4,
-                                  ),
-                                ),
-                                GestureDetector(
-                                  onTap: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) => const RegisterScreen(),
-                                      ),
-                                    );
-                                  },
-                                  child: Text(
-                                    'Kayıt ol',
-                                    style: typography.bodySmall.copyWith(
-                                      color: colors.primary,
-                                      fontWeight: FontWeight.w600,
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => const RegisterScreen(),
                                     ),
+                                  );
+                                },
+                                child: Text(
+                                  'Kayıt ol',
+                                  style: typography.bodySmall.copyWith(
+                                    color: colors.primary,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                              ],
-                            ),
-                          ],
-                        ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                   ),

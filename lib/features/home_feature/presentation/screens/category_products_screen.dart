@@ -5,12 +5,9 @@ import 'package:flutter_sweet_shop_app_ui/core/utils/app_navigator.dart';
 import 'package:flutter_sweet_shop_app_ui/core/utils/app_feedback.dart';
 import 'package:flutter_sweet_shop_app_ui/core/utils/formatters.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_rating_summary.dart';
-import 'package:flutter_sweet_shop_app_ui/features/cart_feature/presentation/bloc/cart_cubit.dart';
 import 'package:flutter_sweet_shop_app_ui/features/restaurant_owner_feature/widgets/product_image_widget.dart';
 
-import '../../../../core/gen/assets.gen.dart';
 import '../../../../core/theme/dimens.dart';
-import '../../../../core/widgets/app_icon_buttons.dart';
 import '../../../../core/widgets/app_scaffold.dart';
 import '../../../../core/widgets/general_app_bar.dart';
 import '../../../../core/widgets/shaded_container.dart';
@@ -22,10 +19,7 @@ class CategoryProductsScreen extends StatelessWidget {
   static const _closedRestaurantMessage =
       'Bu restoran şu anda hizmet verememektedir.';
 
-  const CategoryProductsScreen({
-    super.key,
-    required this.categoryName,
-  });
+  const CategoryProductsScreen({super.key, required this.categoryName});
 
   final String categoryName;
 
@@ -33,8 +27,10 @@ class CategoryProductsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final appColors = context.theme.appColors;
     return BlocProvider(
-      create: (_) =>
-          CategoryProductsCubit(ProductsService())..loadProducts(categoryName),
+      create:
+          (_) =>
+              CategoryProductsCubit(ProductsService())
+                ..loadProducts(categoryName),
       child: AppScaffold(
         appBar: GeneralAppBar(title: categoryName),
         body: BlocBuilder<CategoryProductsCubit, CategoryProductsState>(
@@ -48,7 +44,11 @@ class CategoryProductsScreen extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.inventory_2_outlined, size: 64, color: appColors.gray4),
+                    Icon(
+                      Icons.inventory_2_outlined,
+                      size: 64,
+                      color: appColors.gray4,
+                    ),
                     const SizedBox(height: Dimens.largePadding),
                     Text(
                       'Bu kategoride henüz ürün yok',
@@ -94,8 +94,9 @@ class CategoryProductsScreen extends StatelessWidget {
                                 height: 100,
                                 width: 200,
                                 child: ClipRRect(
-                                  borderRadius:
-                                      BorderRadius.circular(Dimens.corners),
+                                  borderRadius: BorderRadius.circular(
+                                    Dimens.corners,
+                                  ),
                                   child: _buildProductImage(
                                     context,
                                     product.imageUrl,
@@ -112,7 +113,8 @@ class CategoryProductsScreen extends StatelessWidget {
                                 children: [
                                   Text(
                                     product.name,
-                                    style: context.theme.appTypography.titleSmall,
+                                    style:
+                                        context.theme.appTypography.titleSmall,
                                     overflow: TextOverflow.ellipsis,
                                     maxLines: 2,
                                     textAlign: TextAlign.center,
@@ -127,39 +129,15 @@ class CategoryProductsScreen extends StatelessWidget {
                                       ),
                                       Text(
                                         formatPrice(product.price),
-                                        style: context.theme.appTypography
+                                        style: context
+                                            .theme
+                                            .appTypography
                                             .labelLarge
                                             .copyWith(
                                               fontWeight: FontWeight.bold,
                                             ),
                                       ),
                                     ],
-                                  ),
-                                  SizedBox(
-                                    width: double.infinity,
-                                    child: AppIconButton(
-                                      iconPath: Assets.icons.shoppingCart,
-                                      backgroundColor: appColors.primary,
-                                      onPressed: () async {
-                                        if (!isRestaurantOpen) {
-                                          context.showErrorMessage(
-                                            _closedRestaurantMessage,
-                                          );
-                                          return;
-                                        }
-                                        final errorMessage = await context
-                                            .read<CartCubit>()
-                                            .addItem(product);
-                                        if (!context.mounted) return;
-                                        if (errorMessage == null) {
-                                          context.showSuccessMessage(
-                                            '${product.name} sepete eklendi!',
-                                          );
-                                          return;
-                                        }
-                                        context.showErrorMessage(errorMessage);
-                                      },
-                                    ),
                                   ),
                                 ],
                               ),
