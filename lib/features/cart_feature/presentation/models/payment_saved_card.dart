@@ -19,24 +19,24 @@ class PaymentSavedCard {
 
   factory PaymentSavedCard.fromJson(Map<String, dynamic> json) {
     return PaymentSavedCard(
-      paymentCardId: json['paymentCardId']?.toString(),
-      cardholderName: json['cardholderName']?.toString() ?? '',
-      cardNumber: json['cardNumber']?.toString() ?? '',
-      expiration: json['expiration']?.toString() ?? '',
-      cvc: (json['cvc'] ?? json['CVC'] ?? json['cvv'])?.toString() ?? '',
-      bankName: json['bankName']?.toString() ?? 'BANK NAME',
-      cardAlias: json['cardAlias']?.toString() ?? '',
+      paymentCardId: _normalizeField(json['paymentCardId']),
+      cardholderName: _normalizeField(json['cardholderName']) ?? '',
+      cardNumber: _normalizeField(json['cardNumber']) ?? '',
+      expiration: _normalizeField(json['expiration']) ?? '',
+      cvc: _normalizeField(json['cvc'] ?? json['CVC'] ?? json['cvv']) ?? '',
+      bankName: _normalizeField(json['bankName']) ?? 'BANK NAME',
+      cardAlias: _normalizeField(json['cardAlias']) ?? '',
     );
   }
 
   Map<String, dynamic> toRequestJson() {
     return {
-      'cardholderName': cardholderName,
-      'cardNumber': cardNumber,
-      'expiration': expiration,
-      'cvc': cvc,
-      'bankName': bankName,
-      'cardAlias': cardAlias,
+      'cardholderName': _normalizeField(cardholderName) ?? '',
+      'cardNumber': _normalizeField(cardNumber) ?? '',
+      'expiration': _normalizeField(expiration) ?? '',
+      'cvc': _normalizeField(cvc) ?? '',
+      'bankName': _normalizeField(bankName) ?? 'BANK NAME',
+      'cardAlias': _normalizeField(cardAlias) ?? '',
       'createdAtUtc': DateTime.now().toUtc().toIso8601String(),
     };
   }
@@ -59,5 +59,27 @@ class PaymentSavedCard {
       bankName: bankName ?? this.bankName,
       cardAlias: cardAlias ?? this.cardAlias,
     );
+  }
+
+  static String? _normalizeField(dynamic value) {
+    if (value == null) {
+      return null;
+    }
+
+    var text = value.toString().trim();
+    if (text.isEmpty) {
+      return text;
+    }
+
+    // Unwrap values accidentally persisted as quoted JSON strings.
+    for (var i = 0; i < 2; i++) {
+      final wrappedInQuotes = text.startsWith('"') && text.endsWith('"');
+      if (!wrappedInQuotes) {
+        break;
+      }
+      text = text.substring(1, text.length - 1).trim();
+    }
+
+    return text.replaceAll(r'\"', '"').trim();
   }
 }

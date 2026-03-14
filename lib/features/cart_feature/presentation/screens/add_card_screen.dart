@@ -8,6 +8,7 @@ import 'package:flutter_sweet_shop_app_ui/core/widgets/app_button.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_scaffold.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/bordered_container.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/general_app_bar.dart';
+import 'package:flutter_sweet_shop_app_ui/core/utils/app_feedback.dart';
 import 'package:flutter_sweet_shop_app_ui/features/cart_feature/presentation/models/payment_saved_card.dart';
 import 'package:flutter_sweet_shop_app_ui/features/cart_feature/presentation/services/payment_card_service.dart';
 
@@ -22,6 +23,13 @@ class AddCardScreen extends StatefulWidget {
 }
 
 class _AddCardScreenState extends State<AddCardScreen> {
+  static final RegExp _cardholderAllowedChars = RegExp(
+    r"[a-zA-ZçÇğĞıİöÖşŞüÜ\s\.\-']",
+  );
+  static final RegExp _cardAliasAllowedChars = RegExp(
+    r"[0-9a-zA-ZçÇğĞıİöÖşŞüÜ\s\.\-_'()]",
+  );
+
   final PaymentCardService _paymentCardService = PaymentCardService();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _cardNumberController = TextEditingController();
@@ -184,7 +192,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(error.toString()),
+          content: Text(localizeFeedbackMessage(error)),
           backgroundColor: context.theme.appColors.error,
         ),
       );
@@ -233,7 +241,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(error.toString()),
+          content: Text(localizeFeedbackMessage(error)),
           backgroundColor: context.theme.appColors.error,
         ),
       );
@@ -268,9 +276,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
               errorText: _nameError,
               textInputAction: TextInputAction.next,
               inputFormatters: [
-                FilteringTextInputFormatter.allow(
-                  RegExp(r"[a-zA-ZğüşöçıİĞÜŞÖÇ\s]"),
-                ),
+                FilteringTextInputFormatter.allow(_cardholderAllowedChars),
               ],
             ),
             const SizedBox(height: Dimens.largePadding),
@@ -342,6 +348,9 @@ class _AddCardScreenState extends State<AddCardScreen> {
               hintText: context.tr('card_name_hint'),
               errorText: _cardNameError,
               textInputAction: TextInputAction.done,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(_cardAliasAllowedChars),
+              ],
             ),
             const SizedBox(height: Dimens.extraLargePadding),
           ],

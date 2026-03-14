@@ -31,15 +31,18 @@ class FeedbackService {
   }) async {
     for (final baseUrl in _authService.baseUrls) {
       try {
-        final request = http.Request(method, Uri.parse('$baseUrl$path'));
-        request.headers['Content-Type'] = 'application/json';
+        final uri = _buildRequestUri(baseUrl: baseUrl, path: path);
+        final request = http.Request(method, uri);
+        request.headers['Content-Type'] = 'application/json; charset=utf-8';
         if (body != null) {
-          request.body = jsonEncode(body);
+          final normalizedBody = _normalizeRequestBody(body);
+          request.bodyBytes = utf8.encode(jsonEncode(normalizedBody));
         }
         final streamedResponse = await request.send().timeout(
           const Duration(seconds: 8),
         );
-        final responseBody = await streamedResponse.stream.bytesToString();
+        final responseBytes = await streamedResponse.stream.toBytes();
+        final responseBody = utf8.decode(responseBytes);
         final response = http.Response(
           responseBody,
           streamedResponse.statusCode,
@@ -63,6 +66,69 @@ class FeedbackService {
     throw AuthException(
       'Sunucuya baglanilamadi. Lutfen baglantinizi kontrol edin.',
     );
+  }
+
+  Uri _buildRequestUri({required String baseUrl, required String path}) {
+    final normalizedBase = baseUrl.trim();
+    if (normalizedBase.isEmpty) {
+      throw ArgumentError('Base URL is empty.');
+    }
+    return Uri.parse(normalizedBase).resolve(path);
+  }
+
+  Map<String, dynamic> _normalizeRequestBody(Map<String, dynamic> body) {
+    return body.map((key, value) => MapEntry(key, _normalizePayloadValue(value)));
+  }
+
+  dynamic _normalizePayloadValue(dynamic value) {
+    if (value is String) {
+      var text = value.trim();
+      for (var i = 0; i < 2; i++) {
+        final looksJsonString =
+            (text.startsWith('"') && text.endsWith('"')) ||
+            (text.startsWith('{') && text.endsWith('}')) ||
+            (text.startsWith('[') && text.endsWith(']'));
+        if (!looksJsonString) {
+          break;
+        }
+        try {
+          final decoded = jsonDecode(text);
+          if (decoded is String) {
+            text = decoded.trim();
+            continue;
+          }
+          if (decoded is Map<String, dynamic>) {
+            return decoded.map(
+              (k, v) => MapEntry(k, _normalizePayloadValue(v)),
+            );
+          }
+          if (decoded is List) {
+            return decoded.map(_normalizePayloadValue).toList();
+          }
+          break;
+        } catch (_) {
+          break;
+        }
+      }
+      return _sanitizeText(text);
+    }
+
+    if (value is Map<String, dynamic>) {
+      return value.map(
+        (key, nestedValue) => MapEntry(key, _normalizePayloadValue(nestedValue)),
+      );
+    }
+
+    if (value is List) {
+      return value.map(_normalizePayloadValue).toList();
+    }
+
+    return value;
+  }
+
+  String _sanitizeText(String input) {
+    final compactWhitespace = input.replaceAll(RegExp(r'\s+'), ' ').trim();
+    return compactWhitespace.replaceAll(RegExp(r'[\u0000-\u001F\u007F]'), '');
   }
 
   String _normalizeId(String raw, {required String key}) {

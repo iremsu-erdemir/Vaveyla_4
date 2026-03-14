@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_sweet_shop_app_ui/core/theme/dimens.dart';
 import 'package:flutter_sweet_shop_app_ui/core/theme/theme.dart';
 import 'package:flutter_sweet_shop_app_ui/core/utils/app_navigator.dart';
+import 'package:flutter_sweet_shop_app_ui/core/utils/app_feedback.dart';
 import 'package:flutter_sweet_shop_app_ui/core/services/app_session.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_button.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_scaffold.dart';
@@ -79,7 +80,7 @@ class _ExistingCardsScreenState extends State<ExistingCardsScreen> {
         return;
       }
       setState(() {
-        _loadError = error.toString();
+        _loadError = localizeFeedbackMessage(error);
       });
     } finally {
       if (mounted) {
