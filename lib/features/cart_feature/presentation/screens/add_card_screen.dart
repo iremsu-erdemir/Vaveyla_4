@@ -9,6 +9,7 @@ import 'package:flutter_sweet_shop_app_ui/core/widgets/app_scaffold.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/bordered_container.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/general_app_bar.dart';
 import 'package:flutter_sweet_shop_app_ui/core/utils/app_feedback.dart';
+import 'package:flutter_sweet_shop_app_ui/core/utils/card_expiration_validator.dart';
 import 'package:flutter_sweet_shop_app_ui/features/cart_feature/presentation/models/payment_saved_card.dart';
 import 'package:flutter_sweet_shop_app_ui/features/cart_feature/presentation/services/payment_card_service.dart';
 
@@ -102,10 +103,12 @@ class _AddCardScreenState extends State<AddCardScreen> {
       }
       if (expiration.isEmpty) {
         _expirationError = 'expiration_required'.tr();
-      } else if (!RegExp(r'^(0[1-9]|1[0-2])\/\d{2}$').hasMatch(expiration)) {
-        _expirationError = 'expiration_invalid'.tr();
       } else {
-        _expirationError = null;
+        _expirationError = validateCardExpirationMMYY(
+          expiration,
+          invalidFormatMessage: 'expiration_invalid'.tr(),
+          expiredMessage: 'Kartın son kullanma tarihi geçmiş olamaz.',
+        );
       }
       if (cvc.isEmpty) {
         _cvcError = 'CVC_required'.tr();
@@ -304,7 +307,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                       const SizedBox(height: Dimens.smallPadding),
                       _CardInputField(
                         controller: _expirationController,
-                        hintText: 'mm/yyyy',
+                        hintText: 'MM/YY',
                         errorText: _expirationError,
                         keyboardType: TextInputType.datetime,
                         textInputAction: TextInputAction.next,
