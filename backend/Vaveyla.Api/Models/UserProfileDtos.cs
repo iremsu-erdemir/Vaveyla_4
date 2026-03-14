@@ -5,3 +5,7 @@ public sealed record UserProfileDto(
     string FullName,
     string Email,
     string? PhotoUrl);
+
+public sealed record UpdateUserProfileRequest(
+    string FullName,
+    string Email);

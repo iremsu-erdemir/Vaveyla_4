@@ -22,7 +22,7 @@ public interface IRestaurantOwnerRepository
     Task UpdateOrderAsync(RestaurantOrder order, CancellationToken cancellationToken);
     Task<List<RestaurantReview>> GetReviewsAsync(Guid restaurantId, CancellationToken cancellationToken);
     Task UpdateReviewReplyAsync(Guid restaurantId, Guid reviewId, string reply, CancellationToken cancellationToken);
-    Task<List<(MenuItem Item, string RestaurantName, string? RestaurantPhotoPath, string RestaurantType, string RestaurantPhone, double? RestaurantLat, double? RestaurantLng, bool RestaurantIsOpen)>> GetAllProductsAsync(CancellationToken cancellationToken);
+    Task<List<(MenuItem Item, string RestaurantName, string? RestaurantPhotoPath, string RestaurantType, string? RestaurantAddress, string RestaurantPhone, double? RestaurantLat, double? RestaurantLng, int? EstimatedDeliveryMinutes, bool RestaurantIsOpen)>> GetAllProductsAsync(CancellationToken cancellationToken);
 }
 
 public sealed class RestaurantOwnerRepository : IRestaurantOwnerRepository
@@ -289,13 +289,23 @@ public sealed class RestaurantOwnerRepository : IRestaurantOwnerRepository
                 cancellationToken: cancellationToken));
     }
 
-    public async Task<List<(MenuItem Item, string RestaurantName, string? RestaurantPhotoPath, string RestaurantType, string RestaurantPhone, double? RestaurantLat, double? RestaurantLng, bool RestaurantIsOpen)>> GetAllProductsAsync(
+    public async Task<List<(MenuItem Item, string RestaurantName, string? RestaurantPhotoPath, string RestaurantType, string? RestaurantAddress, string RestaurantPhone, double? RestaurantLat, double? RestaurantLng, int? EstimatedDeliveryMinutes, bool RestaurantIsOpen)>> GetAllProductsAsync(
         CancellationToken cancellationToken)
     {
         const string sql = """
             SELECT m.MenuItemId, m.RestaurantId, m.CategoryName, m.Name, m.Price, m.ImagePath,
                    m.IsAvailable, m.IsFeatured, m.CreatedAtUtc, r.Name AS RestaurantName, r.Type AS RestaurantType,
-                   r.PhotoPath AS RestaurantPhotoPath, r.Phone AS RestaurantPhone, r.Latitude AS RestaurantLat, r.Longitude AS RestaurantLng, r.IsOpen AS RestaurantIsOpen
+                   r.PhotoPath AS RestaurantPhotoPath, r.Address AS RestaurantAddress, r.Phone AS RestaurantPhone,
+                   r.Latitude AS RestaurantLat, r.Longitude AS RestaurantLng,
+                   (
+                       SELECT TOP 1 ro.PreparationMinutes
+                       FROM dbo.RestaurantOrders ro
+                       WHERE ro.RestaurantId = r.RestaurantId
+                         AND ro.PreparationMinutes IS NOT NULL
+                         AND ro.PreparationMinutes > 0
+                       ORDER BY ro.CreatedAtUtc DESC
+                   ) AS EstimatedDeliveryMinutes,
+                   r.IsOpen AS RestaurantIsOpen
             FROM dbo.MenuItems m
             INNER JOIN dbo.Restaurants r ON m.RestaurantId = r.RestaurantId
             WHERE m.IsAvailable = 1
@@ -305,7 +315,7 @@ public sealed class RestaurantOwnerRepository : IRestaurantOwnerRepository
         await using var connection = new SqlConnection(_connectionString);
         var rows = await connection.QueryAsync<dynamic>(
             new CommandDefinition(sql, cancellationToken: cancellationToken));
-        var result = new List<(MenuItem, string, string?, string, string, double?, double?, bool)>();
+        var result = new List<(MenuItem, string, string?, string, string?, string, double?, double?, int?, bool)>();
         foreach (var row in rows)
         {
             var dict = (IDictionary<string, object>)row;
@@ -324,6 +334,7 @@ public sealed class RestaurantOwnerRepository : IRestaurantOwnerRepository
             var restaurantName = dict["RestaurantName"]?.ToString() ?? "";
             var restaurantPhotoPath = dict["RestaurantPhotoPath"]?.ToString();
             var restaurantType = dict["RestaurantType"]?.ToString() ?? "";
+            var restaurantAddress = dict["RestaurantAddress"]?.ToString();
             var restaurantPhone = dict["RestaurantPhone"]?.ToString() ?? "";
             double? restaurantLat = dict["RestaurantLat"] == null || dict["RestaurantLat"] is DBNull
                 ? null
@@ -331,10 +342,13 @@ public sealed class RestaurantOwnerRepository : IRestaurantOwnerRepository
             double? restaurantLng = dict["RestaurantLng"] == null || dict["RestaurantLng"] is DBNull
                 ? null
                 : Convert.ToDouble(dict["RestaurantLng"]);
+            int? estimatedDeliveryMinutes = dict["EstimatedDeliveryMinutes"] == null || dict["EstimatedDeliveryMinutes"] is DBNull
+                ? null
+                : Convert.ToInt32(dict["EstimatedDeliveryMinutes"]);
             var restaurantIsOpen = dict["RestaurantIsOpen"] != null
                 && dict["RestaurantIsOpen"] is not DBNull
                 && Convert.ToBoolean(dict["RestaurantIsOpen"]);
-            result.Add((item, restaurantName, restaurantPhotoPath, restaurantType, restaurantPhone, restaurantLat, restaurantLng, restaurantIsOpen));
+            result.Add((item, restaurantName, restaurantPhotoPath, restaurantType, restaurantAddress, restaurantPhone, restaurantLat, restaurantLng, estimatedDeliveryMinutes, restaurantIsOpen));
         }
         return result;
     }

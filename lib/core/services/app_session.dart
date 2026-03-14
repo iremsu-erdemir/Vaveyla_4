@@ -11,6 +11,16 @@ class AppSession {
   static int get roleId => _auth?.roleId ?? 0;
   static String get fullName => _auth?.fullName ?? '';
 
+  static void updateFullName(String fullName) {
+    final auth = _auth;
+    if (auth == null) return;
+    _auth = AuthResponse(
+      userId: auth.userId,
+      roleId: auth.roleId,
+      fullName: fullName,
+    );
+  }
+
   static void clear() {
     _auth = null;
   }

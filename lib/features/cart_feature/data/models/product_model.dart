@@ -10,9 +10,11 @@ class ProductModel {
   final String? restaurantName;
   final String? restaurantPhotoPath;
   final String? restaurantType;
+  final String? restaurantAddress;
   final String? restaurantPhone;
   final double? restaurantLat;
   final double? restaurantLng;
+  final int? estimatedDeliveryMinutes;
   final bool restaurantIsOpen;
   final String? categoryName;
 
@@ -28,9 +30,11 @@ class ProductModel {
     this.restaurantName,
     this.restaurantPhotoPath,
     this.restaurantType,
+    this.restaurantAddress,
     this.restaurantPhone,
     this.restaurantLat,
     this.restaurantLng,
+    this.estimatedDeliveryMinutes,
     this.restaurantIsOpen = true,
     this.categoryName,
   });
@@ -47,9 +51,11 @@ class ProductModel {
     String? restaurantName,
     String? restaurantPhotoPath,
     String? restaurantType,
+    String? restaurantAddress,
     String? restaurantPhone,
     double? restaurantLat,
     double? restaurantLng,
+    int? estimatedDeliveryMinutes,
     bool? restaurantIsOpen,
     String? categoryName,
   }) {
@@ -65,9 +71,12 @@ class ProductModel {
       restaurantName: restaurantName ?? this.restaurantName,
       restaurantPhotoPath: restaurantPhotoPath ?? this.restaurantPhotoPath,
       restaurantType: restaurantType ?? this.restaurantType,
+      restaurantAddress: restaurantAddress ?? this.restaurantAddress,
       restaurantPhone: restaurantPhone ?? this.restaurantPhone,
       restaurantLat: restaurantLat ?? this.restaurantLat,
       restaurantLng: restaurantLng ?? this.restaurantLng,
+      estimatedDeliveryMinutes:
+          estimatedDeliveryMinutes ?? this.estimatedDeliveryMinutes,
       restaurantIsOpen: restaurantIsOpen ?? this.restaurantIsOpen,
       categoryName: categoryName ?? this.categoryName,
     );
@@ -85,9 +94,11 @@ class ProductModel {
       restaurantName: json['restaurantName']?.toString(),
       restaurantPhotoPath: json['restaurantPhotoPath']?.toString(),
       restaurantType: json['restaurantType']?.toString(),
+      restaurantAddress: json['restaurantAddress']?.toString(),
       restaurantPhone: json['restaurantPhone']?.toString(),
       restaurantLat: _parseDouble(json['restaurantLat']),
       restaurantLng: _parseDouble(json['restaurantLng']),
+      estimatedDeliveryMinutes: _parseIntNullable(json['estimatedDeliveryMinutes']),
       restaurantIsOpen:
           json['restaurantIsOpen'] == true || json['restaurantIsOpen'] == 1,
       categoryName: json['categoryName']?.toString(),
@@ -103,5 +114,11 @@ class ProductModel {
   static int _parseInt(dynamic value) {
     if (value is int) return value;
     return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  static int? _parseIntNullable(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    return int.tryParse(value.toString());
   }
 }

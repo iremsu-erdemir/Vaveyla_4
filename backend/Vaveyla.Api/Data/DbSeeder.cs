@@ -34,6 +34,8 @@ public static class DbSeeder
             "Murat Mah. Prf. Dr. Süheyl Ünver Cad. No:5B/19 Merkez/Edirne",
             "0284 235 35 55",
             "05:00 - 00:00",
+            41.665744,
+            26.572097,
             ct);
 
         var sar = await EnsureRestaurantOwnerAsync(db,
@@ -44,6 +46,8 @@ public static class DbSeeder
             "Çilingir Çarşısı D:22, Edirne Merkez",
             "0284 213 41 86",
             "08:00 - 22:00",
+            41.675173,
+            26.553352,
             ct);
 
         var safran = await EnsureRestaurantOwnerAsync(db,
@@ -54,6 +58,8 @@ public static class DbSeeder
             "Ali Rıza Ataktürk Cad. No:9, 1. Murat, Edirne",
             "0284 212 00 00",
             "10:00 - 22:00",
+            41.664016,
+            26.569624,
             ct);
 
         await AddMenuItemsIfMissingAsync(db, sar.RestaurantId, new[]
@@ -121,6 +127,8 @@ public static class DbSeeder
         string address,
         string phone,
         string workingHours,
+        double latitude,
+        double longitude,
         CancellationToken ct)
     {
         var normalizedEmail = email.Trim().ToLowerInvariant();
@@ -158,6 +166,8 @@ public static class DbSeeder
                 Address = address,
                 Phone = phone,
                 WorkingHours = workingHours,
+                Latitude = latitude,
+                Longitude = longitude,
                 OrderNotifications = true,
                 IsOpen = true,
                 CreatedAtUtc = DateTime.UtcNow,
@@ -172,6 +182,8 @@ public static class DbSeeder
             restaurant.Address = address;
             restaurant.Phone = phone;
             restaurant.WorkingHours = workingHours;
+            restaurant.Latitude = latitude;
+            restaurant.Longitude = longitude;
             await db.SaveChangesAsync(ct);
         }
 

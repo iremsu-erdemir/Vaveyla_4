@@ -64,6 +64,56 @@ public sealed class UsersController : ControllerBase
         return Ok(MapProfile(user));
     }
 
+    [HttpPut("{userId:guid}/profile")]
+    public async Task<ActionResult<UserProfileDto>> UpdateProfile(
+        [FromRoute] Guid userId,
+        [FromBody] UpdateUserProfileRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (userId == Guid.Empty)
+        {
+            return BadRequest(new { message = "User id is required." });
+        }
+
+        var fullName = request.FullName?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(fullName))
+        {
+            return BadRequest(new { message = "Full name is required." });
+        }
+
+        var email = request.Email?.Trim().ToLowerInvariant() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return BadRequest(new { message = "Email is required." });
+        }
+
+        try
+        {
+            _ = new System.Net.Mail.MailAddress(email);
+        }
+        catch
+        {
+            return BadRequest(new { message = "Email is invalid." });
+        }
+
+        var user = await _users.GetByIdAsync(userId, cancellationToken);
+        if (user is null)
+        {
+            return NotFound(new { message = "User not found." });
+        }
+
+        var existingByEmail = await _users.GetByEmailAsync(email, cancellationToken);
+        if (existingByEmail is not null && existingByEmail.UserId != userId)
+        {
+            return Conflict(new { message = "Email already registered." });
+        }
+
+        user.FullName = fullName;
+        user.Email = email;
+        await _users.UpdateAsync(user, cancellationToken);
+        return Ok(MapProfile(user));
+    }
+
     [HttpGet("{userId:guid}/addresses")]
     public async Task<ActionResult<List<UserAddressDto>>> GetAddresses(
         [FromRoute] Guid userId,

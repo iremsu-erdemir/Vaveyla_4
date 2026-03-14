@@ -44,6 +44,7 @@ class _ProfileTabState extends State<ProfileTab> {
   UserProfile? _profile;
   bool _isLoadingProfile = true;
   bool _isUploadingPhoto = false;
+  bool _isSavingProfile = false;
   bool _notificationsEnabled = true;
 
   String _localeLabel(Locale locale) {
@@ -271,6 +272,107 @@ class _ProfileTabState extends State<ProfileTab> {
     }
   }
 
+  Future<void> _showEditProfileDialog() async {
+    if (_isSavingProfile || AppSession.userId.isEmpty) {
+      return;
+    }
+
+    final currentName = _profile?.fullName ?? AppSession.fullName;
+    final currentEmail = _profile?.email ?? '';
+    final nameController = TextEditingController(text: currentName);
+    final emailController = TextEditingController(text: currentEmail);
+
+    final payload = await showDialog<(String fullName, String email)>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(context.tr('profile')),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Ad Soyad'),
+                textInputAction: TextInputAction.next,
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(labelText: 'E-posta'),
+                textInputAction: TextInputAction.done,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(context.tr('cancel')),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(
+                  (
+                    nameController.text.trim(),
+                    emailController.text.trim(),
+                  ),
+                );
+              },
+              child: const Text('Kaydet'),
+            ),
+          ],
+        );
+      },
+    );
+
+    nameController.dispose();
+    emailController.dispose();
+    if (payload == null || !mounted) {
+      return;
+    }
+
+    final fullName = payload.$1.trim();
+    final email = payload.$2.trim();
+    final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+    if (fullName.isEmpty) {
+      context.showErrorMessage('Ad soyad bos olamaz.');
+      return;
+    }
+    if (email.isEmpty || !emailRegex.hasMatch(email)) {
+      context.showErrorMessage('Gecerli bir e-posta girin.');
+      return;
+    }
+
+    setState(() {
+      _isSavingProfile = true;
+    });
+    try {
+      final updated = await _profileService.updateProfile(
+        userId: AppSession.userId,
+        fullName: fullName,
+        email: email,
+      );
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _profile = updated;
+      });
+      AppSession.updateFullName(updated.fullName);
+      context.showSuccessMessage('Profil bilgileri guncellendi.');
+    } catch (error) {
+      if (mounted) {
+        context.showErrorMessage(error.toString());
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSavingProfile = false;
+        });
+      }
+    }
+  }
+
   Future<void> _handleLogout() async {
     final shouldLogout = await AppConfirmDialog.show(
       context,
@@ -339,7 +441,7 @@ class _ProfileTabState extends State<ProfileTab> {
                   ),
                 ),
                 trailing:
-                    _isUploadingPhoto
+                    _isUploadingPhoto || _isSavingProfile
                         ? SizedBox(
                           width: 20,
                           height: 20,
@@ -349,7 +451,7 @@ class _ProfileTabState extends State<ProfileTab> {
                           ),
                         )
                         : GestureDetector(
-                          onTap: _pickAndUploadProfilePhoto,
+                          onTap: _showEditProfileDialog,
                           child: AppSvgViewer(
                             Assets.icons.edit,
                             width: 19,

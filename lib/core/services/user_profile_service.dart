@@ -33,6 +33,21 @@ class UserProfileService {
     return _decodeProfile(response);
   }
 
+  Future<UserProfile> updateProfile({
+    required String userId,
+    required String fullName,
+    required String email,
+  }) async {
+    final response = await _putWithFallback(
+      path: '/api/users/$userId/profile',
+      body: {
+        'fullName': fullName.trim(),
+        'email': email.trim().toLowerCase(),
+      },
+    );
+    return _decodeProfile(response);
+  }
+
   Future<http.Response> _getWithFallback({required String path}) async {
     for (final baseUrl in _authService.baseUrls) {
       try {
@@ -91,6 +106,30 @@ class UserProfileService {
       } on Exception catch (error) {
         if (kDebugMode) {
           debugPrint('UserProfileService UPLOAD hata ($baseUrl): $error');
+        }
+      }
+    }
+    throw AuthException(
+      'Sunucuya baglanilamadi. Lutfen baglantinizi kontrol edin.',
+    );
+  }
+
+  Future<http.Response> _putWithFallback({
+    required String path,
+    required Map<String, dynamic> body,
+  }) async {
+    for (final baseUrl in _authService.baseUrls) {
+      try {
+        return await http
+            .put(
+              Uri.parse('$baseUrl$path'),
+              headers: const {'Content-Type': 'application/json'},
+              body: jsonEncode(body),
+            )
+            .timeout(const Duration(seconds: 8));
+      } on Exception catch (error) {
+        if (kDebugMode) {
+          debugPrint('UserProfileService PUT hata ($baseUrl): $error');
         }
       }
     }
