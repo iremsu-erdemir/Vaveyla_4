@@ -34,6 +34,8 @@ public sealed class VaveylaDbContext : DbContext
         user.HasKey(x => x.UserId);
         user.Property(x => x.FullName).HasMaxLength(120).IsRequired();
         user.Property(x => x.Email).HasMaxLength(256).IsRequired();
+        user.Property(x => x.Phone).HasMaxLength(40);
+        user.Property(x => x.Address).HasMaxLength(320);
         user.Property(x => x.PasswordHash).HasMaxLength(200).IsRequired();
         user.Property(x => x.ProfilePhotoPath).HasMaxLength(512);
         user.Property(x => x.Role)

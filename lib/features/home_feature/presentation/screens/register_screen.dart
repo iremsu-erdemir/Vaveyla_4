@@ -373,9 +373,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           SizedBox(height: Dimens.padding),
                           RichText(
                             text: TextSpan(
-                              style: Theme.of(
-                                context,
-                              ).textTheme.bodySmall?.copyWith(color: colors.gray4),
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: colors.gray4),
                               children: [
                                 const TextSpan(text: 'Zaten hesabın var mı? '),
                                 TextSpan(
@@ -475,7 +474,7 @@ class _RegisterRoleField extends StatelessWidget {
       height: height,
       borderRadius: 26,
       child: DropdownButtonFormField<String>(
-        value: value,
+        initialValue: value,
         onChanged: onChanged,
         decoration: InputDecoration(
           border: InputBorder.none,

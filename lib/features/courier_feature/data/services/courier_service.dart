@@ -13,9 +13,9 @@ class CourierService {
     String? baseUrl,
     List<String>? baseUrls,
   }) : _baseUrls =
-            baseUrl != null || (baseUrls != null && baseUrls.isNotEmpty)
-                ? AuthService(baseUrl: baseUrl, baseUrls: baseUrls).baseUrls
-                : authService.baseUrls;
+           baseUrl != null || (baseUrls != null && baseUrls.isNotEmpty)
+               ? AuthService(baseUrl: baseUrl, baseUrls: baseUrls).baseUrls
+               : authService.baseUrls;
 
   final AuthService authService;
   final List<String> _baseUrls;
@@ -31,7 +31,9 @@ class CourierService {
     if (data is List) {
       return data
           .whereType<Map>()
-          .map((item) => CourierOrderModel.fromJson(item.cast<String, dynamic>()))
+          .map(
+            (item) => CourierOrderModel.fromJson(item.cast<String, dynamic>()),
+          )
           .toList();
     }
     return [];
@@ -76,13 +78,17 @@ class CourierService {
     required double lat,
     required double lng,
     required DateTime timestampUtc,
+    double? bearing,
   }) async {
     try {
-      await _putWithFallback(
-        path: '/api/courier/orders/$orderId/location?courierUserId=$courierUserId',
+      await _postWithFallback(
+        path: '/api/location/update',
         body: {
+          'orderId': orderId,
+          'courierUserId': courierUserId,
           'lat': lat,
           'lng': lng,
+          'bearing': bearing,
           'timestampUtc': timestampUtc.toUtc().toIso8601String(),
         },
       );
@@ -91,6 +97,26 @@ class CourierService {
         debugPrint('CourierService updateCourierLocation: $e');
       }
     }
+  }
+
+  Future<void> startTracking({
+    required String courierUserId,
+    required String orderId,
+  }) async {
+    await _postWithFallback(
+      path: '/api/location/orders/$orderId/start?courierUserId=$courierUserId',
+      body: const {},
+    );
+  }
+
+  Future<void> stopTracking({
+    required String courierUserId,
+    required String orderId,
+  }) async {
+    await _postWithFallback(
+      path: '/api/location/orders/$orderId/stop?courierUserId=$courierUserId',
+      body: const {},
+    );
   }
 
   Future<http.Response> _getWithFallback({required String path}) async {
@@ -130,6 +156,28 @@ class CourierService {
     throw AuthException('Sunucuya bağlanılamadı.');
   }
 
+  Future<http.Response> _postWithFallback({
+    required String path,
+    required Map<String, dynamic> body,
+  }) async {
+    for (final baseUrl in _baseUrls) {
+      try {
+        return await http
+            .post(
+              Uri.parse('$baseUrl$path'),
+              headers: const {'Content-Type': 'application/json'},
+              body: jsonEncode(body),
+            )
+            .timeout(const Duration(seconds: 8));
+      } on Exception catch (error) {
+        if (kDebugMode) {
+          debugPrint('CourierService POST hata ($baseUrl): $error');
+        }
+      }
+    }
+    throw AuthException('Sunucuya bağlanılamadı.');
+  }
+
   dynamic _decodeJson(http.Response response) {
     final status = response.statusCode;
     if (status >= 200 && status < 300) {
@@ -146,6 +194,8 @@ class CourierService {
         return data['message'].toString();
       }
     } catch (_) {}
-    return response.body.isNotEmpty ? response.body : 'İşlem sırasında bir hata oluştu.';
+    return response.body.isNotEmpty
+        ? response.body
+        : 'İşlem sırasında bir hata oluştu.';
   }
 }

@@ -37,12 +37,16 @@ class UserProfileService {
     required String userId,
     required String fullName,
     required String email,
+    String? phone,
+    String? address,
   }) async {
     final response = await _putWithFallback(
       path: '/api/users/$userId/profile',
       body: {
         'fullName': fullName.trim(),
         'email': email.trim().toLowerCase(),
+        'phone': phone?.trim(),
+        'address': address?.trim(),
       },
     );
     return _decodeProfile(response);

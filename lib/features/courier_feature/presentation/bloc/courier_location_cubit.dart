@@ -25,10 +25,12 @@ class CourierLocationCubit extends Cubit<CourierLocationState> {
     _activeOrderId = orderId;
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      emit(state.copyWith(
-        status: CourierLocationStatus.error,
-        message: 'Konum servisleri kapalı.',
-      ));
+      emit(
+        state.copyWith(
+          status: CourierLocationStatus.error,
+          message: 'Konum servisleri kapalı.',
+        ),
+      );
       return;
     }
 
@@ -38,14 +40,22 @@ class CourierLocationCubit extends Cubit<CourierLocationState> {
     }
     if (permission == LocationPermission.denied ||
         permission == LocationPermission.deniedForever) {
-      emit(state.copyWith(
-        status: CourierLocationStatus.denied,
-        message: 'Konum izni gerekli.',
-      ));
+      emit(
+        state.copyWith(
+          status: CourierLocationStatus.denied,
+          message: 'Konum izni gerekli.',
+        ),
+      );
       return;
     }
 
     emit(state.copyWith(status: CourierLocationStatus.tracking));
+    if (_activeOrderId != null && _activeOrderId!.isNotEmpty) {
+      await _courierService.startTracking(
+        courierUserId: _courierUserId,
+        orderId: _activeOrderId!,
+      );
+    }
 
     _positionSubscription?.cancel();
     _positionSubscription = Geolocator.getPositionStream(
@@ -54,11 +64,13 @@ class CourierLocationCubit extends Cubit<CourierLocationState> {
         distanceFilter: 5,
       ),
     ).listen((position) async {
-      emit(state.copyWith(
-        latitude: position.latitude,
-        longitude: position.longitude,
-        status: CourierLocationStatus.tracking,
-      ));
+      emit(
+        state.copyWith(
+          latitude: position.latitude,
+          longitude: position.longitude,
+          status: CourierLocationStatus.tracking,
+        ),
+      );
       await _syncLocationIfNeeded(position);
     });
   }
@@ -71,29 +83,42 @@ class CourierLocationCubit extends Cubit<CourierLocationState> {
           accuracy: LocationAccuracy.high,
         ),
       );
-      emit(state.copyWith(
-        latitude: position.latitude,
-        longitude: position.longitude,
-        status: CourierLocationStatus.success,
-      ));
+      emit(
+        state.copyWith(
+          latitude: position.latitude,
+          longitude: position.longitude,
+          status: CourierLocationStatus.success,
+        ),
+      );
     } catch (e) {
       final last = await Geolocator.getLastKnownPosition();
       if (last != null) {
-        emit(state.copyWith(
-          latitude: last.latitude,
-          longitude: last.longitude,
-          status: CourierLocationStatus.success,
-        ));
+        emit(
+          state.copyWith(
+            latitude: last.latitude,
+            longitude: last.longitude,
+            status: CourierLocationStatus.success,
+          ),
+        );
       } else {
-        emit(state.copyWith(
-          status: CourierLocationStatus.error,
-          message: 'Konum alınamadı.',
-        ));
+        emit(
+          state.copyWith(
+            status: CourierLocationStatus.error,
+            message: 'Konum alınamadı.',
+          ),
+        );
       }
     }
   }
 
-  void stopTracking() {
+  Future<void> stopTracking() async {
+    final orderId = _activeOrderId;
+    if (orderId != null && orderId.isNotEmpty) {
+      await _courierService.stopTracking(
+        courierUserId: _courierUserId,
+        orderId: orderId,
+      );
+    }
     _positionSubscription?.cancel();
     _positionSubscription = null;
     _activeOrderId = null;
@@ -119,6 +144,7 @@ class CourierLocationCubit extends Cubit<CourierLocationState> {
       orderId: orderId,
       lat: position.latitude,
       lng: position.longitude,
+      bearing: position.heading.isNaN ? null : position.heading,
       timestampUtc: now,
     );
   }

@@ -110,6 +110,8 @@ public sealed class UsersController : ControllerBase
 
         user.FullName = fullName;
         user.Email = email;
+        user.Phone = string.IsNullOrWhiteSpace(request.Phone) ? null : request.Phone.Trim();
+        user.Address = string.IsNullOrWhiteSpace(request.Address) ? null : request.Address.Trim();
         await _users.UpdateAsync(user, cancellationToken);
         return Ok(MapProfile(user));
     }
@@ -395,6 +397,8 @@ public sealed class UsersController : ControllerBase
             user.UserId,
             user.FullName,
             user.Email,
+            user.Phone,
+            user.Address,
             BuildPublicUrl(user.ProfilePhotoPath));
     }
 

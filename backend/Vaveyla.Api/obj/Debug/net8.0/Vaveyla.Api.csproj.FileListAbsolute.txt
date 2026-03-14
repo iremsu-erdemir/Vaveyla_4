@@ -1349,3 +1349,11 @@ C:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\Vaveyla.Api\bin\Te
 C:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\Vaveyla.Api\bin\TempBuildCheck\runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll
 C:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\Vaveyla.Api\bin\TempBuildCheck\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll
 C:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\Vaveyla.Api\bin\TempBuildCheck\runtimes\win\lib\net8.0\System.Security.Cryptography.Pkcs.dll
+C:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\build-temp-tracking-check\appsettings.Development.json
+C:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\build-temp-tracking-check\appsettings.json
+C:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\build-temp-tracking-check\Vaveyla.Api.staticwebassets.runtime.json
+C:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\build-temp-tracking-check\Vaveyla.Api.exe
+C:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\build-temp-tracking-check\Vaveyla.Api.deps.json
+C:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\build-temp-tracking-check\Vaveyla.Api.runtimeconfig.json
+C:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\build-temp-tracking-check\Vaveyla.Api.dll
+C:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\build-temp-tracking-check\Vaveyla.Api.pdb

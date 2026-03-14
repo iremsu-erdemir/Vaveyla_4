@@ -4,6 +4,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 import 'package:flutter_sweet_shop_app_ui/core/services/google_geocoding_service.dart';
+import 'package:flutter_sweet_shop_app_ui/core/services/route_service.dart';
 import 'package:flutter_sweet_shop_app_ui/core/theme/dimens.dart';
 import 'package:flutter_sweet_shop_app_ui/core/theme/theme.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_scaffold.dart';
@@ -25,12 +26,34 @@ class CourierTrackingScreen extends StatefulWidget {
 class _CourierTrackingScreenState extends State<CourierTrackingScreen> {
   final MapController _mapController = MapController();
   final GoogleGeocodingService _geocodingService = GoogleGeocodingService();
+  final RouteService _routeService = RouteService();
   late final CourierLocationCubit _locationCubit;
   CourierOrderModel? _activeOrder;
+  RouteResult? _routeResult;
+  String? _lastRouteOrderId;
+
   /// Adres metninden geocode edilen koordinatlar (order.id -> LatLng)
   final Map<String, LatLng> _geocodedAddresses = {};
   final Set<String> _geocodingInProgress = {};
   bool _followCourier = true;
+
+  bool _isValidLatLng(double lat, double lng) {
+    return lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+  }
+
+  LatLng? _safeLatLng(double? lat, double? lng) {
+    if (lat == null || lng == null) return null;
+    if (_isValidLatLng(lat, lng)) return LatLng(lat, lng);
+    // Bazı veri kaynaklarında lat/lng alanları yer değiştirmiş gelebilir.
+    if (_isValidLatLng(lng, lat)) return LatLng(lng, lat);
+    return null;
+  }
+
+  List<LatLng> _sanitizePolylinePoints(List<LatLng> points) {
+    return points
+        .where((p) => _isValidLatLng(p.latitude, p.longitude))
+        .toList(growable: false);
+  }
 
   @override
   void initState() {
@@ -58,27 +81,56 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen> {
       return;
     }
     _geocodingInProgress.add(order.id);
-    final result = await _geocodingService.geocodeAddress(order.customerAddress);
+    final result = await _geocodingService.geocodeAddress(
+      order.customerAddress,
+    );
     _geocodingInProgress.remove(order.id);
     if (result != null && mounted) {
+      final point = _safeLatLng(result.latitude, result.longitude);
+      if (point == null) return;
       setState(() {
-        _geocodedAddresses[order.id] =
-            LatLng(result.latitude, result.longitude);
+        _geocodedAddresses[order.id] = point;
       });
     }
   }
 
   LatLng? _getCustomerLatLng(CourierOrderModel order) {
-    if (order.customerLat != null && order.customerLng != null) {
-      return LatLng(order.customerLat!, order.customerLng!);
+    return _safeLatLng(order.customerLat, order.customerLng) ??
+        _geocodedAddresses[order.id];
+  }
+
+  LatLng? _getRestaurantLatLng(CourierOrderModel order) {
+    return _safeLatLng(order.restaurantLat, order.restaurantLng);
+  }
+
+  Future<void> _fetchRouteIfNeeded(
+    List<CourierOrderModel> activeOrders,
+    double? courierLat,
+    double? courierLng,
+  ) async {
+    if (activeOrders.isEmpty) return;
+    final order = activeOrders.first;
+    final from = _getRestaurantLatLng(order);
+    final to = _getCustomerLatLng(order);
+    if (from == null || to == null) return;
+    if (_lastRouteOrderId == order.id && _routeResult != null) return;
+    _lastRouteOrderId = order.id;
+    final courierPos = _safeLatLng(courierLat, courierLng);
+    final result = await _routeService.getRoute(
+      from: from,
+      to: to,
+      courierPosition: courierPos,
+    );
+    if (result != null && mounted) {
+      setState(() => _routeResult = result);
     }
-    return _geocodedAddresses[order.id];
   }
 
   void _centerOnCourier() {
     final loc = context.read<CourierLocationCubit>().state;
-    if (loc.latitude != null && loc.longitude != null) {
-      _mapController.move(LatLng(loc.latitude!, loc.longitude!), 17);
+    final courierPoint = _safeLatLng(loc.latitude, loc.longitude);
+    if (courierPoint != null) {
+      _mapController.move(courierPoint, 17);
       setState(() => _followCourier = true);
     }
   }
@@ -87,17 +139,18 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen> {
     final loc = context.read<CourierLocationCubit>().state;
     final order = _activeOrder;
     final dest = order != null ? _getCustomerLatLng(order) : null;
+    final courierPoint = _safeLatLng(loc.latitude, loc.longitude);
     if (dest != null) {
-      if (loc.latitude != null && loc.longitude != null) {
+      if (courierPoint != null) {
         return LatLng(
-          (loc.latitude! + dest.latitude) / 2,
-          (loc.longitude! + dest.longitude) / 2,
+          (courierPoint.latitude + dest.latitude) / 2,
+          (courierPoint.longitude + dest.longitude) / 2,
         );
       }
       return dest;
     }
-    if (loc.latitude != null && loc.longitude != null) {
-      return LatLng(loc.latitude!, loc.longitude!);
+    if (courierPoint != null) {
+      return courierPoint;
     }
     return const LatLng(41.6757, 26.5548);
   }
@@ -107,47 +160,88 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen> {
     final colors = context.theme.appColors;
     final typography = context.theme.appTypography;
     return BlocConsumer<CourierLocationCubit, CourierLocationState>(
-        listener: (context, locState) {
-          if (_followCourier &&
-              locState.latitude != null &&
-              locState.longitude != null) {
-            _mapController.move(
-              LatLng(locState.latitude!, locState.longitude!),
-              _mapController.camera.zoom,
+      listener: (context, locState) {
+        final courierPoint = _safeLatLng(locState.latitude, locState.longitude);
+        if (_followCourier && courierPoint != null) {
+          _mapController.move(
+            courierPoint,
+            _mapController.camera.zoom,
+          );
+        }
+      },
+      buildWhen:
+          (prev, curr) =>
+              prev.latitude != curr.latitude ||
+              prev.longitude != curr.longitude ||
+              prev.status != curr.status,
+      builder: (context, locState) {
+        return BlocBuilder<CourierOrdersCubit, List<CourierOrderModel>>(
+          builder: (context, orders) {
+            final activeOrders =
+                _activeOrder != null
+                    ? [_activeOrder!]
+                    : orders
+                        .where(
+                          (o) =>
+                              o.status == CourierOrderStatus.assigned ||
+                              o.status == CourierOrderStatus.pickedUp ||
+                              o.status == CourierOrderStatus.inTransit,
+                        )
+                        .toList();
+
+            for (final order in activeOrders) {
+              _geocodeOrderAddress(order);
+            }
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _fetchRouteIfNeeded(
+                activeOrders,
+                locState.latitude,
+                locState.longitude,
+              );
+            });
+
+            final routePoints = _sanitizePolylinePoints(
+              _routeResult?.polylinePoints ?? const <LatLng>[],
             );
-          }
-        },
-        buildWhen: (prev, curr) =>
-            prev.latitude != curr.latitude ||
-            prev.longitude != curr.longitude ||
-            prev.status != curr.status,
-        builder: (context, locState) {
-          return BlocBuilder<CourierOrdersCubit, List<CourierOrderModel>>(
-            builder: (context, orders) {
-              final activeOrders = _activeOrder != null
-                  ? [_activeOrder!]
-                  : orders
-                      .where(
-                        (o) =>
-                            o.status == CourierOrderStatus.assigned ||
-                            o.status == CourierOrderStatus.pickedUp ||
-                            o.status == CourierOrderStatus.inTransit,
-                      )
-                      .toList();
-
-              for (final order in activeOrders) {
-                _geocodeOrderAddress(order);
+            double? remainingKm = _routeResult?.remainingDistanceKm;
+            int? remainingMin = _routeResult?.remainingMinutes;
+            final courierPoint = _safeLatLng(
+              locState.latitude,
+              locState.longitude,
+            );
+            if (activeOrders.isNotEmpty && courierPoint != null) {
+              final order = activeOrders.first;
+              final dest = _getCustomerLatLng(order);
+              if (dest != null) {
+                final avgSpeed =
+                    (_routeResult?.totalDistanceKm != null &&
+                            _routeResult?.totalDurationMinutes != null &&
+                            _routeResult!.totalDurationMinutes! > 0)
+                        ? _routeResult!.totalDistanceKm! /
+                            _routeResult!.totalDurationMinutes!
+                        : null;
+                final (km, min) = RouteResult.computeRemaining(
+                  courierLat: courierPoint.latitude,
+                  courierLng: courierPoint.longitude,
+                  destLat: dest.latitude,
+                  destLng: dest.longitude,
+                  avgSpeedKmPerMin: avgSpeed,
+                );
+                remainingKm = km;
+                remainingMin = min;
               }
+            }
 
-              return AppScaffold(
-                appBar: GeneralAppBar(
-                  title: 'Canlı Takip',
-                  showBackIcon: widget.selectedOrder != null,
-                ),
-                padding: EdgeInsets.zero,
-                body: Stack(
-                  children: [
-                    FlutterMap(
+            return AppScaffold(
+              appBar: GeneralAppBar(
+                title: 'Canlı Takip',
+                showBackIcon: widget.selectedOrder != null,
+              ),
+              padding: EdgeInsets.zero,
+              body: Stack(
+                children: [
+                  Positioned.fill(
+                    child: FlutterMap(
                       mapController: _mapController,
                       options: MapOptions(
                         initialCenter: _centerPoint,
@@ -175,15 +269,30 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen> {
                           userAgentPackageName:
                               'com.sweet.shop.flutter_sweet_shop_app_ui',
                         ),
+                        if (routePoints.isNotEmpty)
+                          PolylineLayer(
+                            polylines: [
+                              Polyline(
+                                points: routePoints,
+                                strokeWidth: 5,
+                                color: colors.error,
+                              ),
+                            ],
+                          ),
                         MarkerLayer(
                           markers: [
                             if (locState.latitude != null &&
-                                locState.longitude != null)
+                                locState.longitude != null &&
+                                _safeLatLng(
+                                      locState.latitude,
+                                      locState.longitude,
+                                    ) !=
+                                    null)
                               Marker(
-                                point: LatLng(
-                                  locState.latitude!,
-                                  locState.longitude!,
-                                ),
+                                point: _safeLatLng(
+                                  locState.latitude,
+                                  locState.longitude,
+                                )!,
                                 width: 48,
                                 height: 48,
                                 child: Icon(
@@ -208,8 +317,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen> {
                               if (order.restaurantLat != null &&
                                   order.restaurantLng != null &&
                                   (order.customerLat != order.restaurantLat ||
-                                      order.customerLng !=
-                                          order.restaurantLng))
+                                      order.customerLng != order.restaurantLng))
                                 Marker(
                                   point: LatLng(
                                     order.restaurantLat!,
@@ -227,31 +335,36 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen> {
                         ),
                       ],
                     ),
-                    Positioned(
-                      right: Dimens.largePadding,
-                      bottom: 280,
-                      child: Material(
-                        color: colors.white,
-                        elevation: 4,
+                  ),
+                  Positioned(
+                    right: Dimens.largePadding,
+                    bottom: 280,
+                    child: Material(
+                      color: colors.white,
+                      elevation: 4,
+                      borderRadius: BorderRadius.circular(12),
+                      child: InkWell(
+                        onTap: _centerOnCourier,
                         borderRadius: BorderRadius.circular(12),
-                        child: InkWell(
-                          onTap: _centerOnCourier,
-                          borderRadius: BorderRadius.circular(12),
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Icon(
-                              Icons.my_location,
-                              color: colors.primary,
-                              size: 28,
-                            ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Icon(
+                            Icons.my_location,
+                            color: colors.primary,
+                            size: 28,
                           ),
                         ),
                       ),
                     ),
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
+                  ),
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxHeight: MediaQuery.of(context).size.height * 0.45,
+                      ),
                       child: Container(
                         padding: const EdgeInsets.all(Dimens.largePadding),
                         decoration: BoxDecoration(
@@ -268,95 +381,204 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen> {
                           ],
                         ),
                         child: SafeArea(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(10),
-                                    decoration: BoxDecoration(
-                                      color: locState.status ==
-                                              CourierLocationStatus.tracking
-                                          ? colors.success.withValues(alpha: 0.2)
-                                          : colors.gray.withValues(alpha: 0.2),
-                                      borderRadius: BorderRadius.circular(12),
+                          top: false,
+                          child: SingleChildScrollView(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            locState.status ==
+                                                    CourierLocationStatus
+                                                        .tracking
+                                                ? colors.success.withValues(
+                                                  alpha: 0.2,
+                                                )
+                                                : colors.gray.withValues(
+                                                  alpha: 0.2,
+                                                ),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Icon(
+                                        locState.status ==
+                                                CourierLocationStatus.tracking
+                                            ? Icons.gps_fixed
+                                            : Icons.gps_not_fixed,
+                                        color:
+                                            locState.status ==
+                                                    CourierLocationStatus
+                                                        .tracking
+                                                ? colors.success
+                                                : colors.gray4,
+                                        size: 24,
+                                      ),
                                     ),
-                                    child: Icon(
-                                      locState.status ==
-                                              CourierLocationStatus.tracking
-                                          ? Icons.gps_fixed
-                                          : Icons.gps_not_fixed,
-                                      color: locState.status ==
-                                              CourierLocationStatus.tracking
-                                          ? colors.success
-                                          : colors.gray4,
-                                      size: 24,
+                                    const SizedBox(width: Dimens.largePadding),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            _statusText(locState),
+                                            style: typography.titleSmall
+                                                .copyWith(
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                          ),
+                                          if (locState.message != null &&
+                                              locState.message!
+                                                  .trim()
+                                                  .isNotEmpty)
+                                            Text(
+                                              locState.message!,
+                                              style: typography.bodySmall
+                                                  .copyWith(
+                                                    color: colors.error,
+                                                  ),
+                                            ),
+                                          if (locState.latitude != null &&
+                                              locState.longitude != null)
+                                            Text(
+                                              '${locState.latitude!.toStringAsFixed(5)}, ${locState.longitude!.toStringAsFixed(5)}',
+                                              style: typography.bodySmall
+                                                  .copyWith(
+                                                    color: colors.gray4,
+                                                  ),
+                                            ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(width: Dimens.largePadding),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          _statusText(locState),
-                                          style: typography.titleSmall
-                                              .copyWith(
-                                                fontWeight: FontWeight.w600,
-                                              ),
+                                    if (locState.status !=
+                                        CourierLocationStatus.tracking)
+                                      TextButton.icon(
+                                        onPressed: () {
+                                          context
+                                              .read<CourierLocationCubit>()
+                                              .startTracking(
+                                                orderId: _activeOrder?.id,
+                                              );
+                                        },
+                                        icon: const Icon(
+                                          Icons.play_arrow,
+                                          size: 20,
                                         ),
-                                        if (locState.message != null &&
-                                            locState.message!.trim().isNotEmpty)
-                                          Text(
-                                            locState.message!,
-                                            style: typography.bodySmall
-                                                .copyWith(color: colors.error),
-                                          ),
-                                        if (locState.latitude != null &&
-                                            locState.longitude != null)
-                                          Text(
-                                            '${locState.latitude!.toStringAsFixed(5)}, ${locState.longitude!.toStringAsFixed(5)}',
-                                            style: typography.bodySmall
-                                                .copyWith(color: colors.gray4),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                  if (locState.status !=
-                                      CourierLocationStatus.tracking)
-                                    TextButton.icon(
-                                      onPressed: () {
-                                        context
-                                            .read<CourierLocationCubit>()
-                                            .startTracking(orderId: _activeOrder?.id);
-                                      },
-                                      icon: const Icon(Icons.play_arrow, size: 20),
-                                      label: const Text('Takibi Başlat'),
-                                    ),
-                                  if (locState.status ==
-                                      CourierLocationStatus.tracking)
-                                    TextButton.icon(
-                                      onPressed: () {
-                                        context.read<CourierLocationCubit>().stopTracking();
-                                      },
-                                      icon: const Icon(Icons.stop, size: 20),
-                                      label: const Text('Takibi Durdur'),
-                                    ),
-                                ],
-                              ),
-                              if (activeOrders.isNotEmpty) ...[
-                                const SizedBox(height: Dimens.largePadding),
-                                Text(
-                                  'Teslimat Adresi',
-                                  style: typography.titleSmall.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                                        label: const Text('Takibi Başlat'),
+                                      ),
+                                    if (locState.status ==
+                                        CourierLocationStatus.tracking)
+                                      TextButton.icon(
+                                        onPressed: () {
+                                          context
+                                              .read<CourierLocationCubit>()
+                                              .stopTracking();
+                                        },
+                                        icon: const Icon(Icons.stop, size: 20),
+                                        label: const Text('Takibi Durdur'),
+                                      ),
+                                  ],
                                 ),
-                                const SizedBox(height: Dimens.padding),
-                                ...activeOrders.map((order) => Padding(
+                                if (activeOrders.isNotEmpty &&
+                                    remainingKm != null &&
+                                    remainingMin != null) ...[
+                                  const SizedBox(height: Dimens.largePadding),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Container(
+                                          padding: const EdgeInsets.all(
+                                            Dimens.largePadding,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: colors.primary.withValues(
+                                              alpha: 0.08,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                '${remainingKm.toStringAsFixed(1)} km',
+                                                style: typography.titleMedium
+                                                    .copyWith(
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      color: colors.primary,
+                                                    ),
+                                              ),
+                                              Text(
+                                                'Kalan mesafe',
+                                                style: typography.bodySmall
+                                                    .copyWith(
+                                                      color: colors.gray4,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: Dimens.padding),
+                                      Expanded(
+                                        child: Container(
+                                          padding: const EdgeInsets.all(
+                                            Dimens.largePadding,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: colors.primary.withValues(
+                                              alpha: 0.08,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                '~$remainingMin dk',
+                                                style: typography.titleMedium
+                                                    .copyWith(
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      color: colors.primary,
+                                                    ),
+                                              ),
+                                              Text(
+                                                'Tahmini süre',
+                                                style: typography.bodySmall
+                                                    .copyWith(
+                                                      color: colors.gray4,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: Dimens.largePadding),
+                                ],
+                                if (activeOrders.isNotEmpty) ...[
+                                  const SizedBox(height: Dimens.largePadding),
+                                  Text(
+                                    'Teslimat Adresi',
+                                    style: typography.titleSmall.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: Dimens.padding),
+                                  ...activeOrders.map(
+                                    (order) => Padding(
                                       padding: const EdgeInsets.only(
                                         bottom: Dimens.padding,
                                       ),
@@ -365,10 +587,12 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen> {
                                           Dimens.largePadding,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: colors.primary
-                                              .withValues(alpha: 0.06),
-                                          borderRadius:
-                                              BorderRadius.circular(Dimens.corners),
+                                          color: colors.primary.withValues(
+                                            alpha: 0.06,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            Dimens.corners,
+                                          ),
                                         ),
                                         child: Column(
                                           crossAxisAlignment:
@@ -378,8 +602,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen> {
                                               order.items,
                                               style: typography.titleSmall
                                                   .copyWith(
-                                                    fontWeight:
-                                                        FontWeight.w600,
+                                                    fontWeight: FontWeight.w600,
                                                   ),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
@@ -408,7 +631,8 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen> {
                                               ],
                                             ),
                                             if (order.customerPhone != null &&
-                                                order.customerPhone!
+                                                order
+                                                    .customerPhone!
                                                     .isNotEmpty) ...[
                                               const SizedBox(height: 4),
                                               Row(
@@ -432,19 +656,22 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen> {
                                           ],
                                         ),
                                       ),
-                                    )),
+                                    ),
+                                  ),
+                                ],
                               ],
-                            ],
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ],
-                ),
-              );
-            },
-          );
-        },
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 

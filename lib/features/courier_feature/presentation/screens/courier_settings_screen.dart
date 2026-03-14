@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -62,6 +63,8 @@ class _CourierSettingsScreenState extends State<CourierSettingsScreen> {
       if (!mounted) return;
       setState(() {
         _profile = profile;
+        _phone = profile.phone?.trim() ?? '';
+        _address = profile.address?.trim() ?? '';
       });
     } catch (_) {
       if (mounted) {
@@ -82,6 +85,15 @@ class _CourierSettingsScreenState extends State<CourierSettingsScreen> {
       SnackBar(
         content: Text(message),
         backgroundColor: context.theme.appColors.success,
+      ),
+    );
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: context.theme.appColors.error,
       ),
     );
   }
@@ -120,7 +132,11 @@ class _CourierSettingsScreenState extends State<CourierSettingsScreen> {
         fileName: picked.name,
       );
       if (!mounted) return;
-      setState(() => _profile = uploaded);
+      setState(() {
+        _profile = uploaded;
+        _phone = uploaded.phone?.trim() ?? _phone;
+        _address = uploaded.address?.trim() ?? _address;
+      });
       _showSuccess('Profil fotoğrafı güncellendi');
     } catch (e) {
       if (mounted) {
@@ -134,7 +150,7 @@ class _CourierSettingsScreenState extends State<CourierSettingsScreen> {
   void _showEditFieldSheet(
     String title,
     String initialValue,
-    void Function(String) onSave,
+    Future<void> Function(String) onSave,
   ) {
     final controller = TextEditingController(text: initialValue);
     showModalBottomSheet(
@@ -170,7 +186,7 @@ class _CourierSettingsScreenState extends State<CourierSettingsScreen> {
               const SizedBox(height: Dimens.largePadding),
               AppButton(
                 title: 'Kaydet',
-                onPressed: () {
+                onPressed: () async {
                   final value = controller.text.trim();
                   if (value.isEmpty) {
                     ScaffoldMessenger.of(ctx).showSnackBar(
@@ -181,8 +197,19 @@ class _CourierSettingsScreenState extends State<CourierSettingsScreen> {
                     );
                     return;
                   }
-                  onSave(value);
-                  Navigator.pop(ctx);
+                  try {
+                    await onSave(value);
+                    if (!ctx.mounted) return;
+                    Navigator.pop(ctx);
+                  } catch (e) {
+                    if (!ctx.mounted) return;
+                    ScaffoldMessenger.of(ctx).showSnackBar(
+                      SnackBar(
+                        content: Text(e.toString()),
+                        backgroundColor: context.theme.appColors.error,
+                      ),
+                    );
+                  }
                 },
               ),
             ],
@@ -192,15 +219,179 @@ class _CourierSettingsScreenState extends State<CourierSettingsScreen> {
     );
   }
 
+  void _showEditPhoneSheet() {
+    final localDigitsController = TextEditingController(
+      text: _extractLocalTurkishPhoneDigits(_phone),
+    );
+    String? validationMessage;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder:
+          (sheetContext) => StatefulBuilder(
+            builder:
+                (sheetContext, setModalState) => Padding(
+                  padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(Dimens.extraLargePadding),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          'Telefon',
+                          style: sheetContext.theme.appTypography.titleLarge,
+                        ),
+                        const SizedBox(height: Dimens.largePadding),
+                        TextField(
+                          controller: localDigitsController,
+                          autofocus: true,
+                          keyboardType: TextInputType.phone,
+                          maxLength: 10,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(10),
+                          ],
+                          onChanged: (_) {
+                            if (validationMessage != null) {
+                              setModalState(() => validationMessage = null);
+                            }
+                          },
+                          decoration: InputDecoration(
+                            prefixText: '+90 ',
+                            counterText: '',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(
+                                Dimens.corners,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: Dimens.largePadding),
+                        AppButton(
+                          title: 'Kaydet',
+                          onPressed: () async {
+                            final localDigits = localDigitsController.text.trim();
+                            if (localDigits.isEmpty) {
+                              setModalState(
+                                () =>
+                                    validationMessage =
+                                        'Bu alan boş bırakılamaz',
+                              );
+                              return;
+                            }
+
+                            if (localDigits.length < 10) {
+                              setModalState(
+                                () => validationMessage = 'Eksik girdiniz',
+                              );
+                              return;
+                            }
+
+                            final fullPhone = '+90$localDigits';
+                            try {
+                              await _saveProfileChanges(phone: fullPhone);
+                              if (!sheetContext.mounted) return;
+                              Navigator.pop(sheetContext);
+                              _showSuccess('Telefon güncellendi');
+                            } catch (e) {
+                              if (!sheetContext.mounted) return;
+                              setModalState(
+                                () => validationMessage = e.toString(),
+                              );
+                            }
+                          },
+                        ),
+                        if (validationMessage != null) ...[
+                          const SizedBox(height: Dimens.padding),
+                          Text(
+                            validationMessage!,
+                            textAlign: TextAlign.center,
+                            style: sheetContext.theme.appTypography.bodySmall
+                                .copyWith(
+                                  color: sheetContext.theme.appColors.error,
+                                ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+          ),
+    );
+  }
+
+  String _extractLocalTurkishPhoneDigits(String value) {
+    final digits = value.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digits.startsWith('90') && digits.length >= 12) {
+      return digits.substring(2, 12);
+    }
+    if (digits.startsWith('0') && digits.length >= 11) {
+      return digits.substring(1, 11);
+    }
+    if (digits.length > 10) {
+      return digits.substring(digits.length - 10);
+    }
+    return digits;
+  }
+
   Future<void> _showAddressSearch() async {
     final result = await Navigator.of(context).push<AddressWithCoords>(
       MaterialPageRoute(builder: (_) => const AddressSearchScreen()),
     );
     if (!mounted) return;
     if (result != null && result.address.trim().isNotEmpty) {
-      setState(() => _address = result.address);
-      _showSuccess('Adres güncellendi');
+      try {
+        await _saveProfileChanges(address: result.address.trim());
+        _showSuccess('Adres güncellendi');
+      } catch (e) {
+        _showError(e.toString());
+      }
     }
+  }
+
+  Future<void> _saveProfileChanges({
+    String? fullName,
+    String? phone,
+    String? address,
+  }) async {
+    final userId = AppSession.userId;
+    if (userId.isEmpty) {
+      throw Exception('Kullanıcı bilgisi bulunamadı.');
+    }
+
+    final currentName =
+        _profile?.fullName.trim().isNotEmpty == true
+            ? _profile!.fullName
+            : (AppSession.fullName.isNotEmpty ? AppSession.fullName : 'Kurye');
+    final currentEmail =
+        _profile?.email.trim().isNotEmpty == true
+            ? _profile!.email
+            : '';
+    if (currentEmail.trim().isEmpty) {
+      throw Exception('E-posta bilgisi bulunamadı.');
+    }
+
+    final updated = await _profileService.updateProfile(
+      userId: userId,
+      fullName: (fullName ?? currentName).trim(),
+      email: currentEmail.trim(),
+      phone: (phone ?? _phone).trim(),
+      address: (address ?? _address).trim(),
+    );
+
+    if (!mounted) return;
+    setState(() {
+      _profile = updated;
+      _phone = updated.phone?.trim() ?? '';
+      _address = updated.address?.trim() ?? '';
+    });
+    AppSession.updateFullName(updated.fullName);
   }
 
   Future<void> _handleLogout() async {
@@ -347,15 +538,8 @@ class _CourierSettingsScreenState extends State<CourierSettingsScreen> {
                     onTap: () => _showEditFieldSheet(
                       'Ad Soyad',
                       displayName,
-                      (v) {
-                        setState(() {
-                          _profile = _profile?.copyWith(fullName: v) ??
-                              UserProfile(
-                                userId: AppSession.userId,
-                                fullName: v,
-                                email: _profile?.email ?? '',
-                              );
-                        });
+                      (v) async {
+                        await _saveProfileChanges(fullName: v);
                         _showSuccess('Ad soyad güncellendi');
                       },
                     ),
@@ -364,14 +548,7 @@ class _CourierSettingsScreenState extends State<CourierSettingsScreen> {
                     title: 'Telefon',
                     value: _phone.isEmpty ? 'Belirtilmedi' : _phone,
                     iconPath: Assets.icons.call,
-                    onTap: () => _showEditFieldSheet(
-                      'Telefon',
-                      _phone,
-                      (v) {
-                        setState(() => _phone = v);
-                        _showSuccess('Telefon güncellendi');
-                      },
-                    ),
+                    onTap: _showEditPhoneSheet,
                   ),
                   _SettingsListTile(
                     title: 'Adres',

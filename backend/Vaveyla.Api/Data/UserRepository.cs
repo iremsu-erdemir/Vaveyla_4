@@ -20,7 +20,7 @@ public sealed class UserRepository : IUserRepository
     public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken)
     {
         const string sql = """
-            SELECT UserId, FullName, Email, PasswordHash, ProfilePhotoPath, Role, IsPrivacyPolicyAccepted, IsTermsOfServiceAccepted, CreatedAtUtc,
+            SELECT UserId, FullName, Email, Phone, Address, PasswordHash, ProfilePhotoPath, Role, IsPrivacyPolicyAccepted, IsTermsOfServiceAccepted, CreatedAtUtc,
                    PasswordResetCodeHash, PasswordResetCodeExpiresAtUtc, PasswordResetVerifiedAtUtc
             FROM dbo.Users
             WHERE Email = @Email
@@ -48,7 +48,7 @@ public sealed class UserRepository : IUserRepository
     public async Task<User?> GetByIdAsync(Guid userId, CancellationToken cancellationToken)
     {
         const string sql = """
-            SELECT UserId, FullName, Email, PasswordHash, ProfilePhotoPath, Role, IsPrivacyPolicyAccepted, IsTermsOfServiceAccepted, CreatedAtUtc,
+            SELECT UserId, FullName, Email, Phone, Address, PasswordHash, ProfilePhotoPath, Role, IsPrivacyPolicyAccepted, IsTermsOfServiceAccepted, CreatedAtUtc,
                    PasswordResetCodeHash, PasswordResetCodeExpiresAtUtc, PasswordResetVerifiedAtUtc
             FROM dbo.Users
             WHERE UserId = @UserId

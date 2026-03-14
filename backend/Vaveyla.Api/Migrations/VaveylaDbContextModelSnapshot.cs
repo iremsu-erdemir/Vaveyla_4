@@ -637,6 +637,10 @@ namespace Vaveyla.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Address")
+                        .HasMaxLength(320)
+                        .HasColumnType("nvarchar(320)");
+
                     b.Property<DateTime>("CreatedAtUtc")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -676,6 +680,10 @@ namespace Vaveyla.Api.Migrations
 
                     b.Property<DateTime?>("PasswordResetVerifiedAtUtc")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
 
                     b.Property<string>("ProfilePhotoPath")
                         .HasMaxLength(512)

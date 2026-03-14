@@ -56,6 +56,7 @@ app.UseStaticFiles();
 
 app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notifications");
+app.MapHub<TrackingHub>("/hubs/tracking");
 
 using (var scope = app.Services.CreateScope())
 {
