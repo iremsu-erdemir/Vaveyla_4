@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using System.Globalization;
+using System.Security.Cryptography;
 using Vaveyla.Api.Data;
 using Vaveyla.Api.Models;
+using Vaveyla.Api.Services;
 
 namespace Vaveyla.Api.Controllers;
 
@@ -9,10 +12,17 @@ namespace Vaveyla.Api.Controllers;
 public sealed class AuthController : ControllerBase
 {
     private readonly IUserRepository _users;
+    private readonly ILogger<AuthController> _logger;
+    private readonly IPasswordResetEmailSender _passwordResetEmailSender;
 
-    public AuthController(IUserRepository users)
+    public AuthController(
+        IUserRepository users,
+        ILogger<AuthController> logger,
+        IPasswordResetEmailSender passwordResetEmailSender)
     {
         _users = users;
+        _logger = logger;
+        _passwordResetEmailSender = passwordResetEmailSender;
     }
 
     [HttpPost("register")]
@@ -119,5 +129,113 @@ public sealed class AuthController : ControllerBase
             Role = user.Role,
             FullName = user.FullName,
         });
+    }
+
+    [HttpPost("forgot-password/request-code")]
+    public async Task<IActionResult> RequestPasswordResetCode(
+        [FromBody] ForgotPasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        var email = request.Email.Trim().ToLowerInvariant();
+        var user = await _users.GetByEmailAsync(email, cancellationToken);
+        if (user is not null)
+        {
+            var resetCode = GenerateResetCode();
+            user.PasswordResetCodeHash = BCrypt.Net.BCrypt.HashPassword(resetCode);
+            user.PasswordResetCodeExpiresAtUtc = DateTime.UtcNow.AddMinutes(10);
+            user.PasswordResetVerifiedAtUtc = null;
+            await _users.UpdateAsync(user, cancellationToken);
+
+            try
+            {
+                await _passwordResetEmailSender.SendResetCodeAsync(
+                    user.Email,
+                    resetCode,
+                    cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Password reset e-mail could not be sent for {Email}.", email);
+                return StatusCode(500, new
+                {
+                    message = "Dogrulama kodu gonderilemedi. Lutfen daha sonra tekrar deneyin."
+                });
+            }
+        }
+
+        // Keep response generic to avoid email enumeration.
+        return Ok(new
+        {
+            message = "Eger e-posta sistemde kayitliysa, dogrulama kodu gonderildi."
+        });
+    }
+
+    [HttpPost("forgot-password/verify-code")]
+    public async Task<IActionResult> VerifyPasswordResetCode(
+        [FromBody] VerifyResetCodeRequest request,
+        CancellationToken cancellationToken)
+    {
+        var email = request.Email.Trim().ToLowerInvariant();
+        var code = request.Code.Trim();
+        var user = await _users.GetByEmailAsync(email, cancellationToken);
+        if (user is null || !IsValidResetCode(user, code))
+        {
+            return BadRequest(new { message = "Kod geçersiz veya süresi dolmuş." });
+        }
+
+        user.PasswordResetVerifiedAtUtc = DateTime.UtcNow;
+        await _users.UpdateAsync(user, cancellationToken);
+
+        return Ok(new { message = "Kod doğrulandı." });
+    }
+
+    [HttpPost("forgot-password/reset-password")]
+    public async Task<IActionResult> ResetPassword(
+        [FromBody] ResetPasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (!TryValidatePassword(request.NewPassword, out var passwordValidationError))
+        {
+            return BadRequest(new { message = passwordValidationError });
+        }
+
+        var email = request.Email.Trim().ToLowerInvariant();
+        var code = request.Code.Trim();
+        var user = await _users.GetByEmailAsync(email, cancellationToken);
+        if (user is null || !IsValidResetCode(user, code))
+        {
+            return BadRequest(new { message = "Kod geçersiz veya süresi dolmuş." });
+        }
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+        user.PasswordResetCodeHash = null;
+        user.PasswordResetCodeExpiresAtUtc = null;
+        user.PasswordResetVerifiedAtUtc = null;
+        await _users.UpdateAsync(user, cancellationToken);
+
+        return Ok(new { message = "Şifreniz başarıyla güncellendi." });
+    }
+
+    private static string GenerateResetCode()
+    {
+        return RandomNumberGenerator.GetInt32(100000, 1_000_000)
+            .ToString(CultureInfo.InvariantCulture);
+    }
+
+    private static bool IsValidResetCode(User user, string code)
+    {
+        if (string.IsNullOrWhiteSpace(code) ||
+            string.IsNullOrWhiteSpace(user.PasswordResetCodeHash) ||
+            user.PasswordResetCodeExpiresAtUtc is null)
+        {
+            return false;
+        }
+
+        if (user.PasswordResetCodeExpiresAtUtc < DateTime.UtcNow)
+        {
+            return false;
+        }
+
+        return BCrypt.Net.BCrypt.Verify(code, user.PasswordResetCodeHash);
     }
 }

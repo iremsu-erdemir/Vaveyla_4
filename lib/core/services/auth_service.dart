@@ -47,6 +47,43 @@ class AuthService {
     return _handleAuthResponse(response);
   }
 
+  Future<String> requestPasswordResetCode({required String email}) async {
+    final response = await _postWithFallback(
+      path: '/api/auth/forgot-password/request-code',
+      body: {'email': email},
+    );
+    return _handleMessageResponse(response, fallbackMessage: 'Kod gönderildi.');
+  }
+
+  Future<String> verifyPasswordResetCode({
+    required String email,
+    required String code,
+  }) async {
+    final response = await _postWithFallback(
+      path: '/api/auth/forgot-password/verify-code',
+      body: {'email': email, 'code': code},
+    );
+    return _handleMessageResponse(
+      response,
+      fallbackMessage: 'Doğrulama başarılı.',
+    );
+  }
+
+  Future<String> resetPasswordWithCode({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    final response = await _postWithFallback(
+      path: '/api/auth/forgot-password/reset-password',
+      body: {'email': email, 'code': code, 'newPassword': newPassword},
+    );
+    return _handleMessageResponse(
+      response,
+      fallbackMessage: 'Şifre başarıyla güncellendi.',
+    );
+  }
+
   Future<http.Response> _postWithFallback({
     required String path,
     required Map<String, dynamic> body,
@@ -93,6 +130,26 @@ class AuthService {
       return response.body;
     }
     return 'İşlem sırasında bir hata oluştu.';
+  }
+
+  String _handleMessageResponse(
+    http.Response response, {
+    required String fallbackMessage,
+  }) {
+    final status = response.statusCode;
+    if (status >= 200 && status < 300) {
+      try {
+        final data = jsonDecode(response.body);
+        if (data is Map<String, dynamic> &&
+            data['message'] != null &&
+            data['message'].toString().trim().isNotEmpty) {
+          return data['message'].toString();
+        }
+      } catch (_) {}
+      return fallbackMessage;
+    }
+
+    throw AuthException(_extractMessage(response));
   }
 
   static List<String> _resolveBaseUrls(

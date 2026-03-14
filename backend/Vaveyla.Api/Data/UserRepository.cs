@@ -20,27 +20,57 @@ public sealed class UserRepository : IUserRepository
     public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken)
     {
         const string sql = """
+            SELECT UserId, FullName, Email, PasswordHash, ProfilePhotoPath, Role, IsPrivacyPolicyAccepted, IsTermsOfServiceAccepted, CreatedAtUtc,
+                   PasswordResetCodeHash, PasswordResetCodeExpiresAtUtc, PasswordResetVerifiedAtUtc
+            FROM dbo.Users
+            WHERE Email = @Email
+            """;
+        const string legacySql = """
             SELECT UserId, FullName, Email, PasswordHash, ProfilePhotoPath, Role, IsPrivacyPolicyAccepted, IsTermsOfServiceAccepted, CreatedAtUtc
             FROM dbo.Users
             WHERE Email = @Email
             """;
 
         await using var connection = new SqlConnection(_connectionString);
-        return await connection.QuerySingleOrDefaultAsync<User>(
-            new CommandDefinition(sql, new { Email = email }, cancellationToken: cancellationToken));
+        try
+        {
+            return await connection.QuerySingleOrDefaultAsync<User>(
+                new CommandDefinition(sql, new { Email = email }, cancellationToken: cancellationToken));
+        }
+        catch (SqlException ex) when (ex.Number == 207)
+        {
+            // Backward compatibility: database migration not applied yet.
+            return await connection.QuerySingleOrDefaultAsync<User>(
+                new CommandDefinition(legacySql, new { Email = email }, cancellationToken: cancellationToken));
+        }
     }
 
     public async Task<User?> GetByIdAsync(Guid userId, CancellationToken cancellationToken)
     {
         const string sql = """
+            SELECT UserId, FullName, Email, PasswordHash, ProfilePhotoPath, Role, IsPrivacyPolicyAccepted, IsTermsOfServiceAccepted, CreatedAtUtc,
+                   PasswordResetCodeHash, PasswordResetCodeExpiresAtUtc, PasswordResetVerifiedAtUtc
+            FROM dbo.Users
+            WHERE UserId = @UserId
+            """;
+        const string legacySql = """
             SELECT UserId, FullName, Email, PasswordHash, ProfilePhotoPath, Role, IsPrivacyPolicyAccepted, IsTermsOfServiceAccepted, CreatedAtUtc
             FROM dbo.Users
             WHERE UserId = @UserId
             """;
 
         await using var connection = new SqlConnection(_connectionString);
-        return await connection.QuerySingleOrDefaultAsync<User>(
-            new CommandDefinition(sql, new { UserId = userId }, cancellationToken: cancellationToken));
+        try
+        {
+            return await connection.QuerySingleOrDefaultAsync<User>(
+                new CommandDefinition(sql, new { UserId = userId }, cancellationToken: cancellationToken));
+        }
+        catch (SqlException ex) when (ex.Number == 207)
+        {
+            // Backward compatibility: database migration not applied yet.
+            return await connection.QuerySingleOrDefaultAsync<User>(
+                new CommandDefinition(legacySql, new { UserId = userId }, cancellationToken: cancellationToken));
+        }
     }
 
     public async Task<User> CreateAsync(User user, CancellationToken cancellationToken)

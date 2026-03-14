@@ -8,6 +8,7 @@ import 'package:flutter_sweet_shop_app_ui/core/services/auth_service.dart';
 import 'package:flutter_sweet_shop_app_ui/core/utils/app_navigator.dart';
 import 'package:flutter_sweet_shop_app_ui/core/services/app_session.dart';
 import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/screens/home_screen.dart';
+import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/screens/forgot_password_screen.dart';
 import 'package:flutter_sweet_shop_app_ui/features/restaurant_owner_feature/presentation/screens/restaurant_owner_dashboard_screen.dart';
 import 'package:flutter_sweet_shop_app_ui/features/courier_feature/presentation/screens/courier_dashboard_screen.dart';
 import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/screens/register_screen.dart';
@@ -264,7 +265,9 @@ class _SplashScreenState extends State<SplashScreen> {
                           ),
                           SizedBox(height: Dimens.padding),
                           TextButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              appPush(context, const ForgotPasswordScreen());
+                            },
                             child: Text(
                               'Şifrenizi mi unuttunuz?',
                               style: typography.bodySmall.copyWith(

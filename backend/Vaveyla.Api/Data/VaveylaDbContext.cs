@@ -46,6 +46,9 @@ public sealed class VaveylaDbContext : DbContext
         user.Property(x => x.CreatedAtUtc)
             .HasDefaultValueSql("SYSUTCDATETIME()")
             .IsRequired();
+        user.Property(x => x.PasswordResetCodeHash).HasMaxLength(200);
+        user.Property(x => x.PasswordResetCodeExpiresAtUtc);
+        user.Property(x => x.PasswordResetVerifiedAtUtc);
         user.HasIndex(x => x.Email).IsUnique();
         user.HasMany(x => x.Addresses)
             .WithOne(x => x.User)

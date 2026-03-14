@@ -154,7 +154,6 @@ C:\Users\erdem\Desktop\vaveyla2-mainyap\backend\Vaveyla.Api\obj\Release\net8.0\r
 C:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\Vaveyla.Api\bin\Release\net8.0\appsettings.Development.json
 C:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\Vaveyla.Api\bin\Release\net8.0\appsettings.json
 C:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\Vaveyla.Api\bin\Release\net8.0\Vaveyla.Api.staticwebassets.runtime.json
-C:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\Vaveyla.Api\bin\Release\net8.0\Vaveyla.Api.exe
 C:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\Vaveyla.Api\bin\Release\net8.0\Vaveyla.Api.deps.json
 C:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\Vaveyla.Api\bin\Release\net8.0\Vaveyla.Api.runtimeconfig.json
 C:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\Vaveyla.Api\bin\Release\net8.0\Vaveyla.Api.dll

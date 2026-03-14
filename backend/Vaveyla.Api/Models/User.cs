@@ -11,6 +11,9 @@ public sealed class User
     public bool IsPrivacyPolicyAccepted { get; set; }
     public bool IsTermsOfServiceAccepted { get; set; }
     public DateTime CreatedAtUtc { get; set; }
+    public string? PasswordResetCodeHash { get; set; }
+    public DateTime? PasswordResetCodeExpiresAtUtc { get; set; }
+    public DateTime? PasswordResetVerifiedAtUtc { get; set; }
     public List<UserAddress> Addresses { get; set; } = [];
     public List<PaymentCard> PaymentCards { get; set; } = [];
     public List<UserFeedback> Feedbacks { get; set; } = [];

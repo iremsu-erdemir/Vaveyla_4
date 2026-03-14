@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Vaveyla.Api.Data;
+using Vaveyla.Api.Models;
+using Vaveyla.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,7 +14,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<VaveylaDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Email"));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IPasswordResetEmailSender, SmtpPasswordResetEmailSender>();
 builder.Services.AddScoped<IRestaurantOwnerRepository, RestaurantOwnerRepository>();
 builder.Services.AddScoped<ICustomerOrdersRepository, CustomerOrdersRepository>();
 builder.Services.AddScoped<ICustomerCartRepository, CustomerCartRepository>();

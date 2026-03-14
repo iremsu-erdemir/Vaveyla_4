@@ -23,7 +23,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _obscureConfirmPassword = true;
   bool _isSubmitting = false;
   late final TapGestureRecognizer _loginTap;
-  final ScrollController _scrollController = ScrollController();
   final List<String> _roles = const ['Restoran Sahibi', 'Müşteri', 'Kurye'];
   late String _selectedRole;
   final _fullNameController = TextEditingController();
@@ -54,7 +53,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
-    _scrollController.dispose();
     super.dispose();
   }
 
@@ -214,19 +212,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
           final height = constraints.maxHeight;
           final width = constraints.maxWidth;
           final isCompact = width < 360;
-          final headerHeight = (height * 0.32).clamp(180.0, 280.0);
+          final headerVisibleHeight = (width * 0.80).clamp(100.0, 800.0);
           final titleFontSize = (width * 0.085).clamp(26.0, 34.0);
           final inputHeight = isCompact ? 46.0 : 52.0;
           final horizontalPadding =
               width < Dimens.smallDeviceBreakPoint
                   ? Dimens.largePadding
                   : Dimens.extraLargePadding;
-          final contentTopPadding = headerHeight * 0.8;
+          final maxTopPadding = headerVisibleHeight * 0.82;
+          final contentTopPadding = (height * 0.42).clamp(160.0, maxTopPadding);
           final contentBottomPadding = Dimens.extraLargePadding;
           final contentMaxWidth = width > 520 ? 420.0 : width;
           final fieldSpacing = isCompact ? Dimens.padding : Dimens.largePadding;
           final sectionSpacing =
               isCompact ? Dimens.largePadding : Dimens.extraLargePadding;
+          final titleTopOnHeader = headerVisibleHeight * 0.45;
 
           return Stack(
             children: [
@@ -234,15 +234,34 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Positioned.fill(child: Container(color: colors.secondaryShade1)),
 
               /// ÜST HEADER
-              Align(
-                alignment: Alignment.topCenter,
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
                 child: SizedBox(
-                  height: headerHeight,
+                  height: headerVisibleHeight,
                   width: width,
                   child: Image.asset(
                     'assets/images/splash header.png',
-                    width: width,
                     fit: BoxFit.fitWidth,
+                    alignment: const Alignment(0, -1),
+                  ),
+                ),
+              ),
+
+              /// BASLIK
+              Positioned(
+                top: titleTopOnHeader,
+                left: horizontalPadding,
+                right: horizontalPadding,
+                child: Text(
+                  'HESAP OLUŞTUR',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.lobsterTwo(
+                    color: colors.secondaryShade1,
+                    fontWeight: FontWeight.w700,
+                    fontSize: titleFontSize + 4,
+                    letterSpacing: 1.0,
                   ),
                 ),
               ),
@@ -251,146 +270,128 @@ class _RegisterScreenState extends State<RegisterScreen> {
               SafeArea(
                 top: false,
                 child: Center(
-                  child: Scrollbar(
-                    controller: _scrollController,
-                    thumbVisibility: true,
-                    child: SingleChildScrollView(
-                      controller: _scrollController,
-                      primary: false,
-                      padding: EdgeInsets.fromLTRB(
-                        horizontalPadding,
-                        contentTopPadding,
-                        horizontalPadding,
-                        contentBottomPadding,
-                      ),
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(maxWidth: contentMaxWidth),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SizedBox(height: sectionSpacing),
-                            Text(
-                              'HESAP OLUSTUR',
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.lobsterTwo(
-                                color: colors.primary,
-                                fontWeight: FontWeight.w700,
-                                fontSize: titleFontSize + 2,
-                                letterSpacing: 0.8,
-                              ),
-                            ),
-                            SizedBox(height: sectionSpacing),
-                            _RegisterInputField(
-                              hintText: 'Ad Soyad',
-                              icon: Icons.person,
-                              keyboardType: TextInputType.name,
-                              height: inputHeight,
-                              controller: _fullNameController,
-                            ),
-                            SizedBox(height: fieldSpacing),
-                            _RegisterInputField(
-                              hintText: 'E-posta',
-                              icon: Icons.email,
-                              keyboardType: TextInputType.emailAddress,
-                              height: inputHeight,
-                              controller: _emailController,
-                            ),
-                            SizedBox(height: fieldSpacing),
-                            _RegisterRoleField(
-                              roles: _roles,
-                              value: _selectedRole,
-                              height: inputHeight,
-                              onChanged: (value) {
-                                if (value == null) {
-                                  return;
-                                }
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.fromLTRB(
+                      horizontalPadding,
+                      contentTopPadding,
+                      horizontalPadding,
+                      contentBottomPadding,
+                    ),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: contentMaxWidth),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(height: sectionSpacing),
+                          _RegisterInputField(
+                            hintText: 'Ad Soyad',
+                            icon: Icons.person,
+                            keyboardType: TextInputType.name,
+                            height: inputHeight,
+                            controller: _fullNameController,
+                          ),
+                          SizedBox(height: fieldSpacing),
+                          _RegisterInputField(
+                            hintText: 'E-posta',
+                            icon: Icons.email,
+                            keyboardType: TextInputType.emailAddress,
+                            height: inputHeight,
+                            controller: _emailController,
+                          ),
+                          SizedBox(height: fieldSpacing),
+                          _RegisterRoleField(
+                            roles: _roles,
+                            value: _selectedRole,
+                            height: inputHeight,
+                            onChanged: (value) {
+                              if (value == null) {
+                                return;
+                              }
+                              setState(() {
+                                _selectedRole = value;
+                              });
+                            },
+                          ),
+                          SizedBox(height: fieldSpacing),
+                          _RegisterInputField(
+                            hintText: 'Şifre (6+ karakter, harf-rakam-sembol)',
+                            icon: Icons.lock,
+                            obscureText: _obscurePassword,
+                            height: inputHeight,
+                            controller: _passwordController,
+                            suffixIcon: IconButton(
+                              onPressed: () {
                                 setState(() {
-                                  _selectedRole = value;
+                                  _obscurePassword = !_obscurePassword;
                                 });
                               },
-                            ),
-                            SizedBox(height: fieldSpacing),
-                            _RegisterInputField(
-                              hintText: 'Şifre (6+ karakter, harf-rakam-sembol)',
-                              icon: Icons.lock,
-                              obscureText: _obscurePassword,
-                              height: inputHeight,
-                              controller: _passwordController,
-                              suffixIcon: IconButton(
-                                onPressed: () {
-                                  setState(() {
-                                    _obscurePassword = !_obscurePassword;
-                                  });
-                                },
-                                color: colors.gray4,
-                                icon: Icon(
-                                  _obscurePassword
-                                      ? Icons.visibility_off
-                                      : Icons.visibility,
-                                ),
+                              color: colors.gray4,
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
                               ),
                             ),
-                            SizedBox(height: fieldSpacing),
-                            _RegisterInputField(
-                              hintText: 'Şifre (Tekrar)',
-                              icon: Icons.lock,
-                              obscureText: _obscureConfirmPassword,
-                              height: inputHeight,
-                              controller: _confirmPasswordController,
-                              suffixIcon: IconButton(
-                                onPressed: () {
-                                  setState(() {
-                                    _obscureConfirmPassword =
-                                        !_obscureConfirmPassword;
-                                  });
-                                },
-                                color: colors.gray4,
-                                icon: Icon(
-                                  _obscureConfirmPassword
-                                      ? Icons.visibility_off
-                                      : Icons.visibility,
-                                ),
+                          ),
+                          SizedBox(height: fieldSpacing),
+                          _RegisterInputField(
+                            hintText: 'Şifre (Tekrar)',
+                            icon: Icons.lock,
+                            obscureText: _obscureConfirmPassword,
+                            height: inputHeight,
+                            controller: _confirmPasswordController,
+                            suffixIcon: IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  _obscureConfirmPassword =
+                                      !_obscureConfirmPassword;
+                                });
+                              },
+                              color: colors.gray4,
+                              icon: Icon(
+                                _obscureConfirmPassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
                               ),
                             ),
-                            SizedBox(
-                              height: fieldSpacing + Dimens.extraLargePadding,
+                          ),
+                          SizedBox(
+                            height: fieldSpacing + Dimens.extraLargePadding,
+                          ),
+                          AppButton(
+                            title: 'Hesap Oluştur',
+                            onPressed: _handleRegister,
+                            margin: EdgeInsets.zero,
+                            borderRadius: 28,
+                            textStyle: Theme.of(
+                              context,
+                            ).textTheme.titleMedium?.copyWith(
+                              color: colors.white,
+                              fontWeight: FontWeight.w600,
                             ),
-                            AppButton(
-                              title: 'Hesap Oluştur',
-                              onPressed: _handleRegister,
-                              margin: EdgeInsets.zero,
-                              borderRadius: 28,
-                              textStyle: Theme.of(
+                          ),
+                          SizedBox(height: Dimens.padding),
+                          RichText(
+                            text: TextSpan(
+                              style: Theme.of(
                                 context,
-                              ).textTheme.titleMedium?.copyWith(
-                                color: colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            SizedBox(height: Dimens.padding),
-                            RichText(
-                              text: TextSpan(
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(color: colors.gray4),
-                                children: [
-                                  const TextSpan(
-                                    text: 'Zaten hesabın var mı? ',
+                              ).textTheme.bodySmall?.copyWith(color: colors.gray4),
+                              children: [
+                                const TextSpan(text: 'Zaten hesabın var mı? '),
+                                TextSpan(
+                                  text: 'Giriş Yap',
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.bodySmall?.copyWith(
+                                    color: colors.primary,
+                                    fontWeight: FontWeight.w600,
                                   ),
-                                  TextSpan(
-                                    text: 'Giriş Yap',
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodySmall?.copyWith(
-                                      color: colors.primary,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                    recognizer: _loginTap,
-                                  ),
-                                ],
-                              ),
+                                  recognizer: _loginTap,
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
