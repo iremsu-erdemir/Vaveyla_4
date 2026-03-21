@@ -1,0 +1,8 @@
+C:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\obj-temp-fix\Debug\net8.0\Vaveyla.Api.csproj.AssemblyReference.cache
+C:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\obj-temp-fix\Debug\net8.0\Vaveyla.Api.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\obj-temp-fix\Debug\net8.0\Vaveyla.Api.AssemblyInfoInputs.cache
+C:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\obj-temp-fix\Debug\net8.0\Vaveyla.Api.AssemblyInfo.cs
+C:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\obj-temp-fix\Debug\net8.0\Vaveyla.Api.csproj.CoreCompileInputs.cache
+C:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\obj-temp-fix\Debug\net8.0\Vaveyla.Api.MvcApplicationPartsAssemblyInfo.cs
+C:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\obj-temp-fix\Debug\net8.0\Vaveyla.Api.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\erdem\Desktop\VaveylaSaticiMusteriPanel-main\backend\obj-temp-fix\Debug\net8.0\Vaveyla.Api.sourcelink.json
