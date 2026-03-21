@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_sweet_shop_app_ui/core/theme/dimens.dart';
 import 'package:flutter_sweet_shop_app_ui/core/theme/theme.dart';
+import 'package:flutter_sweet_shop_app_ui/core/validation/login_validation.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_button.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/app_scaffold.dart';
 import 'package:flutter_sweet_shop_app_ui/core/widgets/shaded_container.dart';
@@ -25,16 +26,42 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> {
   bool _obscurePassword = true;
   bool _isSubmitting = false;
+  String? _emailError;
+  String? _passwordError;
+  String? _generalError;
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
-  final RegExp _hasUpperCase = RegExp(r'[A-ZÇĞİÖŞÜ]');
-  final RegExp _hasLowerCase = RegExp(r'[a-zçğıöşü]');
-  final RegExp _hasDigit = RegExp(r'[0-9]');
-  final RegExp _hasSpecial = RegExp(r"[!@#$%^&*(),.?{}|<>_\-+=;'\[\]\\\/`~]");
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController.addListener(_onEmailChanged);
+    _passwordController.addListener(_onPasswordChanged);
+  }
+
+  void _onEmailChanged() {
+    if (_emailError != null) {
+      setState(() {
+        _emailError = null;
+        _generalError = _passwordError;
+      });
+    }
+  }
+
+  void _onPasswordChanged() {
+    if (_passwordError != null) {
+      setState(() {
+        _passwordError = null;
+        _generalError = _emailError;
+      });
+    }
+  }
 
   @override
   void dispose() {
+    _emailController.removeListener(_onEmailChanged);
+    _passwordController.removeListener(_onPasswordChanged);
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -53,25 +80,6 @@ class _SplashScreenState extends State<SplashScreen> {
     );
   }
 
-  String? _validatePassword(String password) {
-    if (password.length < 6) {
-      return 'Şifre en az 6 karakter olmalıdır.';
-    }
-    if (!_hasUpperCase.hasMatch(password)) {
-      return 'Şifre en az bir büyük harf içermelidir.';
-    }
-    if (!_hasLowerCase.hasMatch(password)) {
-      return 'Şifre en az bir küçük harf içermelidir.';
-    }
-    if (!_hasDigit.hasMatch(password)) {
-      return 'Şifre en az bir rakam içermelidir.';
-    }
-    if (!_hasSpecial.hasMatch(password)) {
-      return 'Şifre en az bir özel karakter içermelidir.';
-    }
-    return null;
-  }
-
   Future<void> _handleLogin() async {
     if (_isSubmitting) {
       return;
@@ -79,16 +87,17 @@ class _SplashScreenState extends State<SplashScreen> {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
     final colors = context.theme.appColors;
-    if (email.isEmpty || password.isEmpty) {
+    final result = LoginValidation.validate(email, password);
+    if (!result.isValid) {
+      setState(() {
+        _emailError = result.emailError;
+        _passwordError = result.passwordError;
+        _generalError = result.generalError;
+      });
       _showMessage(
-        message: 'Lütfen e-posta ve şifre alanlarını doldurun.',
+        message: result.generalError ?? 'Lütfen bilgilerinizi kontrol edin.',
         backgroundColor: colors.error,
       );
-      return;
-    }
-    final passwordError = _validatePassword(password);
-    if (passwordError != null) {
-      _showMessage(message: passwordError, backgroundColor: colors.error);
       return;
     }
 
@@ -225,12 +234,17 @@ class _SplashScreenState extends State<SplashScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           SizedBox(height: sectionSpacing),
+                          if (_generalError != null) ...[
+                            _ValidationBanner(message: _generalError!),
+                            SizedBox(height: fieldSpacing),
+                          ],
                           _LoginInputField(
                             hintText: 'E-posta',
                             icon: Icons.person,
                             keyboardType: TextInputType.emailAddress,
                             height: inputHeight,
                             controller: _emailController,
+                            errorText: _emailError,
                           ),
                           SizedBox(height: fieldSpacing),
                           _LoginInputField(
@@ -239,6 +253,7 @@ class _SplashScreenState extends State<SplashScreen> {
                             obscureText: _obscurePassword,
                             height: inputHeight,
                             controller: _passwordController,
+                            errorText: _passwordError,
                             suffixIcon: IconButton(
                               onPressed: () {
                                 setState(() {
@@ -322,6 +337,46 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 }
 
+class _ValidationBanner extends StatelessWidget {
+  const _ValidationBanner({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.theme.appColors;
+    final typography = context.theme.appTypography;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: Dimens.padding,
+        vertical: Dimens.mediumPadding,
+      ),
+      decoration: BoxDecoration(
+        color: colors.errorExtraLight,
+        borderRadius: BorderRadius.circular(Dimens.corners),
+        border: Border.all(color: colors.error.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.error_outline, color: colors.error, size: 20),
+          const SizedBox(width: Dimens.padding),
+          Expanded(
+            child: Text(
+              message,
+              style: typography.bodySmall.copyWith(
+                color: colors.error,
+                fontWeight: FontWeight.w500,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _LoginInputField extends StatelessWidget {
   const _LoginInputField({
     required this.hintText,
@@ -331,6 +386,7 @@ class _LoginInputField extends StatelessWidget {
     this.suffixIcon,
     this.height = 50,
     this.controller,
+    this.errorText,
   });
 
   final String hintText;
@@ -340,33 +396,70 @@ class _LoginInputField extends StatelessWidget {
   final Widget? suffixIcon;
   final double height;
   final TextEditingController? controller;
+  final String? errorText;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.theme.appColors;
     final typography = context.theme.appTypography;
-    return ShadedContainer(
-      height: height,
-      borderRadius: 26,
-      child: TextField(
-        obscureText: obscureText,
-        keyboardType: keyboardType,
-        controller: controller,
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          hintText: hintText,
-          hintStyle: typography.bodySmall.copyWith(color: colors.gray4),
-          prefixIcon: Icon(icon, color: colors.primary),
-          suffixIcon: suffixIcon,
-          contentPadding: const EdgeInsets.symmetric(
-            vertical: Dimens.mediumPadding,
+    final hasError = errorText != null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ShadedContainer(
+          height: height,
+          borderRadius: 26,
+          child: TextField(
+            obscureText: obscureText,
+            keyboardType: keyboardType,
+            controller: controller,
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              hintText: hintText,
+              hintStyle: typography.bodySmall.copyWith(color: colors.gray4),
+              prefixIcon: Icon(
+                icon,
+                color: hasError ? colors.error : colors.primary,
+              ),
+              suffixIcon: suffixIcon,
+              contentPadding: const EdgeInsets.symmetric(
+                vertical: Dimens.mediumPadding,
+              ),
+              enabledBorder: hasError
+                  ? OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(26),
+                      borderSide: BorderSide(color: colors.error, width: 1.5),
+                    )
+                  : InputBorder.none,
+              focusedBorder: hasError
+                  ? OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(26),
+                      borderSide: BorderSide(color: colors.error, width: 1.5),
+                    )
+                  : InputBorder.none,
+            ),
+            style: typography.bodySmall.copyWith(
+              color: colors.primaryTint2,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
-        style: typography.bodySmall.copyWith(
-          color: colors.primaryTint2,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
+        if (hasError)
+          Padding(
+            padding: const EdgeInsets.only(
+              top: Dimens.smallPadding,
+              left: Dimens.padding,
+            ),
+            child: Text(
+              errorText!,
+              style: typography.bodySmall.copyWith(
+                color: colors.error,
+                fontSize: 12,
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

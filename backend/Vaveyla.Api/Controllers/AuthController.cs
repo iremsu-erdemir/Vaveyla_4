@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Globalization;
+using System.Linq;
 using System.Security.Cryptography;
 using Vaveyla.Api.Data;
 using Vaveyla.Api.Models;
@@ -115,6 +116,18 @@ public sealed class AuthController : ControllerBase
         [FromBody] LoginRequest request,
         CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            var firstError = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .FirstOrDefault(m => !string.IsNullOrEmpty(m));
+            return BadRequest(new
+            {
+                message = firstError ?? "E-posta ve şifre alanları zorunludur."
+            });
+        }
+
         var email = request.Email.Trim().ToLowerInvariant();
         var user = await _users.GetByEmailAsync(email, cancellationToken);
         if (user is null)
