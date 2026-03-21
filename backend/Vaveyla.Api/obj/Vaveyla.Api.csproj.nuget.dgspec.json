@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "c:\\Users\\erdem\\Downloads\\Vaveyla_4-master\\Vaveyla_4-master\\backend\\Vaveyla.Api\\Vaveyla.Api.csproj": {}
+    "C:\\Users\\erdem\\Downloads\\Vaveyla_4-master\\Vaveyla_4-master\\backend\\Vaveyla.Api\\Vaveyla.Api.csproj": {}
   },
   "projects": {
-    "c:\\Users\\erdem\\Downloads\\Vaveyla_4-master\\Vaveyla_4-master\\backend\\Vaveyla.Api\\Vaveyla.Api.csproj": {
+    "C:\\Users\\erdem\\Downloads\\Vaveyla_4-master\\Vaveyla_4-master\\backend\\Vaveyla.Api\\Vaveyla.Api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "c:\\Users\\erdem\\Downloads\\Vaveyla_4-master\\Vaveyla_4-master\\backend\\Vaveyla.Api\\Vaveyla.Api.csproj",
+        "projectUniqueName": "C:\\Users\\erdem\\Downloads\\Vaveyla_4-master\\Vaveyla_4-master\\backend\\Vaveyla.Api\\Vaveyla.Api.csproj",
         "projectName": "Vaveyla.Api",
-        "projectPath": "c:\\Users\\erdem\\Downloads\\Vaveyla_4-master\\Vaveyla_4-master\\backend\\Vaveyla.Api\\Vaveyla.Api.csproj",
+        "projectPath": "C:\\Users\\erdem\\Downloads\\Vaveyla_4-master\\Vaveyla_4-master\\backend\\Vaveyla.Api\\Vaveyla.Api.csproj",
         "packagesPath": "C:\\Users\\erdem\\.nuget\\packages\\",
-        "outputPath": "c:\\Users\\erdem\\Downloads\\Vaveyla_4-master\\Vaveyla_4-master\\backend\\Vaveyla.Api\\obj\\",
+        "outputPath": "C:\\Users\\erdem\\Downloads\\Vaveyla_4-master\\Vaveyla_4-master\\backend\\Vaveyla.Api\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\erdem\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -53,6 +53,10 @@
             "Dapper": {
               "target": "Package",
               "version": "[2.1.66, )"
+            },
+            "Microsoft.AspNetCore.Authentication.JwtBearer": {
+              "target": "Package",
+              "version": "[8.0.11, )"
             },
             "Microsoft.AspNetCore.OpenApi": {
               "target": "Package",

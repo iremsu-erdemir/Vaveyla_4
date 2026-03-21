@@ -96,11 +96,12 @@ class _ProceedToCheckoutScreenState extends State<ProceedToCheckoutScreen> {
                     builder: (context, cartState) {
                       final productTotal =
                           cartState is CartLoaded
-                              ? cartState.totalAmount.round()
+                              ? cartState.finalPrice.round()
                               : 0;
                       const deliveryFee = 10;
-                      const discount = 0;
-                      final total = productTotal + deliveryFee - discount;
+                      final discount =
+                          cartState is CartLoaded ? cartState.totalDiscount.round() : 0;
+                      final total = productTotal + deliveryFee;
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [

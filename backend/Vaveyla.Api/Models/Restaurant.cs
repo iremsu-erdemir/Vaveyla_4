@@ -14,5 +14,7 @@ public sealed class Restaurant
     public bool OrderNotifications { get; set; } = true;
     public bool IsOpen { get; set; } = true;
     public string? PhotoPath { get; set; }
+    public decimal CommissionRate { get; set; } = 0.10m;
+    public bool IsEnabled { get; set; } = true;
     public DateTime CreatedAtUtc { get; set; }
 }

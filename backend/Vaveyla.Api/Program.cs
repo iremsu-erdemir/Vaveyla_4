@@ -1,6 +1,9 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using Vaveyla.Api.Data;
 using Vaveyla.Api.Hubs;
 using Vaveyla.Api.Models;
@@ -8,8 +11,31 @@ using Vaveyla.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.Configure<JwtSettings>(
+    builder.Configuration.GetSection(JwtSettings.SectionName));
+builder.Services.AddScoped<IJwtService, JwtService>();
+
+var jwtKey = builder.Configuration["Jwt:Key"] ?? "Vaveyla-DefaultKey-Min32CharactersRequired!!";
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "VaveylaApi";
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "VaveylaApp";
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ClockSkew = TimeSpan.Zero,
+        };
+    });
+builder.Services.AddAuthorization();
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -26,6 +52,8 @@ builder.Services.AddScoped<ICustomerChatsRepository, CustomerChatsRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IPushNotificationSender, NoopPushNotificationSender>();
+builder.Services.AddScoped<ICartCalculationService, CartCalculationService>();
+builder.Services.AddScoped<ICampaignRepository, CampaignRepository>();
 builder.Services.AddSignalR();
 builder.Services.AddCors(options =>
 {
@@ -51,7 +79,8 @@ if (app.Environment.IsProduction())
     app.UseHttpsRedirection();
 }
 app.UseCors("AllowAll");
-
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseStaticFiles();
 
 app.MapControllers();

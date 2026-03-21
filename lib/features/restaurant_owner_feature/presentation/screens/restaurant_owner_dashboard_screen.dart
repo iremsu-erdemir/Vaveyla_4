@@ -22,6 +22,7 @@ import 'package:flutter_sweet_shop_app_ui/features/restaurant_owner_feature/pres
 import 'package:flutter_sweet_shop_app_ui/features/restaurant_owner_feature/presentation/screens/restaurant_owner_orders_screen.dart';
 import 'package:flutter_sweet_shop_app_ui/features/restaurant_owner_feature/presentation/screens/restaurant_owner_chats_screen.dart';
 import 'package:flutter_sweet_shop_app_ui/features/restaurant_owner_feature/presentation/screens/restaurant_owner_reports_screen.dart';
+import 'package:flutter_sweet_shop_app_ui/features/restaurant_owner_feature/presentation/screens/restaurant_campaigns_screen.dart';
 import 'package:flutter_sweet_shop_app_ui/features/restaurant_owner_feature/presentation/screens/restaurant_owner_settings_screen.dart';
 import 'package:flutter_sweet_shop_app_ui/features/restaurant_owner_feature/presentation/screens/restaurant_owner_stat_details_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -273,6 +274,19 @@ class _DashboardTab extends StatelessWidget {
                     subtitle: 'Ürün ekle veya güncelle',
                     onTap: () {
                       context.read<RestaurantOwnerNavCubit>().onItemTap(2);
+                    },
+                  ),
+                  const SizedBox(height: Dimens.largePadding),
+                  _QuickActionCard(
+                    icon: Assets.icons.ticketDiscount,
+                    title: 'Kampanyalar',
+                    subtitle: 'İndirim kampanyaları oluştur',
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const RestaurantCampaignsScreen(),
+                        ),
+                      );
                     },
                   ),
                   const SizedBox(height: Dimens.largePadding),

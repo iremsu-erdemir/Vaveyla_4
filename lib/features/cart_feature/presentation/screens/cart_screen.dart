@@ -61,13 +61,35 @@ class CartScreen extends StatelessWidget {
                   ),
                   child: Column(
                     children: [
+                      if (state.totalDiscount > 0) ...[
+                        SizedBox(height: Dimens.largePadding),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Kazancınız:',
+                              style: appTypography.bodyMedium.copyWith(
+                                color: appColors.success,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              '${formatPrice(state.totalDiscount)} indirim',
+                              style: appTypography.bodyMedium.copyWith(
+                                color: appColors.success,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                       SizedBox(height: Dimens.largePadding),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text('Toplam:', style: appTypography.bodyLarge),
                           Text(
-                            formatPrice(state.totalAmount),
+                            formatPrice(state.finalPrice),
                             style: appTypography.bodyLarge.copyWith(
                               color: appColors.primary,
                             ),

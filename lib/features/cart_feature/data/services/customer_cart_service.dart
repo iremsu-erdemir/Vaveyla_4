@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_sweet_shop_app_ui/core/services/auth_service.dart';
+import 'package:flutter_sweet_shop_app_ui/features/cart_feature/data/models/calculate_cart_response.dart';
 import 'package:flutter_sweet_shop_app_ui/features/cart_feature/data/models/cart_item_model.dart';
 import 'package:flutter_sweet_shop_app_ui/features/cart_feature/data/models/product_model.dart';
 import 'package:http/http.dart' as http;
@@ -87,6 +88,18 @@ class CustomerCartService {
     await _deleteWithFallback(
       path: '/api/customer/cart/clear?customerUserId=$customerUserId',
     );
+  }
+
+  Future<CalculateCartResponse?> calculateCart({
+    required String customerUserId,
+  }) async {
+    final response = await _postWithFallback(
+      path: '/api/customer/cart/calculate?customerUserId=$customerUserId',
+      body: {},
+    );
+    final data = _decodeJson(response);
+    if (data is! Map<String, dynamic>) return null;
+    return CalculateCartResponse.fromJson(data);
   }
 
   Future<http.Response> _getWithFallback({required String path}) async {

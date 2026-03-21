@@ -12,15 +12,18 @@ namespace Vaveyla.Api.Controllers;
 public sealed class AuthController : ControllerBase
 {
     private readonly IUserRepository _users;
+    private readonly IJwtService _jwtService;
     private readonly ILogger<AuthController> _logger;
     private readonly IPasswordResetEmailSender _passwordResetEmailSender;
 
     public AuthController(
         IUserRepository users,
+        IJwtService jwtService,
         ILogger<AuthController> logger,
         IPasswordResetEmailSender passwordResetEmailSender)
     {
         _users = users;
+        _jwtService = jwtService;
         _logger = logger;
         _passwordResetEmailSender = passwordResetEmailSender;
     }
@@ -61,11 +64,13 @@ public sealed class AuthController : ControllerBase
 
         await _users.CreateAsync(user, cancellationToken);
 
+        var token = _jwtService.GenerateToken(user);
         return Ok(new AuthResponse
         {
             UserId = user.UserId,
             Role = user.Role,
             FullName = user.FullName,
+            Token = token,
         });
     }
 
@@ -123,11 +128,13 @@ public sealed class AuthController : ControllerBase
             return Unauthorized(new { message = "Invalid credentials." });
         }
 
+        var token = _jwtService.GenerateToken(user);
         return Ok(new AuthResponse
         {
             UserId = user.UserId,
             Role = user.Role,
             FullName = user.FullName,
+            Token = token,
         });
     }
 

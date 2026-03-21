@@ -342,6 +342,81 @@ class _OrdersList extends StatelessWidget {
                             ),
                           ],
                         ),
+                        if (order.restaurantEarning > 0 ||
+                            order.totalDiscount > 0) ...[
+                          const SizedBox(height: Dimens.padding),
+                          Container(
+                            padding: const EdgeInsets.all(Dimens.padding),
+                            decoration: BoxDecoration(
+                              color: colors.gray.withValues(alpha: 0.15),
+                              borderRadius:
+                                  BorderRadius.circular(Dimens.smallCorners),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Hakediş Özeti',
+                                  style: typography.labelSmall.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: colors.gray4,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'Müşteri Ödemesi:',
+                                      style: typography.bodySmall,
+                                    ),
+                                    Text(
+                                      formatPrice(order.customerPaidAmount),
+                                      style: typography.bodySmall.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                if (order.totalDiscount > 0)
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'İndirim:',
+                                        style: typography.bodySmall,
+                                      ),
+                                      Text(
+                                        formatPrice(order.totalDiscount),
+                                        style: typography.bodySmall.copyWith(
+                                          color: colors.success,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'Restoran Hakedişi:',
+                                      style: typography.bodySmall,
+                                    ),
+                                    Text(
+                                      formatPrice(order.restaurantEarning),
+                                      style: typography.bodySmall.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: colors.primary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),

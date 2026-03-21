@@ -108,7 +108,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
     final itemsStr = cartState.items
         .map((i) => '${i.quantity}x ${i.product.name} (${i.product.weight} kg)')
         .join(', ');
-    final total = cartState.totalAmount.round();
+    final total = cartState.finalPrice.round();
     try {
       await CustomerOrderService().createOrder(
         customerUserId: userId,

@@ -17,6 +17,9 @@ public sealed class CustomerOrder
     public Guid RestaurantId { get; set; }
     public string Items { get; set; } = string.Empty;  // "2x Çilekli Pasta, 1x Kapkek"
     public int Total { get; set; }
+    public decimal TotalDiscount { get; set; }
+    public decimal RestaurantEarning { get; set; }
+    public decimal PlatformEarning { get; set; }
     public string DeliveryAddress { get; set; } = string.Empty;
     public string? DeliveryAddressDetail { get; set; }
     public double? CustomerLat { get; set; }

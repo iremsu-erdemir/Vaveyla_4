@@ -1509,3 +1509,5 @@ C:\Users\erdem\Downloads\Vaveyla_4-master\Vaveyla_4-master\backend\Vaveyla.Api\o
 C:\Users\erdem\Downloads\Vaveyla_4-master\Vaveyla_4-master\backend\Vaveyla.Api\obj\Debug\net8.0\Vaveyla.Api.pdb
 C:\Users\erdem\Downloads\Vaveyla_4-master\Vaveyla_4-master\backend\Vaveyla.Api\obj\Debug\net8.0\Vaveyla.Api.genruntimeconfig.cache
 C:\Users\erdem\Downloads\Vaveyla_4-master\Vaveyla_4-master\backend\Vaveyla.Api\obj\Debug\net8.0\ref\Vaveyla.Api.dll
+C:\Users\erdem\Downloads\Vaveyla_4-master\Vaveyla_4-master\backend\Vaveyla.Api\obj\Debug\net8.0\Vaveyla.Api.sourcelink.json
+C:\Users\erdem\Downloads\Vaveyla_4-master\Vaveyla_4-master\backend\Vaveyla.Api\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll

@@ -1,14 +1,15 @@
 {
   "version": 2,
-  "dgSpecHash": "UF7JKVv0Swc=",
+  "dgSpecHash": "4UeYEisqdgk=",
   "success": true,
-  "projectFilePath": "c:\\Users\\erdem\\Downloads\\Vaveyla_4-master\\Vaveyla_4-master\\backend\\Vaveyla.Api\\Vaveyla.Api.csproj",
+  "projectFilePath": "C:\\Users\\erdem\\Downloads\\Vaveyla_4-master\\Vaveyla_4-master\\backend\\Vaveyla.Api\\Vaveyla.Api.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\erdem\\.nuget\\packages\\azure.core\\1.50.0\\azure.core.1.50.0.nupkg.sha512",
     "C:\\Users\\erdem\\.nuget\\packages\\azure.identity\\1.17.1\\azure.identity.1.17.1.nupkg.sha512",
     "C:\\Users\\erdem\\.nuget\\packages\\bcrypt.net-next\\4.1.0\\bcrypt.net-next.4.1.0.nupkg.sha512",
     "C:\\Users\\erdem\\.nuget\\packages\\dapper\\2.1.66\\dapper.2.1.66.nupkg.sha512",
     "C:\\Users\\erdem\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
+    "C:\\Users\\erdem\\.nuget\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\8.0.11\\microsoft.aspnetcore.authentication.jwtbearer.8.0.11.nupkg.sha512",
     "C:\\Users\\erdem\\.nuget\\packages\\microsoft.aspnetcore.openapi\\8.0.22\\microsoft.aspnetcore.openapi.8.0.22.nupkg.sha512",
     "C:\\Users\\erdem\\.nuget\\packages\\microsoft.bcl.asyncinterfaces\\8.0.0\\microsoft.bcl.asyncinterfaces.8.0.0.nupkg.sha512",
     "C:\\Users\\erdem\\.nuget\\packages\\microsoft.codeanalysis.analyzers\\3.3.3\\microsoft.codeanalysis.analyzers.3.3.3.nupkg.sha512",

@@ -10,6 +10,7 @@ import 'package:flutter_sweet_shop_app_ui/core/services/app_session.dart';
 import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/screens/home_screen.dart';
 import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/screens/forgot_password_screen.dart';
 import 'package:flutter_sweet_shop_app_ui/features/restaurant_owner_feature/presentation/screens/restaurant_owner_dashboard_screen.dart';
+import 'package:flutter_sweet_shop_app_ui/features/admin_feature/presentation/screens/admin_dashboard_screen.dart';
 import 'package:flutter_sweet_shop_app_ui/features/courier_feature/presentation/screens/courier_dashboard_screen.dart';
 import 'package:flutter_sweet_shop_app_ui/features/home_feature/presentation/screens/register_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -115,6 +116,8 @@ class _SplashScreenState extends State<SplashScreen> {
             ? const RestaurantOwnerDashboardScreen()
             : result.roleId == 3
             ? const CourierDashboardScreen()
+            : result.roleId == 4
+            ? const AdminDashboardScreen()
             : const HomeScreen(),
       );
     } catch (error) {

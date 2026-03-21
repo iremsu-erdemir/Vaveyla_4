@@ -10,6 +10,7 @@ public sealed class VaveylaDbContext : DbContext
     {
     }
 
+    public DbSet<Campaign> Campaigns => Set<Campaign>();
     public DbSet<User> Users => Set<User>();
     public DbSet<UserAddress> UserAddresses => Set<UserAddress>();
     public DbSet<PaymentCard> PaymentCards => Set<PaymentCard>();
@@ -120,6 +121,8 @@ public sealed class VaveylaDbContext : DbContext
         restaurant.Property(x => x.PhotoPath).HasMaxLength(512);
         restaurant.Property(x => x.OrderNotifications).HasDefaultValue(true).IsRequired();
         restaurant.Property(x => x.IsOpen).HasDefaultValue(true).IsRequired();
+        restaurant.Property(x => x.CommissionRate).HasPrecision(5, 4).HasDefaultValue(0.10m).IsRequired();
+        restaurant.Property(x => x.IsEnabled).HasDefaultValue(true).IsRequired();
         restaurant.Property(x => x.CreatedAtUtc)
             .HasDefaultValueSql("SYSUTCDATETIME()")
             .IsRequired();
@@ -225,6 +228,9 @@ public sealed class VaveylaDbContext : DbContext
         customerOrder.Property(x => x.RestaurantId).IsRequired();
         customerOrder.Property(x => x.Items).HasMaxLength(800).IsRequired();
         customerOrder.Property(x => x.Total).IsRequired();
+        customerOrder.Property(x => x.TotalDiscount).HasPrecision(18, 2).HasDefaultValue(0).IsRequired();
+        customerOrder.Property(x => x.RestaurantEarning).HasPrecision(18, 2).HasDefaultValue(0).IsRequired();
+        customerOrder.Property(x => x.PlatformEarning).HasPrecision(18, 2).HasDefaultValue(0).IsRequired();
         customerOrder.Property(x => x.DeliveryAddress).HasMaxLength(400).IsRequired();
         customerOrder.Property(x => x.DeliveryAddressDetail).HasMaxLength(200);
         customerOrder.Property(x => x.CustomerName).HasMaxLength(120);
@@ -302,6 +308,29 @@ public sealed class VaveylaDbContext : DbContext
         notification.HasIndex(x => x.UserId);
         notification.HasIndex(x => new { x.UserId, x.IsRead, x.CreatedAtUtc });
         notification.HasIndex(x => x.RelatedOrderId);
+
+        var campaign = modelBuilder.Entity<Campaign>();
+        campaign.ToTable("Campaigns");
+        campaign.HasKey(x => x.CampaignId);
+        campaign.Property(x => x.Name).HasMaxLength(200).IsRequired();
+        campaign.Property(x => x.Description).HasMaxLength(800);
+        campaign.Property(x => x.DiscountType).HasConversion<int>().IsRequired();
+        campaign.Property(x => x.DiscountValue).HasPrecision(18, 2).IsRequired();
+        campaign.Property(x => x.TargetType).HasConversion<int>().IsRequired();
+        campaign.Property(x => x.TargetId);
+        campaign.Property(x => x.TargetCategoryName).HasMaxLength(120);
+        campaign.Property(x => x.MinCartAmount).HasPrecision(18, 2);
+        campaign.Property(x => x.IsActive).HasDefaultValue(true).IsRequired();
+        campaign.Property(x => x.Status).HasMaxLength(30).IsRequired();
+        campaign.Property(x => x.DiscountOwner).HasConversion<int>().IsRequired();
+        campaign.Property(x => x.RestaurantId);
+        campaign.Property(x => x.StartDate).IsRequired();
+        campaign.Property(x => x.EndDate).IsRequired();
+        campaign.Property(x => x.CreatedAtUtc)
+            .HasDefaultValueSql("SYSUTCDATETIME()")
+            .IsRequired();
+        campaign.HasIndex(x => x.RestaurantId);
+        campaign.HasIndex(x => new { x.IsActive, x.Status, x.StartDate, x.EndDate });
 
         var userDeviceToken = modelBuilder.Entity<UserDeviceToken>();
         userDeviceToken.ToTable("UserDeviceTokens");

@@ -101,10 +101,26 @@ class CartListWidget extends StatelessWidget {
                                     color: appColors.gray4,
                                   ),
                                 ),
-                                Text(
-                                  formatPrice(items[index].product.price),
-                                  style: appTypography.bodyLarge,
-                                ),
+                                if (items[index].hasDiscount) ...[
+                                  Text(
+                                    formatPrice(items[index].lineOriginalPrice),
+                                    style: appTypography.bodyMedium.copyWith(
+                                      decoration: TextDecoration.lineThrough,
+                                      color: appColors.gray4,
+                                    ),
+                                  ),
+                                  Text(
+                                    formatPrice(items[index].totalPrice),
+                                    style: appTypography.bodyLarge.copyWith(
+                                      color: appColors.primary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ] else
+                                  Text(
+                                    formatPrice(items[index].totalPrice),
+                                    style: appTypography.bodyLarge,
+                                  ),
                               ],
                             ),
                           ),

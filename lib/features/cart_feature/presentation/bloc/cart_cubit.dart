@@ -20,6 +20,7 @@ class CartCubit extends Cubit<CartState> {
   Future<void> loadCart() async {
     final customerUserId = _customerUserId;
     if (customerUserId.isEmpty) {
+      _items.clear();
       emit(_buildLoadedState());
       return;
     }
@@ -28,6 +29,37 @@ class CartCubit extends Cubit<CartState> {
       _items
         ..clear()
         ..addAll(items);
+
+      try {
+        final calc = await _cartService.calculateCart(customerUserId: customerUserId);
+        if (calc != null && calc.items.isNotEmpty) {
+          final calcByProduct = {
+            for (final c in calc.items) c.productId: c,
+          };
+          final merged = _items.map((item) {
+            final calcItem = calcByProduct[item.product.id];
+            if (calcItem != null) {
+              return item.copyWith(
+                originalLinePrice: calcItem.originalPrice,
+                discountedLinePrice: calcItem.discountedPrice,
+              );
+            }
+            return item;
+          }).toList();
+          _items
+            ..clear()
+            ..addAll(merged);
+          emit(CartLoaded(
+            items: List.from(_items),
+            totalAmount: calc.totalPrice,
+            totalDiscount: calc.totalDiscount,
+            finalPrice: calc.finalPrice,
+            totalItems: _items.fold(0, (s, i) => s + i.quantity),
+          ));
+          return;
+        }
+      } catch (_) {}
+
       emit(_buildLoadedState());
     } catch (e) {
       emit(CartError(e.toString()));
@@ -141,6 +173,8 @@ class CartCubit extends Cubit<CartState> {
     return CartLoaded(
       items: List.from(_items),
       totalAmount: totalAmount,
+      totalDiscount: 0,
+      finalPrice: totalAmount,
       totalItems: totalItems,
     );
   }

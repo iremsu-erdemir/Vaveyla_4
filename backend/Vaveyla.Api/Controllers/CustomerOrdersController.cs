@@ -10,16 +10,22 @@ namespace Vaveyla.Api.Controllers;
 public sealed class CustomerOrdersController : ControllerBase
 {
     private readonly ICustomerOrdersRepository _repository;
+    private readonly ICustomerCartRepository _cartRepository;
     private readonly IRestaurantOwnerRepository _restaurantRepo;
+    private readonly ICartCalculationService _calculationService;
     private readonly INotificationService _notificationService;
 
     public CustomerOrdersController(
         ICustomerOrdersRepository repository,
+        ICustomerCartRepository cartRepository,
         IRestaurantOwnerRepository restaurantRepo,
+        ICartCalculationService calculationService,
         INotificationService notificationService)
     {
         _repository = repository;
+        _cartRepository = cartRepository;
         _restaurantRepo = restaurantRepo;
+        _calculationService = calculationService;
         _notificationService = notificationService;
     }
 
@@ -75,46 +81,60 @@ public sealed class CustomerOrdersController : ControllerBase
         CancellationToken cancellationToken)
     {
         if (customerUserId == Guid.Empty)
-        {
             return BadRequest(new { message = "Customer user id is required." });
+
+        try
+        {
+            var cartItems = await _cartRepository.GetCartAsync(customerUserId, cancellationToken);
+            if (cartItems.Count == 0)
+                return BadRequest(new { message = "Sepet boş. Sipariş oluşturulamaz." });
+
+            var restaurantId = cartItems[0].RestaurantId;
+            var calcRequest = new CalculateCartRequest(
+                restaurantId,
+                cartItems.Select(c => new CalculateCartItemRequest(c.ProductId, c.Quantity, c.UnitPrice)).ToList());
+            var calcResult = await _calculationService.CalculateCartAsync(calcRequest, cancellationToken);
+
+            var itemsStr = string.Join(", ", cartItems.Select(c => $"{c.Quantity}x {c.ProductName} ({c.WeightKg} kg)"));
+
+            var order = new CustomerOrder
+            {
+                OrderId = Guid.NewGuid(),
+                CustomerUserId = customerUserId,
+                RestaurantId = restaurantId,
+                Items = itemsStr,
+                Total = (int)Math.Round(calcResult.FinalPrice),
+                TotalDiscount = calcResult.TotalDiscount,
+                RestaurantEarning = calcResult.RestaurantEarning,
+                PlatformEarning = calcResult.PlatformEarning,
+                DeliveryAddress = request.DeliveryAddress.Trim(),
+                DeliveryAddressDetail = string.IsNullOrWhiteSpace(request.DeliveryAddressDetail) ? null : request.DeliveryAddressDetail.Trim(),
+                CustomerLat = request.CustomerLat,
+                CustomerLng = request.CustomerLng,
+                CustomerName = request.CustomerName?.Trim(),
+                CustomerPhone = request.CustomerPhone?.Trim(),
+                Status = CustomerOrderStatus.Pending,
+                CreatedAtUtc = DateTime.UtcNow,
+            };
+
+            var restaurant = await _restaurantRepo.GetRestaurantByIdAsync(restaurantId, cancellationToken);
+            if (restaurant != null)
+                order.RestaurantAddress = restaurant.Address;
+
+            await _repository.CreateOrderAsync(order, cancellationToken);
+            await _notificationService.NotifyOrderCreatedAsync(order, cancellationToken);
+
+            return Ok(new
+            {
+                id = order.OrderId,
+                status = "pending",
+                total = order.Total,
+            });
         }
-
-        var order = new CustomerOrder
+        catch (Exception ex)
         {
-            OrderId = Guid.NewGuid(),
-            CustomerUserId = customerUserId,
-            RestaurantId = request.RestaurantId,
-            Items = request.Items.Trim(),
-            Total = request.Total,
-            DeliveryAddress = request.DeliveryAddress.Trim(),
-            DeliveryAddressDetail = string.IsNullOrWhiteSpace(request.DeliveryAddressDetail)
-                ? null
-                : request.DeliveryAddressDetail.Trim(),
-            CustomerLat = request.CustomerLat,
-            CustomerLng = request.CustomerLng,
-            CustomerName = request.CustomerName?.Trim(),
-            CustomerPhone = request.CustomerPhone?.Trim(),
-            Status = CustomerOrderStatus.Pending,
-            CreatedAtUtc = DateTime.UtcNow,
-        };
-
-        var restaurant = await _restaurantRepo.GetRestaurantByIdAsync(
-            request.RestaurantId,
-            cancellationToken);
-        if (restaurant != null)
-        {
-            order.RestaurantAddress = restaurant.Address;
+            return StatusCode(500, new { message = "Sipariş oluşturulurken hata oluştu.", detail = ex.Message });
         }
-
-        await _repository.CreateOrderAsync(order, cancellationToken);
-        await _notificationService.NotifyOrderCreatedAsync(order, cancellationToken);
-
-        return Ok(new
-        {
-            id = order.OrderId,
-            status = "pending",
-            total = order.Total,
-        });
     }
 
     [HttpGet("orders/{orderId:guid}/review-products")]

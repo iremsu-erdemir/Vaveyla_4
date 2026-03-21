@@ -14,6 +14,10 @@ class CourierOrderModel {
     this.preparationMinutes,
     required this.items,
     required this.total,
+    this.totalDiscount = 0,
+    double? customerPaidAmount,
+    this.restaurantEarning = 0,
+    this.platformEarning = 0,
     required this.status,
     required this.customerAddress,
     this.customerLat,
@@ -23,7 +27,7 @@ class CourierOrderModel {
     this.restaurantLng,
     this.customerName,
     this.customerPhone,
-  });
+  }) : customerPaidAmount = customerPaidAmount ?? total.toDouble();
 
   final String id;
   final String time;
@@ -32,6 +36,10 @@ class CourierOrderModel {
   final int? preparationMinutes;
   final String items;
   final int total;
+  final double totalDiscount;
+  final double customerPaidAmount;
+  final double restaurantEarning;
+  final double platformEarning;
   final CourierOrderStatus status;
   final String customerAddress;
   final double? customerLat;
@@ -51,6 +59,10 @@ class CourierOrderModel {
       preparationMinutes: _parseNullableInt(json['preparationMinutes']),
       items: json['items']?.toString() ?? '',
       total: _parseInt(json['total']),
+      totalDiscount: _parseDouble(json['totalDiscount']) ?? 0,
+      customerPaidAmount: _parseDouble(json['customerPaidAmount']),
+      restaurantEarning: _parseDouble(json['restaurantEarning']) ?? 0,
+      platformEarning: _parseDouble(json['platformEarning']) ?? 0,
       status: _parseStatus(json['status']),
       customerAddress: json['customerAddress']?.toString() ?? '',
       customerLat: _parseDouble(json['customerLat']),
@@ -72,6 +84,10 @@ class CourierOrderModel {
       'preparationMinutes': preparationMinutes,
       'items': items,
       'total': total,
+      'totalDiscount': totalDiscount,
+      'customerPaidAmount': customerPaidAmount,
+      'restaurantEarning': restaurantEarning,
+      'platformEarning': platformEarning,
       'status': status.name,
       'customerAddress': customerAddress,
       'customerLat': customerLat,
@@ -126,6 +142,10 @@ class CourierOrderModel {
     int? preparationMinutes,
     String? items,
     int? total,
+    double? totalDiscount,
+    double? customerPaidAmount,
+    double? restaurantEarning,
+    double? platformEarning,
     CourierOrderStatus? status,
     String? customerAddress,
     double? customerLat,
@@ -144,6 +164,10 @@ class CourierOrderModel {
       preparationMinutes: preparationMinutes ?? this.preparationMinutes,
       items: items ?? this.items,
       total: total ?? this.total,
+      totalDiscount: totalDiscount ?? this.totalDiscount,
+      customerPaidAmount: customerPaidAmount ?? this.customerPaidAmount,
+      restaurantEarning: restaurantEarning ?? this.restaurantEarning,
+      platformEarning: platformEarning ?? this.platformEarning,
       status: status ?? this.status,
       customerAddress: customerAddress ?? this.customerAddress,
       customerLat: customerLat ?? this.customerLat,

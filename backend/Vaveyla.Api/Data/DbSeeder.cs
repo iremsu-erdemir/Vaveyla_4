@@ -17,9 +17,31 @@ public static class DbSeeder
     private const string SafranEmail = "safran@vaveyla.com";
     private const string SeedPassword = "Test123!";
 
+    private const string AdminEmail = "admin@vaveyla.com";
+
     public static async Task SeedAsync(VaveylaDbContext db, CancellationToken ct = default)
     {
+        await EnsureAdminUserAsync(db, ct);
         await EnsureRestaurantWithProductsAsync(db, ct);
+    }
+
+    private static async Task EnsureAdminUserAsync(VaveylaDbContext db, CancellationToken ct)
+    {
+        var exists = await db.Users.AnyAsync(u => u.Email == AdminEmail, ct);
+        if (exists) return;
+        var admin = new User
+        {
+            UserId = Guid.NewGuid(),
+            FullName = "Sistem Yöneticisi",
+            Email = AdminEmail,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(SeedPassword),
+            Role = UserRole.Admin,
+            IsPrivacyPolicyAccepted = true,
+            IsTermsOfServiceAccepted = true,
+            CreatedAtUtc = DateTime.UtcNow,
+        };
+        db.Users.Add(admin);
+        await db.SaveChangesAsync(ct);
     }
 
     private static async Task EnsureRestaurantWithProductsAsync(

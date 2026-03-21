@@ -144,6 +144,22 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\owners\c07998aa-3789-4b27-b2ab-82aa7311533b\restaurant\63204c30bd394606932f8f3f08e13225.jpg))</OriginalItemSpec>
     </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\owners\cd23f525-9f11-4f17-9239-4468d58a6008\menu\06484c8711d94f62b1b3d19c6cfed606.avif))">
+      <SourceType>Package</SourceType>
+      <SourceId>Vaveyla.Api</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/Vaveyla.Api</BasePath>
+      <RelativePath>uploads/owners/cd23f525-9f11-4f17-9239-4468d58a6008/menu/06484c8711d94f62b1b3d19c6cfed606.avif</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\owners\cd23f525-9f11-4f17-9239-4468d58a6008\menu\06484c8711d94f62b1b3d19c6cfed606.avif))</OriginalItemSpec>
+    </StaticWebAsset>
     <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\owners\cd23f525-9f11-4f17-9239-4468d58a6008\menu\088946f1940349c4ae5f8b9fd438d70f.webp))">
       <SourceType>Package</SourceType>
       <SourceId>Vaveyla.Api</SourceId>
@@ -191,6 +207,22 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\owners\cd23f525-9f11-4f17-9239-4468d58a6008\menu\2ec3229da224421bb2450a276e15e445.avif))</OriginalItemSpec>
+    </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\owners\cd23f525-9f11-4f17-9239-4468d58a6008\menu\43257a8f183b4f45b05f7c2170d38d4f.avif))">
+      <SourceType>Package</SourceType>
+      <SourceId>Vaveyla.Api</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/Vaveyla.Api</BasePath>
+      <RelativePath>uploads/owners/cd23f525-9f11-4f17-9239-4468d58a6008/menu/43257a8f183b4f45b05f7c2170d38d4f.avif</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\owners\cd23f525-9f11-4f17-9239-4468d58a6008\menu\43257a8f183b4f45b05f7c2170d38d4f.avif))</OriginalItemSpec>
     </StaticWebAsset>
     <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\owners\cd23f525-9f11-4f17-9239-4468d58a6008\menu\4b16f36725974bb8b37d7ed7f27e451c.avif))">
       <SourceType>Package</SourceType>
@@ -271,6 +303,22 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\owners\cd23f525-9f11-4f17-9239-4468d58a6008\menu\b033a546b2c64d40a94a4903bdf7e510.jpg))</OriginalItemSpec>
+    </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\owners\cd23f525-9f11-4f17-9239-4468d58a6008\menu\beb8fd42d6f94fdfa033d4efcfa5f999.jpg))">
+      <SourceType>Package</SourceType>
+      <SourceId>Vaveyla.Api</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/Vaveyla.Api</BasePath>
+      <RelativePath>uploads/owners/cd23f525-9f11-4f17-9239-4468d58a6008/menu/beb8fd42d6f94fdfa033d4efcfa5f999.jpg</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\owners\cd23f525-9f11-4f17-9239-4468d58a6008\menu\beb8fd42d6f94fdfa033d4efcfa5f999.jpg))</OriginalItemSpec>
     </StaticWebAsset>
     <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\owners\cd23f525-9f11-4f17-9239-4468d58a6008\menu\da5e0c9f523f4925b3f07d75012449cf.jpg))">
       <SourceType>Package</SourceType>
